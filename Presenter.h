@@ -37,7 +37,7 @@ class Presenter {
 
     void setMode(uint8_t mode) { mRenderingInfo.mode = mode; }
 
-    void setDateTime(const DateTime& dateTime) {
+    void setDateTime(const ZonedDateTime& dateTime) {
       mRenderingInfo.dateTime = dateTime;
     }
 
@@ -88,7 +88,7 @@ class Presenter {
     }
 
     void displayDateTime() const {
-      const DateTime& dateTime = mRenderingInfo.dateTime;
+      const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
 
       // Date
       if (dateTime.isError()) {
@@ -96,7 +96,6 @@ class Presenter {
         return;
       }
       if (shouldShowFor(MODE_CHANGE_YEAR)) {
-        mOled.print("20");
         printPad2(mOled, dateTime.year());
       } else {
         mOled.print("    ");
@@ -138,7 +137,7 @@ class Presenter {
       mOled.println();
 
       // week day
-      mOled.print(DateStrings().weekDayLongString(dateTime.dayOfWeek()));
+      mOled.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
       mOled.clearToEOL();
     }
 

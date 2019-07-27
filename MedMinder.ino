@@ -31,18 +31,20 @@ Supported boards are:
 #include "config.h"
 #include "Presenter.h"
 #include "Controller.h"
-#include <ace_time/common/logger.h>
 #include <ace_time/hw/HardwareDateTime.h>
 
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using namespace med_minder;
-using ace_time::common::logger;
 
 //------------------------------------------------------------------
 // Configure CrcEeprom.
 //------------------------------------------------------------------
+
+// Needed by ESP32 chips. Has no effect on other chips.
+// Should be bigger than (sizeof(crc32) + sizeof(StoredInfo)).
+#define EEPROM_SIZE 32
 
 hw::CrcEeprom crcEeprom;
 
@@ -62,26 +64,16 @@ hw::CrcEeprom crcEeprom;
 #endif
 
 SystemTimeSyncCoroutine systemTimeSync(systemTimeKeeper);
-SystemTimeHeartbeatCoroutine systemTimeHeartbeat(systemTimeKeeper);
 
 //------------------------------------------------------------------
 // Configure the OLED display.
 //------------------------------------------------------------------
 
-// OLED address: 0X3C+SA0 - 0x3C or 0x3D
-#define OLED_I2C_ADDRESS 0x3C
-
 SSD1306AsciiWire oled;
 
 void setupOled() {
-#if OLED_DISPLAY == OLED_DIPLAY_ADA64
   oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
   oled.displayRemap(OLED_REMAP);
-#elif OLED_DISPLAY == OLED_DIPLAY_ADA32
-  oled.begin(&Adafruit128x32, OLED_I2C_ADDRESS);
-  oled.displayRemap(OLED_REMAP);
-#endif
-
   oled.clear();
 }
 
@@ -102,24 +94,8 @@ Controller controller(systemTimeKeeper, crcEeprom, presenter);
 // benchmarking. Therefore, we can set this to 100ms without worrying about too
 // much overhead.
 COROUTINE(runController) {
-#if ENABLE_SERIAL
-  static uint16_t lastMillis = millis();
-#endif
-
   COROUTINE_LOOP() {
-#if ENABLE_SERIAL
-    lastMillis = millis();
-#endif
     controller.update();
-
-#if ENABLE_SERIAL
-    uint16_t now = millis();
-    uint16_t elapsedTime = now - lastMillis;
-    lastMillis = now;
-    if (elapsedTime > 100) {
-      logger("runController(): update() > 100ms: %u ms", elapsedTime);
-    }
-#endif
     COROUTINE_DELAY(100);
   }
 }
@@ -150,7 +126,7 @@ COROUTINE(manageSleep) {
     COROUTINE_AWAIT((uint16_t) ((uint16_t) millis() - lastUserActionMillis)
         >= SLEEP_DELAY_MILLIS);
     controller.prepareToSleep();
-    Serial.println("Powering down");
+    SERIAL_PORT_MONITOR.println("Powering down");
     COROUTINE_DELAY(500);
 
     runMode = RUN_MODE_SLEEPING;
@@ -161,12 +137,12 @@ COROUTINE(manageSleep) {
       if (runMode == RUN_MODE_AWAKE) break;
 
       isWakingUp = true;
-      Serial.println("Dreaming for 1000ms... then going back to sleep");
+      SERIAL_PORT_MONITOR.println("Dreaming for 1000ms... then going back to sleep");
       runMode = RUN_MODE_DREAMING;
       COROUTINE_DELAY(1000);
     }
 
-    Serial.println("Powering up");
+    SERIAL_PORT_MONITOR.println("Powering up");
     controller.wakeup();
     isWakingUp = true;
     lastUserActionMillis = millis();
@@ -178,10 +154,10 @@ COROUTINE(manageSleep) {
 // Configurations for AceButton
 //------------------------------------------------------------------
 
-AdjustableButtonConfig modeButtonConfig;
+ButtonConfig modeButtonConfig;
 AceButton modeButton(&modeButtonConfig);
 
-AdjustableButtonConfig changeButtonConfig;
+ButtonConfig changeButtonConfig;
 AceButton changeButton(&changeButtonConfig);
 
 void handleModeButton(AceButton* /* button */, uint8_t eventType,
@@ -253,7 +229,7 @@ COROUTINE(checkButton) {
   COROUTINE_LOOP() {
     modeButton.check();
     changeButton.check();
-    COROUTINE_DELAY(10); // check button every 10 ms
+    COROUTINE_DELAY(5); // check button every 5 ms
   }
 }
 
@@ -272,11 +248,11 @@ void setup() {
   TXLED0; // LED off
 #endif
 
-#if ENABLE_SERIAL == 1
-  Serial.begin(115200); // ESP8266 default of 74880 not supported on Linux
-  while (!Serial); // Wait until Serial is ready - Leonardo/Micro
-  Serial.println(F("setup(): begin"));
-#endif
+  if (ENABLE_SERIAL) {
+    SERIAL_PORT_MONITOR.begin(115200);
+    while (!SERIAL_PORT_MONITOR); // Wait until Serial is ready - Leonardo/Micro
+    SERIAL_PORT_MONITOR.println(F("setup(): begin"));
+  }
 
   Wire.begin();
   Wire.setClock(400000L);
@@ -301,12 +277,10 @@ void setup() {
   lastUserActionMillis = millis();
 
   systemTimeSync.setupCoroutine(F("systemTimeSync"));
-  systemTimeHeartbeat.setupCoroutine(F("systemTimeHeartbeat"));
+  systemTime.keepAlive();
   CoroutineScheduler::setup();
 
-#if ENABLE_SERIAL == 1
-  Serial.println(F("setup(): end"));
-#endif
+  if (ENABLE_SERIAL) SERIAL_PORT_MONITOR.println(F("setup(): end"));
 }
 
 void loop() {

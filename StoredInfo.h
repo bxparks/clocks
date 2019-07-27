@@ -9,7 +9,7 @@ namespace med_minder {
 /** Data that is saved to and retrieved from EEPROM. */
 struct StoredInfo {
   /** Current time zone. */
-  TimeZone timeZone;
+  ace_time::TimeZoneData timeZoneData;
 
   /** Medication info. */
   MedInfo medInfo;

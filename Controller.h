@@ -22,7 +22,7 @@ using namespace ace_time;
  */
 class Controller {
   public:
-    static const uint16_t STORED_INFO_EEPROM_ADDRESS = 0;
+    static const uint16_t kStoredInfoEepromAddress = 0;
     static const int8_t DEFAULT_TZ_CODE = -32; // Pacific Standard Time, -08:00
 
     /** Constructor. */
@@ -31,28 +31,29 @@ class Controller {
         mTimeKeeper(timeKeeper),
         mCrcEeprom(crcEeprom),
         mPresenter(presenter),
-        mMode(MODE_UNKNOWN),
-        mTimeZone(0) {}
+        mZoneManager(kZoneRegistrySize, kZoneRegistry),
+        mMode(MODE_UNKNOWN) {}
 
     void setup() {
       // Retrieve current time from TimeKeeper.
-      uint32_t nowSeconds = mTimeKeeper.getNow();
+      acetime_t nowSeconds = mTimeKeeper.getNow();
 
       // Restore state from EEPROM.
       StoredInfo storedInfo;
-      bool isValid = mCrcEeprom.readWithCrc(STORED_INFO_EEPROM_ADDRESS,
+      bool isValid = mCrcEeprom.readWithCrc(kStoredInfoEepromAddress,
           &storedInfo, sizeof(StoredInfo));
       if (isValid) {
-        mTimeZone = storedInfo.timeZone;
+        mTimeZone = mManager.createFromTimeZoneData(storedInfo.timeZoneData);
         mMedInfo = storedInfo.medInfo;
       } else {
-        mTimeZone = TimeZone(DEFAULT_TZ_CODE);
+        mTimeZone =
+            mManager.createFromZoneInfo(zonedb::kZoneAmerica_LosAngeles);
         mMedInfo.interval = TimePeriod(86400); // one day
         mMedInfo.startTime = nowSeconds;
       }
 
       // Set the current date time using the mTimeZone.
-      mCurrentDateTime = DateTime(nowSeconds, mTimeZone);
+      mCurrentDateTime = ZonedDateTime(nowSeconds, mTimeZone);
 
       // Start with the medInfo view mode.
       mMode = MODE_VIEW_MED;
@@ -294,12 +295,12 @@ class Controller {
       StoredInfo storedInfo;
       storedInfo.timeZone = mTimeZone;
       storedInfo.medInfo = mMedInfo;
-      mCrcEeprom.writeWithCrc(STORED_INFO_EEPROM_ADDRESS, &storedInfo,
+      mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, &storedInfo,
           sizeof(StoredInfo));
     }
 
     void updateDateTime() {
-      mCurrentDateTime = DateTime(mTimeKeeper.getNow(), mTimeZone);
+      mCurrentDateTime = ZonedDateTime(mTimeKeeper.getNow(), mTimeZone);
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update the mChangingDateTime.second field with the current second.
@@ -376,14 +377,17 @@ class Controller {
     }
 
   protected:
+    static const uint16_t kCacheSize = 2;
+
     TimeKeeper& mTimeKeeper;
     hw::CrcEeprom& mCrcEeprom;
     Presenter& mPresenter;
+    BasicZoneManager<kCacheSize> mZoneManager;;
 
     uint8_t mMode; // current mode
     TimeZone mTimeZone; // current time zone of clock
-    DateTime mCurrentDateTime; // DateTime from the TimeKeeper
-    DateTime mChangingDateTime; // DateTime set by user in "Change" modes
+    ZonedDateTime mCurrentDateTime; // ZonedDateTime from the TimeKeeper
+    ZonedDateTime mChangingDateTime; // ZonedDateTime set by user in "Change" modes
     MedInfo mMedInfo; // current med info
     MedInfo mChangingMedInfo; // med info in "Change" modes
     bool mSecondFieldCleared;

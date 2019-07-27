@@ -2,37 +2,38 @@
 #define MED_MINDER_CONFIG_H
 
 //------------------------------------------------------------------
-// Compile-time selectors and options
+// OLED display configuration
 //------------------------------------------------------------------
 
-// Needed by ESP32 chips. Has no effect on other chips.
-// Should be bigger than (sizeof(crc32) + sizeof(StoredInfo)).
-#define EEPROM_SIZE 32
+// OLED address: 0X3C+SA0 - 0x3C or 0x3D
+#define OLED_I2C_ADDRESS 0x3C
+
+//------------------------------------------------------------------
+// Compile-time selectors and options
+//------------------------------------------------------------------
 
 // Options for the time sync provider.
 #define TIME_PROVIDER_DS3231 0
 #define TIME_PROVIDER_NTP 1
 #define TIME_PROVIDER_SYSTEM 2
 
-// Options for the display: Adafruit128x64 or Adafruit128x32
-#define OLED_DIPLAY_ADA32 0
-#define OLED_DIPLAY_ADA64 1
-
 //------------------------------------------------------------------
 // Configuration of target environment. The environment is defined in
 // $HOME/.auniter.ini and the AUNITER_XXX macro is set by auniter.sh.
 //------------------------------------------------------------------
 
-#if !defined(AUNITER)
-  #define AUNITER_MICRO_MINDER
-  #warning Defaulting to AUNITER_MICRO_MINDER
-#endif
-
-#if defined(AUNITER_MICRO_MINDER)
+#if ! defined(AUNITER)
+  // Normal Arduino IDE
   #define ENABLE_SERIAL 0
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
-  #define OLED_DISPLAY OLED_DIPLAY_ADA32
+  #define OLED_REMAP false
+  #define MODE_BUTTON_PIN 8
+  #define CHANGE_BUTTON_PIN 9
+#elif defined(AUNITER_MICRO_MINDER)
+  #define ENABLE_SERIAL 0
+  #define ENABLE_LOW_POWER 0
+  #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
@@ -40,7 +41,6 @@
   #define ENABLE_SERIAL 0
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
-  #define OLED_DISPLAY OLED_DIPLAY_ADA64
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
@@ -48,7 +48,6 @@
   #define ENABLE_SERIAL 1
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_NTP
-  #define OLED_DISPLAY OLED_DIPLAY_ADA64
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN D4
   #define CHANGE_BUTTON_PIN D3
@@ -56,7 +55,6 @@
   #define ENABLE_SERIAL 1
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_NTP
-  #define OLED_DISPLAY OLED_DIPLAY_ADA64
   #define OLED_REMAP true
   #define MODE_BUTTON_PIN D4
   #define CHANGE_BUTTON_PIN D3
@@ -64,12 +62,32 @@
   #define ENABLE_SERIAL 1
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_NTP
-  #define OLED_DISPLAY OLED_DIPLAY_ADA64
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 4
 #else
   #error Unsupported AUNITER environment
 #endif
+
+//------------------------------------------------------------------
+// Constants for button and UI states.
+//------------------------------------------------------------------
+
+static const uint8_t MODE_UNKNOWN = 0; // uninitialized
+static const uint8_t MODE_DATE_TIME_MED = 1;
+static const uint8_t MODE_TIME_ZONE = 2;
+static const uint8_t MODE_ABOUT = 3;
+
+static const uint8_t MODE_CHANGE_YEAR = 10;
+static const uint8_t MODE_CHANGE_MONTH = 11;
+static const uint8_t MODE_CHANGE_DAY = 12;
+static const uint8_t MODE_CHANGE_HOUR = 13;
+static const uint8_t MODE_CHANGE_MINUTE = 14;
+static const uint8_t MODE_CHANGE_SECOND = 15;
+
+static const uint8_t MODE_CHANGE_MED_HOUR = 20;
+static const uint8_t MODE_CHANGE_MED_MINUTE = 21;
+
+static const uint8_t MODE_CHANGE_TIME_ZONE_NAME = 30;
 
 #endif
