@@ -110,13 +110,25 @@ class Presenter {
       mOled.set1X();
 
       mOled.print(F("MedMinder: "));
-      mOled.println(MED_MINDER_VERSION_STRING);
+      mOled.print(MED_MINDER_VERSION_STRING);
+      mOled.println();
       mOled.print(F("TZ: "));
-      mOled.println(zonedb::kTzDatabaseVersion);
+      mOled.print(zonedb::kTzDatabaseVersion);
+      mOled.println();
       mOled.print(F("AceTime: "));
       mOled.print(ACE_TIME_VERSION_STRING);
+      mOled.println();
+      mOled.print(F("Clock: "));
+    #if TIME_PROVIDER == TIME_PROVIDER_DS3231
+      mOled.print(F("DS3231"));
+    #elif TIME_PROVIDER == TIME_PROVIDER_NTP
+      mOled.print(F("NTP"));
+    #elif TIME_PROVIDER == TIME_PROVIDER_SYSTEM
+      mOled.print(F("millis()"));
+    #else
+      mOled.print(F("<Unknown>"));
+    #endif
     }
-
 
     void displayChangeMed() const {
       mOled.println("Med intrvl");
