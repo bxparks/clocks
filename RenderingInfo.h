@@ -4,8 +4,6 @@
 #include <AceTime.h>
 #include "config.h"
 
-namespace med_minder {
-
 using namespace ace_time;
 
 /**
@@ -16,10 +14,9 @@ struct RenderingInfo {
   uint8_t mode = 0;
   bool suppressBlink = false; // true if blinking should be suppressed
   bool blinkShowState = true; // true if should be rendered
-  ZonedDateTime dateTime; // currentDateTime, changingDateTime
-  TimePeriod timePeriod; // med interval, med remaining
+  TimeZone timeZone; // currentTimeZone or changingTimeZone
+  ZonedDateTime dateTime; // currentDateTime or changingDateTime
+  TimePeriod timePeriod; // med interval or med remaining
 };
-
-}
 
 #endif

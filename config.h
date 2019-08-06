@@ -1,6 +1,8 @@
 #ifndef MED_MINDER_CONFIG_H
 #define MED_MINDER_CONFIG_H
 
+#define MED_MINDER_VERSION_STRING "0.1"
+
 //------------------------------------------------------------------
 // OLED display configuration
 //------------------------------------------------------------------
@@ -54,7 +56,7 @@
 #elif defined(AUNITER_ESP_MINDER2)
   #define ENABLE_SERIAL 1
   #define ENABLE_LOW_POWER 0
-  #define TIME_PROVIDER TIME_PROVIDER_NTP
+  #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP true
   #define MODE_BUTTON_PIN D4
   #define CHANGE_BUTTON_PIN D3
@@ -73,21 +75,23 @@
 // Constants for button and UI states.
 //------------------------------------------------------------------
 
+// View modes
 static const uint8_t MODE_UNKNOWN = 0; // uninitialized
-static const uint8_t MODE_DATE_TIME_MED = 1;
-static const uint8_t MODE_TIME_ZONE = 2;
-static const uint8_t MODE_ABOUT = 3;
+static const uint8_t MODE_VIEW_MED = 1;
+static const uint8_t MODE_VIEW_DATE_TIME = 2;
+static const uint8_t MODE_VIEW_ABOUT = 3;
 
+// Change Med info
+static const uint8_t MODE_CHANGE_MED_HOUR = 20;
+static const uint8_t MODE_CHANGE_MED_MINUTE = 21;
+
+// Change date/time modes
 static const uint8_t MODE_CHANGE_YEAR = 10;
 static const uint8_t MODE_CHANGE_MONTH = 11;
 static const uint8_t MODE_CHANGE_DAY = 12;
 static const uint8_t MODE_CHANGE_HOUR = 13;
 static const uint8_t MODE_CHANGE_MINUTE = 14;
 static const uint8_t MODE_CHANGE_SECOND = 15;
-
-static const uint8_t MODE_CHANGE_MED_HOUR = 20;
-static const uint8_t MODE_CHANGE_MED_MINUTE = 21;
-
-static const uint8_t MODE_CHANGE_TIME_ZONE_NAME = 30;
+static const uint8_t MODE_CHANGE_TIME_ZONE_NAME = 16;
 
 #endif

@@ -4,8 +4,6 @@
 #include <AceTime.h>
 #include "MedInfo.h"
 
-namespace med_minder {
-
 /** Data that is saved to and retrieved from EEPROM. */
 struct StoredInfo {
   /** Current time zone. */
@@ -14,7 +12,5 @@ struct StoredInfo {
   /** Medication info. */
   MedInfo medInfo;
 };
-
-}
 
 #endif

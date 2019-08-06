@@ -1,23 +1,24 @@
 /*
-A medication reminder app. The hardware dependencies are:
-  * a DS3231 RTC chip
-  * an SSD1306 OLED display
-  * 2 push buttons
-
-The library dependencies are:
-  * AceButton
-  * AceRoutine
-  * AceTime
-  * FastCRC
-  * SDD1306Ascii (modified)
-  * EEPROM (Arduino builtin)
-  * Wire (Arduino builtin)
-
-Supported boards are:
-  * Arduino Nano
-  * Arduino Pro Mini
-  * Arduino Leonardo (Pro Micro clone)
-*/
+ * A medication reminder app. The hardware dependencies are:
+ *   * a DS3231 RTC chip
+ *   * an SSD1306 OLED display
+ *   * 2 push buttons
+ *
+ * The library dependencies are:
+ *   * AceButton
+ *   * AceRoutine
+ *   * AceTime
+ *   * FastCRC
+ *   * SDD1306Ascii
+ *   * EEPROM (Arduino builtin)
+ *   * Wire (Arduino builtin)
+ *
+ * Supported boards are:
+ *   * Arduino Nano
+ *   * Arduino Pro Mini
+ *   * SparkFun Pro Micro
+ *   * ESP8266
+ */
 
 #include <Wire.h>
 #include <SSD1306AsciiWire.h>
@@ -36,7 +37,6 @@ Supported boards are:
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
-using namespace med_minder;
 
 //------------------------------------------------------------------
 // Configure CrcEeprom.
@@ -49,21 +49,18 @@ using namespace med_minder;
 hw::CrcEeprom crcEeprom;
 
 //------------------------------------------------------------------
-// Configure the SystemTimeKeeper.
+// Configure the SystemClock.
 //------------------------------------------------------------------
 
 #if TIME_PROVIDER == TIME_PROVIDER_DS3231
-  DS3231TimeKeeper dsTimeKeeper;
-  SystemTimeKeeper systemTimeKeeper(&dsTimeKeeper, &dsTimeKeeper);
+  DS3231Clock dsClock;
+  SystemClockCoroutine systemClock(&dsClock, &dsClock);
 #elif TIME_PROVIDER == TIME_PROVIDER_NTP
-  NtpTimeProvider ntpTimeProvider;
-  SystemTimeKeeper systemTimeKeeper(&ntpTimeProvider,
-      nullptr /*backupTimeKeeper*/);
+  NtpClock ntpClock;
+  SystemClockCoroutine systemClock(&ntpClock, nullptr /*backup*/);
 #else
-  SystemTimeKeeper systemTimeKeeper(nullptr, nullptr);
+  SystemClockCoroutine systemClock(nullptr, nullptr);
 #endif
-
-SystemTimeSyncCoroutine systemTimeSync(systemTimeKeeper);
 
 //------------------------------------------------------------------
 // Configure the OLED display.
@@ -82,7 +79,7 @@ void setupOled() {
 //------------------------------------------------------------------
 
 Presenter presenter(oled);
-Controller controller(systemTimeKeeper, crcEeprom, presenter);
+Controller controller(systemClock, crcEeprom, presenter);
 
 //------------------------------------------------------------------
 // Run the controller.
@@ -137,7 +134,8 @@ COROUTINE(manageSleep) {
       if (runMode == RUN_MODE_AWAKE) break;
 
       isWakingUp = true;
-      SERIAL_PORT_MONITOR.println("Dreaming for 1000ms... then going back to sleep");
+      SERIAL_PORT_MONITOR.println(
+          F("Dreaming for 1000ms... then going back to sleep"));
       runMode = RUN_MODE_DREAMING;
       COROUTINE_DELAY(1000);
     }
@@ -259,11 +257,11 @@ void setup() {
 
   crcEeprom.begin(EEPROM_SIZE);
 #if TIME_PROVIDER == TIME_PROVIDER_DS3231
-  dsTimeKeeper.setup();
+  dsClock.setup();
 #elif TIME_PROVIDER == TIME_PROVIDER_NTP
-  ntpTimeProvider.setup(AUNITER_SSID, AUNITER_PASSWORD);
+  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
 #endif
-  systemTimeKeeper.setup();
+  systemClock.setup();
 
   setupAceButton();
   setupOled();
@@ -276,8 +274,7 @@ void setup() {
 
   lastUserActionMillis = millis();
 
-  systemTimeSync.setupCoroutine(F("systemTimeSync"));
-  systemTime.keepAlive();
+  systemClock.setupCoroutine(F("systemClock"));
   CoroutineScheduler::setup();
 
   if (ENABLE_SERIAL) SERIAL_PORT_MONITOR.println(F("setup(): end"));

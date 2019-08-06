@@ -3,8 +3,6 @@
 
 #include <AceTime.h>
 
-namespace med_minder {
-
 using namespace ace_time;
 
 /**
@@ -18,7 +16,5 @@ struct MedInfo {
   uint32_t startTime; // when the last pill was taken
   TimePeriod interval; // how often the pill should be taken
 };
-
-}
 
 #endif

@@ -8,10 +8,10 @@
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
 #include "Presenter.h"
-
-namespace med_minder {
+#include "ClockInfo.h"
 
 using namespace ace_time;
+using namespace ace_time::clock;
 
 /**
  * Class responsible for handling user button presses, and determining
@@ -23,37 +23,37 @@ using namespace ace_time;
 class Controller {
   public:
     static const uint16_t kStoredInfoEepromAddress = 0;
-    static const int8_t DEFAULT_TZ_CODE = -32; // Pacific Standard Time, -08:00
 
     /** Constructor. */
-    Controller(TimeKeeper& timeKeeper, hw::CrcEeprom& crcEeprom,
-            Presenter& presenter):
-        mTimeKeeper(timeKeeper),
+    Controller(Clock& Clock, hw::CrcEeprom& crcEeprom, Presenter& presenter):
+        mClock(Clock),
         mCrcEeprom(crcEeprom),
         mPresenter(presenter),
         mZoneManager(kZoneRegistrySize, kZoneRegistry),
         mMode(MODE_UNKNOWN) {}
 
     void setup() {
-      // Retrieve current time from TimeKeeper.
-      acetime_t nowSeconds = mTimeKeeper.getNow();
+      // Retrieve current time from Clock.
+      acetime_t nowSeconds = mClock.getNow();
 
       // Restore state from EEPROM.
       StoredInfo storedInfo;
       bool isValid = mCrcEeprom.readWithCrc(kStoredInfoEepromAddress,
           &storedInfo, sizeof(StoredInfo));
       if (isValid) {
-        mTimeZone = mManager.createFromTimeZoneData(storedInfo.timeZoneData);
+        mClockInfo.timeZone = mZoneManager.createForTimeZoneData(
+            storedInfo.timeZoneData);
         mMedInfo = storedInfo.medInfo;
       } else {
-        mTimeZone =
-            mManager.createFromZoneInfo(zonedb::kZoneAmerica_LosAngeles);
+        mClockInfo.timeZone = mZoneManager.createForZoneInfo(
+            &zonedb::kZoneAmerica_Los_Angeles);
         mMedInfo.interval = TimePeriod(86400); // one day
         mMedInfo.startTime = nowSeconds;
       }
 
-      // Set the current date time using the mTimeZone.
-      mCurrentDateTime = ZonedDateTime(nowSeconds, mTimeZone);
+      // Set the current date time using the mClockInfo.timeZone.
+      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
+          nowSeconds, mClockInfo.timeZone);
 
       // Start with the medInfo view mode.
       mMode = MODE_VIEW_MED;
@@ -63,7 +63,7 @@ class Controller {
     void wakeup() {
       mIsPreparingToSleep = false;
       // TODO: might need to replace this with a special wakeup() method
-      //mTimeKeeper.setup();
+      //mClock.setup();
       setup();
     }
 
@@ -76,14 +76,20 @@ class Controller {
     void modeButtonPress()  {
       switch (mMode) {
         case MODE_VIEW_MED:
-          mMode = MODE_DATE_TIME;
+          mMode = MODE_VIEW_DATE_TIME;
+          break;
+        case MODE_VIEW_DATE_TIME:
+          mMode = MODE_VIEW_ABOUT;
+          break;
+        case MODE_VIEW_ABOUT:
+          mMode = MODE_VIEW_MED;
           break;
 
-        case MODE_DATE_TIME:
-          mMode = MODE_TIME_ZONE;
+        case MODE_CHANGE_MED_HOUR:
+          mMode = MODE_CHANGE_MED_MINUTE;
           break;
-        case MODE_TIME_ZONE:
-          mMode = MODE_VIEW_MED;
+        case MODE_CHANGE_MED_MINUTE:
+          mMode = MODE_CHANGE_MED_HOUR;
           break;
 
         case MODE_CHANGE_YEAR:
@@ -101,145 +107,116 @@ class Controller {
         case MODE_CHANGE_MINUTE:
           mMode = MODE_CHANGE_SECOND;
           break;
-
         case MODE_CHANGE_SECOND:
+          mMode = MODE_CHANGE_TIME_ZONE_NAME;
+          break;
+        case MODE_CHANGE_TIME_ZONE_NAME:
           mMode = MODE_CHANGE_YEAR;
-          break;
-
-        case MODE_CHANGE_MED_HOUR:
-          mMode = MODE_CHANGE_MED_MINUTE;
-          break;
-        case MODE_CHANGE_MED_MINUTE:
-          mMode = MODE_CHANGE_MED_HOUR;
-          break;
-
-        case MODE_CHANGE_TIME_ZONE_HOUR:
-          mMode = MODE_CHANGE_TIME_ZONE_MINUTE;
-          break;
-
-        case MODE_CHANGE_TIME_ZONE_MINUTE:
-          mMode = MODE_CHANGE_TIME_ZONE_DST;
-          break;
-
-        case MODE_CHANGE_TIME_ZONE_DST:
-          mMode = MODE_CHANGE_TIME_ZONE_HOUR;
           break;
       }
     }
 
     void modeButtonLongPress() {
       switch (mMode) {
-        case MODE_DATE_TIME:
-          mChangingDateTime = mCurrentDateTime;
-          mSecondFieldCleared = false;
+        case MODE_VIEW_MED:
+          mChangingMedInfo = mMedInfo;
+          mMode = MODE_CHANGE_MED_HOUR;
+          break;
+        case MODE_CHANGE_MED_HOUR:
+        case MODE_CHANGE_MED_MINUTE:
+          saveMedInterval();
           mMode = MODE_CHANGE_YEAR;
           break;
 
+        case MODE_VIEW_DATE_TIME:
+          mChangingClockInfo = mClockInfo;
+          mSecondFieldCleared = false;
+          mMode = MODE_CHANGE_YEAR;
+          break;
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
         case MODE_CHANGE_HOUR:
         case MODE_CHANGE_MINUTE:
         case MODE_CHANGE_SECOND:
+        case MODE_CHANGE_TIME_ZONE_NAME:
           saveDateTime();
-          mMode = MODE_DATE_TIME;
-          break;
-
-        case MODE_TIME_ZONE:
-          mChangingDateTime.timeZone(mTimeZone);
-          mMode = MODE_CHANGE_TIME_ZONE_HOUR;
-          break;
-
-        case MODE_CHANGE_TIME_ZONE_HOUR:
-        case MODE_CHANGE_TIME_ZONE_MINUTE:
-        case MODE_CHANGE_TIME_ZONE_DST:
-          saveTimeZone();
-          mMode = MODE_TIME_ZONE;
-          break;
-
-        case MODE_VIEW_MED:
-          mChangingMedInfo = mMedInfo;
-          mMode = MODE_CHANGE_MED_HOUR;
-          break;
-
-        case MODE_CHANGE_MED_HOUR:
-        case MODE_CHANGE_MED_MINUTE:
-          saveMedInterval();
-          mMode = MODE_VIEW_MED;
+          mMode = MODE_VIEW_DATE_TIME;
           break;
       }
     }
 
     void saveDateTime() {
-      mCurrentDateTime = mChangingDateTime;
-      mTimeKeeper.setNow(mCurrentDateTime.toSecondsSinceEpoch());
+      mClockInfo = mChangingClockInfo;
+      mClock.setNow(mClockInfo.dateTime.toEpochSeconds());
     }
 
     void saveMedInterval() {
       if (mMedInfo.interval != mChangingMedInfo.interval) {
         mMedInfo.interval = mChangingMedInfo.interval;
-        //mMedInfo.startTime = mCurrentDateTime.toSecondsSinceEpoch();
         mMedInfo.interval.second(0);
-        preserveInfo(); // save mMedInfo in EEPROM
+        preserveInfo();
       }
     }
 
     void saveTimeZone() {
-      mTimeZone = mChangingDateTime.timeZone();
-      mCurrentDateTime = mCurrentDateTime.convertToTimeZone(mTimeZone);
-      preserveInfo(); // save mTimeZone in EEPROM
+      mClockInfo.timeZone = mChangingClockInfo.timeZone;
+      mClockInfo.dateTime =
+          mClockInfo.dateTime.convertToTimeZone(mClockInfo.timeZone);
+      preserveInfo();
     }
 
     void changeButtonPress() {
       switch (mMode) {
-        case MODE_CHANGE_YEAR:
-          mSuppressBlink = true;
-          mChangingDateTime.incrementYear();
-          break;
-        case MODE_CHANGE_MONTH:
-          mSuppressBlink = true;
-          mChangingDateTime.incrementMonth();
-          break;
-        case MODE_CHANGE_DAY:
-          mSuppressBlink = true;
-          mChangingDateTime.incrementDay();
-          break;
-        case MODE_CHANGE_HOUR:
-          mSuppressBlink = true;
-          mChangingDateTime.incrementHour();
-          break;
-        case MODE_CHANGE_MINUTE:
-          mSuppressBlink = true;
-          mChangingDateTime.incrementMinute();
-          break;
-        case MODE_CHANGE_SECOND:
-          mSuppressBlink = true;
-          mChangingDateTime.second(0);
-          mSecondFieldCleared = true;
-          break;
-
-        case MODE_CHANGE_TIME_ZONE_HOUR:
-          mSuppressBlink = true;
-          mChangingDateTime.timeZone().incrementHour();
-          break;
-        case MODE_CHANGE_TIME_ZONE_MINUTE:
-          mSuppressBlink = true;
-          mChangingDateTime.timeZone().increment15Minutes();
-          break;
-        case MODE_CHANGE_TIME_ZONE_DST:
-          mSuppressBlink = true;
-          mChangingDateTime.timeZone().isDst(
-              !mChangingDateTime.timeZone().isDst());
-          break;
-
         case MODE_CHANGE_MED_HOUR:
           mSuppressBlink = true;
-          mChangingMedInfo.interval.incrementHour(36);
+          time_period_mutation::incrementHour(mChangingMedInfo.interval, 36);
           break;
         case MODE_CHANGE_MED_MINUTE:
           mSuppressBlink = true;
-          mChangingMedInfo.interval.incrementMinute();
+          time_period_mutation::incrementMinute(mChangingMedInfo.interval);
           break;
+
+        case MODE_CHANGE_TIME_ZONE_NAME:
+          mSuppressBlink = true;
+          mZoneIndex++;
+          if (mZoneIndex >= kZoneRegistrySize) {
+            mZoneIndex = 0;
+          }
+          mChangingClockInfo.timeZone =
+              mZoneManager.createForZoneIndex(mZoneIndex);
+          mChangingClockInfo.dateTime =
+              mChangingClockInfo.dateTime.convertToTimeZone(
+                  mChangingClockInfo.timeZone);
+          break;
+
+        case MODE_CHANGE_YEAR:
+          mSuppressBlink = true;
+          zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
+          break;
+        case MODE_CHANGE_MONTH:
+          mSuppressBlink = true;
+          zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
+          break;
+        case MODE_CHANGE_DAY:
+          mSuppressBlink = true;
+          zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
+          break;
+        case MODE_CHANGE_HOUR:
+          mSuppressBlink = true;
+          zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
+          break;
+        case MODE_CHANGE_MINUTE:
+          mSuppressBlink = true;
+          zoned_date_time_mutation::incrementMinute(
+              mChangingClockInfo.dateTime);
+          break;
+        case MODE_CHANGE_SECOND:
+          mSuppressBlink = true;
+          mChangingClockInfo.dateTime.second(0);
+          mSecondFieldCleared = true;
+          break;
+
       }
 
       // Update the display right away to prevent jitters during RepeatPress.
@@ -260,9 +237,7 @@ class Controller {
         case MODE_CHANGE_SECOND:
         case MODE_CHANGE_MED_HOUR:
         case MODE_CHANGE_MED_MINUTE:
-        case MODE_CHANGE_TIME_ZONE_HOUR:
-        case MODE_CHANGE_TIME_ZONE_MINUTE:
-        case MODE_CHANGE_TIME_ZONE_DST:
+        case MODE_CHANGE_TIME_ZONE_NAME:
           mSuppressBlink = false;
           break;
       }
@@ -271,7 +246,7 @@ class Controller {
     void changeButtonLongPress() {
       switch (mMode) {
         case MODE_VIEW_MED:
-          mMedInfo.startTime = mCurrentDateTime.toSecondsSinceEpoch();
+          mMedInfo.startTime = mClockInfo.dateTime.toEpochSeconds();
           preserveInfo();
           break;
       }
@@ -293,17 +268,18 @@ class Controller {
   protected:
     void preserveInfo() {
       StoredInfo storedInfo;
-      storedInfo.timeZone = mTimeZone;
+      storedInfo.timeZoneData = mClockInfo.timeZone.toTimeZoneData();
       storedInfo.medInfo = mMedInfo;
       mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, &storedInfo,
           sizeof(StoredInfo));
     }
 
     void updateDateTime() {
-      mCurrentDateTime = ZonedDateTime(mTimeKeeper.getNow(), mTimeZone);
+      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
+          mClock.getNow(), mClockInfo.timeZone);
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
-      // update the mChangingDateTime.second field with the current second.
+      // update mChangingClockInfo.dateTime with the current second.
       switch (mMode) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
@@ -312,7 +288,7 @@ class Controller {
         case MODE_CHANGE_MINUTE:
         case MODE_CHANGE_SECOND:
           if (!mSecondFieldCleared) {
-            mChangingDateTime.second(mCurrentDateTime.second());
+            mChangingClockInfo.dateTime.second(mClockInfo.dateTime.second());
           }
           break;
       }
@@ -325,9 +301,9 @@ class Controller {
       mPresenter.setBlinkShowState(mBlinkShowState);
 
       switch (mMode) {
-        case MODE_DATE_TIME:
-        case MODE_TIME_ZONE:
-          mPresenter.setDateTime(mCurrentDateTime);
+        case MODE_VIEW_DATE_TIME:
+          mPresenter.setDateTime(mClockInfo.dateTime);
+          mPresenter.setTimeZone(mClockInfo.timeZone);
           break;
 
         case MODE_CHANGE_YEAR:
@@ -336,17 +312,16 @@ class Controller {
         case MODE_CHANGE_HOUR:
         case MODE_CHANGE_MINUTE:
         case MODE_CHANGE_SECOND:
-        case MODE_CHANGE_TIME_ZONE_HOUR:
-        case MODE_CHANGE_TIME_ZONE_MINUTE:
-        case MODE_CHANGE_TIME_ZONE_DST:
-          mPresenter.setDateTime(mChangingDateTime);
+        case MODE_CHANGE_TIME_ZONE_NAME:
+          mPresenter.setDateTime(mChangingClockInfo.dateTime);
+          mPresenter.setTimeZone(mChangingClockInfo.timeZone);
           break;
 
         case MODE_VIEW_MED: {
-          if (mCurrentDateTime.isError()) {
+          if (mClockInfo.dateTime.isError()) {
             mPresenter.setTimePeriod(TimePeriod(0));
           } else {
-            int32_t now = mCurrentDateTime.toSecondsSinceEpoch();
+            int32_t now = mClockInfo.dateTime.toEpochSeconds();
             int32_t remainingSeconds = mMedInfo.startTime
                 + mMedInfo.interval.toSeconds() - now;
             TimePeriod remainingTime(remainingSeconds);
@@ -378,18 +353,21 @@ class Controller {
 
   protected:
     static const uint16_t kCacheSize = 2;
+    static const basic::ZoneInfo* const kZoneRegistry[];
+    static const uint16_t kZoneRegistrySize;
 
-    TimeKeeper& mTimeKeeper;
+    Clock& mClock;
     hw::CrcEeprom& mCrcEeprom;
     Presenter& mPresenter;
     BasicZoneManager<kCacheSize> mZoneManager;;
 
     uint8_t mMode; // current mode
-    TimeZone mTimeZone; // current time zone of clock
-    ZonedDateTime mCurrentDateTime; // ZonedDateTime from the TimeKeeper
-    ZonedDateTime mChangingDateTime; // ZonedDateTime set by user in "Change" modes
+    ClockInfo mClockInfo; // current clock
+    ClockInfo mChangingClockInfo; // target clock (in change mode)
     MedInfo mMedInfo; // current med info
-    MedInfo mChangingMedInfo; // med info in "Change" modes
+    MedInfo mChangingMedInfo; // target med info (in change mode)
+
+    uint16_t mZoneIndex;
     bool mSecondFieldCleared;
     bool mSuppressBlink; // true if blinking should be suppressed
 
@@ -397,7 +375,5 @@ class Controller {
     uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
     bool mIsPreparingToSleep = false;
 };
-
-}
 
 #endif

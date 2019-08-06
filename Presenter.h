@@ -5,8 +5,7 @@
 #include <AceTime.h>
 #include <ace_time/common/DateStrings.h>
 #include "RenderingInfo.h"
-
-namespace med_minder {
+#include "ClockInfo.h"
 
 using namespace ace_time;
 using namespace ace_time::common;
@@ -41,6 +40,10 @@ class Presenter {
       mRenderingInfo.dateTime = dateTime;
     }
 
+    void setTimeZone(const TimeZone& timeZone) {
+      mRenderingInfo.timeZone = timeZone;
+    }
+
     void setTimePeriod(const TimePeriod& timePeriod) {
       mRenderingInfo.timePeriod = timePeriod;
     }
@@ -56,47 +59,106 @@ class Presenter {
   private:
     void displayData() const {
       mOled.home();
-      mOled.setFont(lcd5x7);
-      mOled.set2X();
 
       switch (mRenderingInfo.mode) {
-        case MODE_DATE_TIME:
+        case MODE_VIEW_MED:
+          displayViewMed();
+          break;
+
+        case MODE_VIEW_DATE_TIME:
+          displayViewDateTime();
+          break;
+
+        case MODE_VIEW_ABOUT:
+          displayViewAbout();
+          break;
+
+        case MODE_CHANGE_MED_HOUR:
+        case MODE_CHANGE_MED_MINUTE:
+          displayChangeMed();
+          break;
+
+        case MODE_CHANGE_TIME_ZONE_NAME:
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
         case MODE_CHANGE_HOUR:
         case MODE_CHANGE_MINUTE:
         case MODE_CHANGE_SECOND:
-          displayDateTime();
-          break;
-
-        case MODE_TIME_ZONE:
-        case MODE_CHANGE_TIME_ZONE_HOUR:
-        case MODE_CHANGE_TIME_ZONE_MINUTE:
-        case MODE_CHANGE_TIME_ZONE_DST:
-          displayTimeZone();
-          break;
-
-        case MODE_VIEW_MED:
-          displayTimeRemaining();
-          break;
-        case MODE_CHANGE_MED_HOUR:
-        case MODE_CHANGE_MED_MINUTE:
-          displayMedInterval();
+          displayViewDateTime();
           break;
       }
     }
 
-    void displayDateTime() const {
+    void displayViewMed() const {
+    #if ENABLE_SERIAL == 1
+      SERIAL_PORT_MONITOR.println(F("displayViewMed()"));
+    #endif
+      mOled.setFont(fixed_bold10x15);
+      mOled.set1X();
+
+      mOled.println(F("Med due"));
+      mRenderingInfo.timePeriod.printTo(mOled);
+      mOled.clearToEOL();
+    }
+
+    void displayViewAbout() const {
+    #if ENABLE_SERIAL == 1
+      SERIAL_PORT_MONITOR.println(F("displayViewAbout()"));
+    #endif
+      mOled.setFont(SystemFont5x7);
+      mOled.set1X();
+
+      mOled.print(F("MedMinder: "));
+      mOled.println(MED_MINDER_VERSION_STRING);
+      mOled.print(F("TZ: "));
+      mOled.println(zonedb::kTzDatabaseVersion);
+      mOled.print(F("AceTime: "));
+      mOled.print(ACE_TIME_VERSION_STRING);
+    }
+
+
+    void displayChangeMed() const {
+      mOled.println("Med intrvl");
+
+      if (shouldShowFor(MODE_CHANGE_MED_HOUR)) {
+        printPad2(mOled, mRenderingInfo.timePeriod.hour());
+      } else {
+        mOled.print("  ");
+      }
+      mOled.print(':');
+      if (shouldShowFor(MODE_CHANGE_MED_MINUTE)) {
+        printPad2(mOled, mRenderingInfo.timePeriod.minute());
+      } else {
+        mOled.print("  ");
+      }
+
+      mOled.clearToEOL();
+    }
+
+    void displayViewDateTime() const {
+    #if ENABLE_SERIAL == 1
+      SERIAL_PORT_MONITOR.println(F("displayViewDateTime()"));
+    #endif
+      mOled.setFont(fixed_bold10x15);
+      mOled.set1X();
+
+      displayDate();
+      mOled.println();
+      displayTime();
+      mOled.println();
+      displayTimeZone();
+    }
+
+    void displayDate() const {
       const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
 
-      // Date
       if (dateTime.isError()) {
-        mOled.print("<INVALID>");
+        mOled.print(F("<INVALID>"));
         return;
       }
       if (shouldShowFor(MODE_CHANGE_YEAR)) {
-        printPad2(mOled, dateTime.year());
+        mOled.print(dateTime.year());
       } else {
         mOled.print("    ");
       }
@@ -113,9 +175,11 @@ class Presenter {
         mOled.print("  ");
       }
       mOled.clearToEOL();
-      mOled.println();
+    }
 
-      // time
+    void displayTime() const {
+      const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
+
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
         printPad2(mOled, dateTime.hour());
       } else {
@@ -142,56 +206,23 @@ class Presenter {
     }
 
     void displayTimeZone() const {
-      const TimeZone& timeZone = mRenderingInfo.dateTime.timeZone();
-      int8_t sign;
-      uint8_t hour;
-      uint8_t minute;
-      timeZone.extractStandardHourMinute(sign, hour, minute);
-
-      mOled.print("UTC");
-      if (shouldShowFor(MODE_CHANGE_TIME_ZONE_HOUR)) {
-        mOled.print((sign < 0) ? '-' : '+');
-        printPad2(mOled, hour);
-      } else {
-        mOled.print("   ");
+      const TimeZone& tz = mRenderingInfo.dateTime.timeZone();
+      switch (tz.getType()) {
+        case TimeZone::kTypeBasic:
+        case TimeZone::kTypeExtended:
+        case TimeZone::kTypeBasicManaged:
+        case TimeZone::kTypeExtendedManaged:
+          // Print name of timezone
+          if (shouldShowFor(MODE_CHANGE_TIME_ZONE_NAME)) {
+            tz.printShortTo(mOled);
+          }
+          mOled.clearToEOL();
+          break;
+        default:
+          mOled.print(F("<unknown>"));
+          mOled.clearToEOL();
+          break;
       }
-      mOled.print(':');
-      if (shouldShowFor(MODE_CHANGE_TIME_ZONE_MINUTE)) {
-        printPad2(mOled, minute);
-      } else {
-        mOled.print("  ");
-      }
-      mOled.println();
-      mOled.print("DST: ");
-      if (shouldShowFor(MODE_CHANGE_TIME_ZONE_DST)) {
-        mOled.print(timeZone.isDst() ? "on " : "off");
-      } else {
-        mOled.print("   ");
-      }
-    }
-
-    void displayTimeRemaining() const {
-      mOled.println("Med due");
-      mRenderingInfo.timePeriod.printTo(mOled);
-      mOled.clearToEOL();
-    }
-
-    void displayMedInterval() const {
-      mOled.println("Med intrvl");
-
-      if (shouldShowFor(MODE_CHANGE_MED_HOUR)) {
-        printPad2(mOled, mRenderingInfo.timePeriod.hour());
-      } else {
-        mOled.print("  ");
-      }
-      mOled.print(':');
-      if (shouldShowFor(MODE_CHANGE_MED_MINUTE)) {
-        printPad2(mOled, mRenderingInfo.timePeriod.minute());
-      } else {
-        mOled.print("  ");
-      }
-
-      mOled.clearToEOL();
     }
 
     /**
@@ -225,7 +256,5 @@ class Presenter {
     RenderingInfo mRenderingInfo;
     RenderingInfo mPrevRenderingInfo;
 };
-
-}
 
 #endif
