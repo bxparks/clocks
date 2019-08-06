@@ -41,10 +41,17 @@ class Controller {
       bool isValid = mCrcEeprom.readWithCrc(kStoredInfoEepromAddress,
           &storedInfo, sizeof(StoredInfo));
       if (isValid) {
+      #if ENABLE_SERIAL == 1
+        SERIAL_PORT_MONITOR.println(F("setup(): valid StoredInfo"));
+      #endif
         mClockInfo.timeZone = mZoneManager.createForTimeZoneData(
             storedInfo.timeZoneData);
         mMedInfo = storedInfo.medInfo;
       } else {
+      #if ENABLE_SERIAL == 1
+        SERIAL_PORT_MONITOR.println(
+            F("setup(): invalid StoredInfo; initialiing"));
+      #endif
         mClockInfo.timeZone = mZoneManager.createForZoneInfo(
             &zonedb::kZoneAmerica_Los_Angeles);
         mMedInfo.interval = TimePeriod(86400); // one day
@@ -149,6 +156,7 @@ class Controller {
     void saveDateTime() {
       mClockInfo = mChangingClockInfo;
       mClock.setNow(mClockInfo.dateTime.toEpochSeconds());
+      preserveInfo();
     }
 
     void saveMedInterval() {
