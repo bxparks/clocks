@@ -32,6 +32,14 @@
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
+#elif defined(AUNITER_MICRO) || defined(AUNITER_NANO) || \
+    defined(AUNITER_ESP8266) || defined(AUNITER_ESP32)
+  #define ENABLE_SERIAL 0
+  #define ENABLE_LOW_POWER 0
+  #define TIME_PROVIDER TIME_PROVIDER_DS3231
+  #define OLED_REMAP false
+  #define MODE_BUTTON_PIN 8
+  #define CHANGE_BUTTON_PIN 9
 #elif defined(AUNITER_MICRO_MINDER)
   #define ENABLE_SERIAL 0
   #define ENABLE_LOW_POWER 0
