@@ -132,7 +132,7 @@ class Controller {
         case MODE_CHANGE_MED_HOUR:
         case MODE_CHANGE_MED_MINUTE:
           saveMedInterval();
-          mMode = MODE_CHANGE_YEAR;
+          mMode = MODE_VIEW_MED;
           break;
 
         case MODE_VIEW_DATE_TIME:
