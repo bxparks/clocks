@@ -25,11 +25,12 @@
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
+
+#include "config.h"
 #if ENABLE_LOW_POWER == 1
   #include <LowPower.h>
   #include <EnableInterrupt.h>
 #endif
-#include "config.h"
 #include "Presenter.h"
 #include "Controller.h"
 #include <ace_time/hw/HardwareDateTime.h>
@@ -105,7 +106,10 @@ COROUTINE(runController) {
 #define RUN_MODE_SLEEPING 1
 #define RUN_MODE_DREAMING 2
 
-uint8_t runMode = RUN_MODE_AWAKE;
+static uint16_t lastUserActionMillis;
+
+#if ENABLE_LOW_POWER == 1
+volatile uint8_t runMode = RUN_MODE_AWAKE;
 
 void buttonInterrupt() {
   runMode = RUN_MODE_AWAKE;
@@ -113,33 +117,36 @@ void buttonInterrupt() {
 
 const uint16_t SLEEP_DELAY_MILLIS = 5000;
 
-static uint16_t lastUserActionMillis;
-
-#if ENABLE_LOW_POWER == 1
 static bool isWakingUp;
 
 COROUTINE(manageSleep) {
   COROUTINE_LOOP() {
+    // Go to sleep if more than 5 seconds passes after the last user action.
     COROUTINE_AWAIT((uint16_t) ((uint16_t) millis() - lastUserActionMillis)
         >= SLEEP_DELAY_MILLIS);
     controller.prepareToSleep();
-    if (ENABLE_SERIAL) SERIAL_PORT_MONITOR.println("Powering down");
-    COROUTINE_DELAY(500);
+    if (ENABLE_SERIAL) {
+      SERIAL_PORT_MONITOR.println("Powering down");
+      COROUTINE_DELAY(500);
+    }
 
     runMode = RUN_MODE_SLEEPING;
     // What happens if a button is pressed right here?
     while (true) {
       isWakingUp = false;
       LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+
+      // Check if button caused wakeup.
       if (runMode == RUN_MODE_AWAKE) break;
 
       isWakingUp = true;
       if (ENABLE_SERIAL) {
         SERIAL_PORT_MONITOR.println(
             F("Dreaming for 1000ms... then going back to sleep"));
+        COROUTINE_DELAY(500);
       }
       runMode = RUN_MODE_DREAMING;
-      COROUTINE_DELAY(1000);
+      COROUTINE_DELAY(250);
     }
 
     if (ENABLE_SERIAL) SERIAL_PORT_MONITOR.println("Powering up");

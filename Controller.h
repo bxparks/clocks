@@ -30,8 +30,9 @@ class Controller {
     static const int16_t kDstOffsetMinutes = 60;
 
     /** Constructor. */
-    Controller(Clock& Clock, hw::CrcEeprom& crcEeprom, Presenter& presenter):
-        mClock(Clock),
+    Controller(SystemClock& clock, hw::CrcEeprom& crcEeprom,
+          Presenter& presenter):
+        mClock(clock),
         mCrcEeprom(crcEeprom),
         mPresenter(presenter)
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
@@ -68,18 +69,24 @@ class Controller {
       mMode = MODE_VIEW_MED;
     }
 
+    void syncClock() {
+      mClock.forceSync();
+      acetime_t nowSeconds = mClock.getNow();
+      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
+          nowSeconds, mClockInfo.timeZone);
+    }
+
     /** Wake from sleep. */
     void wakeup() {
       mIsPreparingToSleep = false;
-      // TODO: might need to replace this with a special wakeup() method
-      //mClock.setup();
-      setup();
+      mPresenter.wakeup();
+      syncClock(); // sync from reference clock
     }
 
     /** Prepare to sleep. */
     void prepareToSleep() {
       mIsPreparingToSleep = true;
-      mPresenter.clearDisplay();
+      mPresenter.prepareToSleep();
     }
 
     void modeButtonPress()  {
@@ -481,7 +488,7 @@ class Controller {
     static const basic::ZoneInfo* const kZoneRegistry[];
     static const uint16_t kZoneRegistrySize;
 
-    Clock& mClock;
+    SystemClock& mClock;
     hw::CrcEeprom& mCrcEeprom;
     Presenter& mPresenter;
   #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC

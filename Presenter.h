@@ -44,6 +44,14 @@ class Presenter {
       mRenderingInfo.timePeriod = clockInfo.medInterval;
     }
 
+    void prepareToSleep() {
+      mOled.ssd1306WriteCmd(SSD1306_DISPLAYOFF);
+    }
+
+    void wakeup() {
+      mOled.ssd1306WriteCmd(SSD1306_DISPLAYON);
+    }
+
   private:
     void displayData() const {
       mOled.home();
