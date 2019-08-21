@@ -59,7 +59,7 @@
   #define CHANGE_BUTTON_PIN 9
 #elif defined(AUNITER_MINI_MINDER)
   #define ENABLE_SERIAL 0
-  #define ENABLE_LOW_POWER 0
+  #define ENABLE_LOW_POWER 1
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 2

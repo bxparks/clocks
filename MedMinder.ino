@@ -1,23 +1,44 @@
 /*
- * A medication reminder app. The hardware dependencies are:
- *   * a DS3231 RTC chip
- *   * an SSD1306 OLED display
- *   * 2 push buttons
+ * A medication reminder app. There are 2 buttons, the Mode button and the
+ * Change button. Press and hold the Mode button to set the time interval
+ * between doses (e.g. 24h00m). A countdown clock is shown. Press the "Change"
+ * button to reset the countdown clock. Press and hold the Mode button to change
+ * the time and date. Press and hold the Mode button to change the TimeZone. The
+ * TimeZone is either a UTC offset plus a DST flag, or a TimeZone identifier
+ * (e.g. "Los_Angeles" or "Denver").
+ *
+ * The hardware dependencies are:
+ *
+ *    * Arduino Pro Mini
+ *    * a DS3231 RTC chip
+ *    * an SSD1306 OLED display
+ *    * 2 push buttons
  *
  * The library dependencies are:
- *   * AceButton
- *   * AceRoutine
- *   * AceTime
- *   * FastCRC
- *   * SDD1306Ascii
- *   * EEPROM (Arduino builtin)
- *   * Wire (Arduino builtin)
+ *    * AceButton (https://github.com/bxparks/AceButton)
+ *    * AceRoutine (https://github.com/bxparks/AceRoutine)
+ *    * AceTime (https://github.com/bxparks/AceTime)
+ *    * FastCRC (https://github.com/FrankBoesing/FastCRC)
+ *    * SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
+ *    * Low-Power (https://github.com/rocketscream/Low-Power)
+ *    * EnableInterrupt (https://github.com/GreyGnome/EnableInterrupt)
+ *    * EEPROM (Arduino builtin)
+ *    * Wire (Arduino builtin)
  *
- * Supported boards are:
- *   * Arduino Nano
- *   * Arduino Pro Mini
- *   * SparkFun Pro Micro
- *   * ESP8266
+ * Other boards that may work are:
+ *    * Arduino Nano
+ *    * Arduino Pro Mini
+ *    * SparkFun Pro Micro
+ *    * ESP8266
+ *
+ * Power usage:
+ *    * Pro Mini 5V 16MHz (w/ power LED)
+ *      * Normal: 12 mA
+ *      * Sleep: 420 uA
+ *    * Pro Mini 3.3V 8Mhz (w/ power LED removed)
+ *      * Normal: 7-9 mA (depending on OLED display)
+ *      * Sleep: 162 uA
+ *    * 3 x 800mAh NiMh AAA batteries should last about 200 days.
  */
 
 #include <Wire.h>
@@ -55,10 +76,10 @@ hw::CrcEeprom crcEeprom;
 
 #if TIME_PROVIDER == TIME_PROVIDER_DS3231
   DS3231Clock dsClock;
-  SystemClockCoroutine systemClock(&dsClock, &dsClock);
+  SystemClockCoroutine systemClock(&dsClock /*reference*/, &dsClock /*backup*/);
 #elif TIME_PROVIDER == TIME_PROVIDER_NTP
   NtpClock ntpClock;
-  SystemClockCoroutine systemClock(&ntpClock, nullptr /*backup*/);
+  SystemClockCoroutine systemClock(&ntpClock /*reference*/, nullptr /*backup*/);
 #else
   SystemClockCoroutine systemClock(nullptr, nullptr);
 #endif
@@ -134,7 +155,7 @@ COROUTINE(manageSleep) {
     // What happens if a button is pressed right here?
     while (true) {
       isWakingUp = false;
-      LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+      LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
 
       // Check if button caused wakeup.
       if (runMode == RUN_MODE_AWAKE) break;
