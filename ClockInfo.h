@@ -10,6 +10,12 @@ struct ClockInfo {
 
   /** Current time. */
   ace_time::ZonedDateTime dateTime;
+
+  /** Time when the last pill was taken. */
+  uint32_t medStartTime;
+
+  /** How often the pill should be taken. */
+  TimePeriod medInterval;
 };
 
 #endif

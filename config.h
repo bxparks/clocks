@@ -19,6 +19,14 @@
 #define TIME_PROVIDER_NTP 1
 #define TIME_PROVIDER_SYSTEM 2
 
+// Determine type of TimeZone to use: Manual, Basic or Extended.
+//    * Manual will work on all microcontrollers
+//    * Basic is too big for the Pro Micro
+//    * Extended is too big for the Pro Micro and Nano
+#define TIME_ZONE_TYPE_MANUAL 0
+#define TIME_ZONE_TYPE_BASIC 1
+#define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
+
 //------------------------------------------------------------------
 // Configuration of target environment. The environment is defined in
 // $HOME/.auniter.ini and the AUNITER_XXX macro is set by auniter.sh.
@@ -41,10 +49,12 @@
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
 #elif defined(AUNITER_MICRO_MINDER)
+  #undef TIME_ZONE_TYPE
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_MANUAL
   #define ENABLE_SERIAL 0
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
-  #define OLED_REMAP false
+  #define OLED_REMAP true
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
 #elif defined(AUNITER_MINI_MINDER)
@@ -87,19 +97,27 @@
 static const uint8_t MODE_UNKNOWN = 0; // uninitialized
 static const uint8_t MODE_VIEW_MED = 1;
 static const uint8_t MODE_VIEW_DATE_TIME = 2;
-static const uint8_t MODE_VIEW_ABOUT = 3;
+static const uint8_t MODE_VIEW_TIME_ZONE = 3;
+static const uint8_t MODE_VIEW_ABOUT = 4;
 
 // Change Med info
-static const uint8_t MODE_CHANGE_MED_HOUR = 20;
-static const uint8_t MODE_CHANGE_MED_MINUTE = 21;
+static const uint8_t MODE_CHANGE_MED_HOUR = 10;
+static const uint8_t MODE_CHANGE_MED_MINUTE = 11;
 
 // Change date/time modes
-static const uint8_t MODE_CHANGE_YEAR = 10;
-static const uint8_t MODE_CHANGE_MONTH = 11;
-static const uint8_t MODE_CHANGE_DAY = 12;
-static const uint8_t MODE_CHANGE_HOUR = 13;
-static const uint8_t MODE_CHANGE_MINUTE = 14;
-static const uint8_t MODE_CHANGE_SECOND = 15;
-static const uint8_t MODE_CHANGE_TIME_ZONE_NAME = 16;
+static const uint8_t MODE_CHANGE_YEAR = 20;
+static const uint8_t MODE_CHANGE_MONTH = 21;
+static const uint8_t MODE_CHANGE_DAY = 22;
+static const uint8_t MODE_CHANGE_HOUR = 23;
+static const uint8_t MODE_CHANGE_MINUTE = 24;
+static const uint8_t MODE_CHANGE_SECOND = 25;
+
+
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+static const uint8_t MODE_CHANGE_TIME_ZONE_OFFSET = 30;
+static const uint8_t MODE_CHANGE_TIME_ZONE_DST = 31;
+#else
+static const uint8_t MODE_CHANGE_TIME_ZONE_NAME = 30;
+#endif
 
 #endif

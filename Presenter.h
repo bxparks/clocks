@@ -34,26 +34,14 @@ class Presenter {
     /** Clear the display. */
     void clearDisplay() { mOled.clear(); }
 
-    void setMode(uint8_t mode) { mRenderingInfo.mode = mode; }
-
-    void setDateTime(const ZonedDateTime& dateTime) {
-      mRenderingInfo.dateTime = dateTime;
-    }
-
-    void setTimeZone(const TimeZone& timeZone) {
-      mRenderingInfo.timeZone = timeZone;
-    }
-
-    void setTimePeriod(const TimePeriod& timePeriod) {
-      mRenderingInfo.timePeriod = timePeriod;
-    }
-
-    void setSuppressBlink(bool suppressBlink) {
+    void setRenderingInfo(uint8_t mode, bool suppressBlink, bool blinkShowState,
+        const ClockInfo& clockInfo) {
+      mRenderingInfo.mode = mode;
       mRenderingInfo.suppressBlink = suppressBlink;
-    }
-
-    void setBlinkShowState(bool blinkShowState) {
       mRenderingInfo.blinkShowState = blinkShowState;
+      mRenderingInfo.timeZone = clockInfo.timeZone;
+      mRenderingInfo.dateTime = clockInfo.dateTime;
+      mRenderingInfo.timePeriod = clockInfo.medInterval;
     }
 
   private:
@@ -62,15 +50,25 @@ class Presenter {
 
       switch (mRenderingInfo.mode) {
         case MODE_VIEW_MED:
-          displayViewMed();
+          displayMed();
           break;
 
         case MODE_VIEW_DATE_TIME:
-          displayViewDateTime();
+          displayDateTime();
           break;
 
         case MODE_VIEW_ABOUT:
-          displayViewAbout();
+          displayAbout();
+          break;
+
+        case MODE_VIEW_TIME_ZONE:
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        case MODE_CHANGE_TIME_ZONE_OFFSET:
+        case MODE_CHANGE_TIME_ZONE_DST:
+      #else
+        case MODE_CHANGE_TIME_ZONE_NAME:
+      #endif
+          displayTimeZone();
           break;
 
         case MODE_CHANGE_MED_HOUR:
@@ -78,21 +76,20 @@ class Presenter {
           displayChangeMed();
           break;
 
-        case MODE_CHANGE_TIME_ZONE_NAME:
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
         case MODE_CHANGE_HOUR:
         case MODE_CHANGE_MINUTE:
         case MODE_CHANGE_SECOND:
-          displayViewDateTime();
+          displayDateTime();
           break;
       }
     }
 
-    void displayViewMed() const {
+    void displayMed() const {
     #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("displayViewMed()"));
+      SERIAL_PORT_MONITOR.println(F("displayMed()"));
     #endif
       mOled.setFont(fixed_bold10x15);
       mOled.set1X();
@@ -102,9 +99,9 @@ class Presenter {
       mOled.clearToEOL();
     }
 
-    void displayViewAbout() const {
+    void displayAbout() const {
     #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("displayViewAbout()"));
+      SERIAL_PORT_MONITOR.println(F("displayAbout()"));
     #endif
       mOled.setFont(SystemFont5x7);
       mOled.set1X();
@@ -148,9 +145,9 @@ class Presenter {
       mOled.clearToEOL();
     }
 
-    void displayViewDateTime() const {
+    void displayDateTime() const {
     #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("displayViewDateTime()"));
+      SERIAL_PORT_MONITOR.println(F("displayDateTime()"));
     #endif
       mOled.setFont(fixed_bold10x15);
       mOled.set1X();
@@ -158,8 +155,6 @@ class Presenter {
       displayDate();
       mOled.println();
       displayTime();
-      mOled.println();
-      displayTimeZone();
     }
 
     void displayDate() const {
@@ -218,8 +213,51 @@ class Presenter {
     }
 
     void displayTimeZone() const {
-      const TimeZone& tz = mRenderingInfo.dateTime.timeZone();
+      const auto& tz = mRenderingInfo.timeZone;
+
+      // Display the timezone using the TimeZoneData, not the dateTime, since
+      // dateTime will contain a TimeZone, which points to the (singular)
+      // Controller::mZoneProcessor, which will contain the old timeZone.
+      mOled.print("TZ: ");
+      const __FlashStringHelper* typeString;
       switch (tz.getType()) {
+        case TimeZone::kTypeManual:
+          typeString = F("manual");
+          break;
+        case TimeZone::kTypeBasic:
+        case TimeZone::kTypeBasicManaged:
+          typeString = F("basic");
+          break;
+        case TimeZone::kTypeExtended:
+        case TimeZone::kTypeExtendedManaged:
+          typeString = F("extd");
+          break;
+        default:
+          typeString = F("unknown");
+      }
+      mOled.print(typeString);
+      mOled.clearToEOL();
+      mOled.println();
+
+      switch (tz.getType()) {
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        case TimeZone::kTypeManual:
+          mOled.println();
+          mOled.print("UTC");
+          if (shouldShowFor(MODE_CHANGE_TIME_ZONE_OFFSET)) {
+            TimeOffset offset = tz.getStdOffset();
+            offset.printTo(mOled);
+          }
+          mOled.clearToEOL();
+
+          mOled.println();
+          mOled.print("DST: ");
+          if (shouldShowFor(MODE_CHANGE_TIME_ZONE_DST)) {
+            mOled.print((tz.getDstOffset().isZero()) ? "off " : "on");
+          }
+          mOled.clearToEOL();
+          break;
+      #else
         case TimeZone::kTypeBasic:
         case TimeZone::kTypeExtended:
         case TimeZone::kTypeBasicManaged:
@@ -230,6 +268,7 @@ class Presenter {
           }
           mOled.clearToEOL();
           break;
+      #endif
         default:
           mOled.print(F("<unknown>"));
           mOled.clearToEOL();

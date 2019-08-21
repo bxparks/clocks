@@ -123,7 +123,7 @@ COROUTINE(manageSleep) {
     COROUTINE_AWAIT((uint16_t) ((uint16_t) millis() - lastUserActionMillis)
         >= SLEEP_DELAY_MILLIS);
     controller.prepareToSleep();
-    SERIAL_PORT_MONITOR.println("Powering down");
+    if (ENABLE_SERIAL) SERIAL_PORT_MONITOR.println("Powering down");
     COROUTINE_DELAY(500);
 
     runMode = RUN_MODE_SLEEPING;
@@ -134,13 +134,15 @@ COROUTINE(manageSleep) {
       if (runMode == RUN_MODE_AWAKE) break;
 
       isWakingUp = true;
-      SERIAL_PORT_MONITOR.println(
-          F("Dreaming for 1000ms... then going back to sleep"));
+      if (ENABLE_SERIAL) {
+        SERIAL_PORT_MONITOR.println(
+            F("Dreaming for 1000ms... then going back to sleep"));
+      }
       runMode = RUN_MODE_DREAMING;
       COROUTINE_DELAY(1000);
     }
 
-    SERIAL_PORT_MONITOR.println("Powering up");
+    if (ENABLE_SERIAL) SERIAL_PORT_MONITOR.println("Powering up");
     controller.wakeup();
     isWakingUp = true;
     lastUserActionMillis = millis();
