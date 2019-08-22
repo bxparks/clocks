@@ -35,10 +35,16 @@
  *    * Pro Mini 5V 16MHz (w/ power LED)
  *      * Normal: 12 mA
  *      * Sleep: 420 uA
- *    * Pro Mini 3.3V 8Mhz (w/ power LED removed)
+ *      * Powered by 3 x 800mAh NiMh AAA batteries
+ *    * Pro Mini 3.3V 8Mhz (w/o power LED)
  *      * Normal: 7-9 mA (depending on OLED display)
  *      * Sleep: 162 uA
- *    * 3 x 800mAh NiMh AAA batteries should last about 200 days.
+ *      * Powered by 3 x 800mAh NiMh AAA batteries
+ *        * should last about 200 days.
+ *    * Pro Micro 5V 16MHz (w/o power LED)
+ *      * Normal: 19-24 mA (depending on OLED display)
+ *      * Sleep: 288 uA
+ *      * Powered by 3 AAA (3.9V)
  */
 
 #include <Wire.h>
