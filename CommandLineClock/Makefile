@@ -4,4 +4,8 @@
 LDFLAGS := -lz
 APP_NAME := CommandLineClock
 ARDUINO_LIBS := AceTime AceRoutine
-include ../../../UnixHostDuino/UnixHostDuino.mk
+MORE_CLEAN := more_clean
+include ../../UnixHostDuino/UnixHostDuino.mk
+
+more_clean:
+	rm -f commandline.dat
