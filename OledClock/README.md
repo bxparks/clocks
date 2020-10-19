@@ -78,6 +78,16 @@ ignore those. The various `AUNITER_xxx` symbols are defined by the
 normally use for compiling and uploading. You do *not* need to use AUniter, you
 can use just the normal Arduino IDE.
 
+## Installations
+
+The following libraries are required:
+
+* AceTime (https://github.com/bxparks/AceTime)
+* AceButton (https://github.com/bxparks/AceButton)
+* AceRoutine (https://github.com/bxparks/AceRoutine)
+* SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
+* FastCRC (https://github.com/FrankBoesing/FastCRC)
+
 ## User Guide
 
 Once the program is uploaded and running, here is how to set and operate the
