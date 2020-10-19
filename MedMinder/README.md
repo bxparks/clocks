@@ -11,6 +11,8 @@ The following libraries are required:
 * AceRoutine (https://github.com/bxparks/AceRoutine)
 * SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
 * FastCRC (https://github.com/FrankBoesing/FastCRC)
+* EnableInterrupt (https://github.com/GreyGnome/EnableInterrupt)
+* LowPower (https://github.com/rocketscream/Low-Power)
 
 ## User Guide
 
