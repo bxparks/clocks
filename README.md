@@ -10,3 +10,5 @@ AceTime library (https://github.com/bxparks/AceTime).
     * A clock with a single SSD1306 OLED display, supporting a single timezone.
 * [WorldClock](OledClock)
     * A clock with 3 SSD1306 OLED displays, supporting 3 concurrent timezones.
+* [MedMinder](MedMinder)
+    * A medication reminder device.
