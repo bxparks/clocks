@@ -54,7 +54,17 @@ SCL, SDA = I2C pins
 
 ![WorldClock](WorldClock.jpg)
 
-## Installation and User Guide
+## Installation
+
+The following libraries are required:
+
+* AceTime (https://github.com/bxparks/AceTime)
+* AceButton (https://github.com/bxparks/AceButton)
+* AceRoutine (https://github.com/bxparks/AceRoutine)
+* SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
+* FastCRC (https://github.com/FrankBoesing/FastCRC)
+
+## User Guide
 
 I don't have the time to write a documentation for this, but structure of the
 code for WorldClock is very similar to [OledClock](../OledClock) so the notes
