@@ -2,14 +2,14 @@
 #define WORLD_CLOCK_CONTROLLER_H
 
 #include <AceTime.h>
-#include <ace_time/hw/CrcEeprom.h>
+#include <CrcEeprom.h>
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
 #include "Presenter.h"
 
 using namespace ace_time;
-using namespace ace_time::common;
 using namespace ace_time::clock;
+using crc_eeprom::CrcEeprom;
 
 /**
  * Maintains the internal state of the world clock, handling button inputs,
@@ -27,7 +27,7 @@ class Controller {
      * @param crcEeprom stores objects into the EEPROM with CRC
      * @param presenter renders the date and time info to the screen
      */
-    Controller(Clock& clock, hw::CrcEeprom& crcEeprom,
+    Controller(Clock& clock, CrcEeprom& crcEeprom,
             Presenter& presenter0, Presenter& presenter1, Presenter& presenter2,
             const TimeZone& tz0, const TimeZone& tz1, const TimeZone& tz2,
             const char* name0, const char* name1, const char* name2):
@@ -354,7 +354,7 @@ class Controller {
     Controller& operator=(const Controller&) = delete;
 
     Clock& mClock;
-    hw::CrcEeprom& mCrcEeprom;
+    CrcEeprom& mCrcEeprom;
     Presenter& mPresenter0;
     Presenter& mPresenter1;
     Presenter& mPresenter2;

@@ -3,12 +3,13 @@
 
 #include <AceTime.h>
 #if ! defined(ARDUINO_ARCH_SAMD)
-  #include <ace_time/hw/CrcEeprom.h>
+  #include <CrcEeprom.h>
 #endif
 #include "config.h"
 #include "StoredInfo.h"
 
 using namespace ace_time;
+using crc_eeprom::CrcEeprom;
 
 class PersistentStore {
   public:
@@ -48,7 +49,7 @@ class PersistentStore {
     // Must be >= (sizeof(StoredInfo) + 4).
     static const uint8_t kEepromSize = sizeof(StoredInfo) + 4;
 
-    hw::CrcEeprom mCrcEeprom;
+    CrcEeprom mCrcEeprom;
   #endif
 };
 

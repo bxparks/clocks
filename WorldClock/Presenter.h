@@ -7,7 +7,7 @@
 #include "config.h"
 
 using namespace ace_time;
-using namespace ace_time::common;
+using ace_common::printPad2To;
 
 /**
  * Class that knows how to render a specific Mode on the OLED display.
@@ -113,14 +113,14 @@ class Presenter {
         } else if (hour > 12) {
           hour -= 12;
         }
-        printPad2(mOled, hour, ' ');
+        printPad2To(mOled, hour, ' ');
       } else {
-        printPad2(mOled, hour);
+        printPad2To(mOled, hour, '0');
       }
       mOled.print(
           (! mRenderingInfo.blinkingColon || shouldShowFor(MODE_DATE_TIME))
           ? ':' : ' ');
-      printPad2(mOled, dateTime.minute());
+      printPad2To(mOled, dateTime.minute(), '0');
 
       // AM/PM indicator
       mOled.set1X();
@@ -135,9 +135,9 @@ class Presenter {
 
       mOled.print(DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));
       mOled.print(' ');
-      printPad2(mOled, dateTime.month(), ' ');
+      printPad2To(mOled, dateTime.month(), ' ');
       mOled.print('/');
-      printPad2(mOled, dateTime.day(), '0');
+      printPad2To(mOled, dateTime.day(), '0');
       mOled.print(' ');
       mOled.clearToEOL();
 
@@ -167,13 +167,13 @@ class Presenter {
       }
       mOled.print('-');
       if (shouldShowFor(MODE_CHANGE_MONTH)) {
-        printPad2(mOled, dateTime.month());
+        printPad2To(mOled, dateTime.month(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print('-');
       if (shouldShowFor(MODE_CHANGE_DAY)) {
-        printPad2(mOled, dateTime.day());
+        printPad2To(mOled, dateTime.day(), '0');
       } else{
         mOled.print("  ");
       }
@@ -189,22 +189,22 @@ class Presenter {
           } else if (hour > 12) {
             hour -= 12;
           }
-          printPad2(mOled, hour, ' ');
+          printPad2To(mOled, hour, ' ');
         } else {
-          printPad2(mOled, hour);
+          printPad2To(mOled, hour, '0');
         }
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(MODE_CHANGE_MINUTE)) {
-        printPad2(mOled, dateTime.minute());
+        printPad2To(mOled, dateTime.minute(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(MODE_CHANGE_SECOND)) {
-        printPad2(mOled, dateTime.second());
+        printPad2To(mOled, dateTime.second(), '0');
       } else {
         mOled.print("  ");
       }
@@ -258,9 +258,9 @@ class Presenter {
       mOled.print("UTC");
       mOled.print((hour < 0) ? '-' : '+');
       if (hour < 0) hour = -hour;
-      printPad2(mOled, hour);
+      printPad2To(mOled, hour, '0');
       mOled.print(':');
-      printPad2(mOled, minute);
+      printPad2To(mOled, minute, '0');
 
       mOled.println();
       mOled.print("DST: ");

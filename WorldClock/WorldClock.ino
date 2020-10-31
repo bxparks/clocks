@@ -22,7 +22,7 @@
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
-#include <ace_time/hw/CrcEeprom.h>
+#include <CrcEeprom.h>
 #include <SSD1306AsciiSpi.h>
 #include "config.h"
 #include "ClockInfo.h"
@@ -31,6 +31,7 @@
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
+using crc_eeprom::CrcEeprom;
 
 //------------------------------------------------------------------
 // Configure CrcEeprom.
@@ -40,7 +41,7 @@ using namespace ace_time;
 // Should be bigger than (sizeof(crc32) + sizeof(StoredInfo)).
 static const uint16_t EEPROM_SIZE = sizeof(StoredInfo) + sizeof(acetime_t);
 
-hw::CrcEeprom crcEeprom;
+CrcEeprom crcEeprom;
 
 //------------------------------------------------------------------
 // Configure various Clocks.

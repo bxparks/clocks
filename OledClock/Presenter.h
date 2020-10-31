@@ -1,6 +1,7 @@
 #ifndef OLED_CLOCK_PRESERNTER_H
 #define OLED_CLOCK_PRESERNTER_H
 
+#include <AceCommon.h>
 #include <AceTime.h>
 #include <SSD1306AsciiWire.h>
 #include "config.h"
@@ -10,7 +11,7 @@
 #include "Presenter.h"
 
 using namespace ace_time;
-using ace_time::common::printPad2;
+using ace_common::printPad2To;
 
 class Presenter {
   public:
@@ -123,13 +124,13 @@ class Presenter {
       }
       mOled.print('-');
       if (shouldShowFor(MODE_CHANGE_MONTH)) {
-        printPad2(mOled, dateTime.month());
+        printPad2To(mOled, dateTime.month(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print('-');
       if (shouldShowFor(MODE_CHANGE_DAY)) {
-        printPad2(mOled, dateTime.day());
+        printPad2To(mOled, dateTime.day(), '0');
       } else{
         mOled.print("  ");
       }
@@ -145,22 +146,22 @@ class Presenter {
           } else if (hour > 12) {
             hour -= 12;
           }
-          printPad2(mOled, hour, ' ');
+          printPad2To(mOled, hour, ' ');
         } else {
-          printPad2(mOled, hour);
+          printPad2To(mOled, hour, '0');
         }
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(MODE_CHANGE_MINUTE)) {
-        printPad2(mOled, dateTime.minute());
+        printPad2To(mOled, dateTime.minute(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(MODE_CHANGE_SECOND)) {
-        printPad2(mOled, dateTime.second());
+        printPad2To(mOled, dateTime.second(), '0');
       } else {
         mOled.print("  ");
       }

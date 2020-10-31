@@ -52,6 +52,7 @@
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
+#include <CrcEeprom.h>
 
 #include "config.h"
 #if ENABLE_LOW_POWER == 1
@@ -74,7 +75,7 @@ using namespace ace_time;
 // Should be bigger than (sizeof(crc32) + sizeof(StoredInfo)).
 #define EEPROM_SIZE 32
 
-hw::CrcEeprom crcEeprom;
+CrcEeprom crcEeprom;
 
 //------------------------------------------------------------------
 // Configure the SystemClock.

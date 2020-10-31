@@ -8,7 +8,7 @@
 #include "ClockInfo.h"
 
 using namespace ace_time;
-using namespace ace_time::common;
+using ace_common::printPad2To;
 
 /** Class responsible for rendering the information to the OLED display. */
 class Presenter {
@@ -139,13 +139,13 @@ class Presenter {
       mOled.println("Med intrvl");
 
       if (shouldShowFor(MODE_CHANGE_MED_HOUR)) {
-        printPad2(mOled, mRenderingInfo.timePeriod.hour());
+        printPad2To(mOled, mRenderingInfo.timePeriod.hour(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(MODE_CHANGE_MED_MINUTE)) {
-        printPad2(mOled, mRenderingInfo.timePeriod.minute());
+        printPad2To(mOled, mRenderingInfo.timePeriod.minute(), '0');
       } else {
         mOled.print("  ");
       }
@@ -179,13 +179,13 @@ class Presenter {
       }
       mOled.print('-');
       if (shouldShowFor(MODE_CHANGE_MONTH)) {
-        printPad2(mOled, dateTime.month());
+        printPad2To(mOled, dateTime.month(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print('-');
       if (shouldShowFor(MODE_CHANGE_DAY)) {
-        printPad2(mOled, dateTime.day());
+        printPad2To(mOled, dateTime.day(), '0');
       } else{
         mOled.print("  ");
       }
@@ -196,19 +196,19 @@ class Presenter {
       const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
 
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
-        printPad2(mOled, dateTime.hour());
+        printPad2To(mOled, dateTime.hour(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(MODE_CHANGE_MINUTE)) {
-        printPad2(mOled, dateTime.minute());
+        printPad2To(mOled, dateTime.minute(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(MODE_CHANGE_SECOND)) {
-        printPad2(mOled, dateTime.second());
+        printPad2To(mOled, dateTime.second(), '0');
       } else {
         mOled.print("  ");
       }

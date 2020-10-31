@@ -3,7 +3,7 @@
 
 #include <SSD1306AsciiWire.h>
 #include <AceTime.h>
-#include <ace_time/hw/CrcEeprom.h>
+#include <CrcEeprom.h>
 #include "config.h"
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
@@ -12,6 +12,7 @@
 
 using namespace ace_time;
 using namespace ace_time::clock;
+using crc_eeprom::CrcEeprom;
 
 /**
  * Class responsible for handling user button presses, and determining
@@ -30,7 +31,7 @@ class Controller {
     static const int16_t kDstOffsetMinutes = 60;
 
     /** Constructor. */
-    Controller(SystemClock& clock, hw::CrcEeprom& crcEeprom,
+    Controller(SystemClock& clock, CrcEeprom& crcEeprom,
           Presenter& presenter):
         mClock(clock),
         mCrcEeprom(crcEeprom),
@@ -489,7 +490,7 @@ class Controller {
     static const uint16_t kZoneRegistrySize;
 
     SystemClock& mClock;
-    hw::CrcEeprom& mCrcEeprom;
+    CrcEeprom& mCrcEeprom;
     Presenter& mPresenter;
   #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
     BasicZoneManager<kCacheSize> mZoneManager;;

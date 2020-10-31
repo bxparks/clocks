@@ -5,13 +5,13 @@
 
 #include <AceTime.h>
 #if ENABLE_EEPROM
-  #include <ace_time/hw/CrcEeprom.h>
+  #include <CrcEeprom.h>
 #endif
 #include "config.h"
 #include "StoredInfo.h"
 
 using namespace ace_time;
-
+using crc_eeprom::CrcEeprom;
 
 class PersistentStore {
   public:
@@ -56,7 +56,7 @@ class PersistentStore {
     // Must be greater than or equal to (sizeof(StoredInfo) + 4).
     static const uint8_t kEepromSize = sizeof(StoredInfo) + 4;
 
-    hw::CrcEeprom mCrcEeprom;
+    CrcEeprom mCrcEeprom;
   #endif
 };
 
