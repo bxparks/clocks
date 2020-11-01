@@ -1,14 +1,17 @@
 /*
- * A simple command line (i.e. ascii clock using the SERIAL_PORT_MONITOR line. Useful for
- * debugging. Requires no additional hardware in the simple case. Optionally
- * depends on the DS3231 RTC chip, or an NTP client.
+ * A simple command line (i.e. ascii clock using the SERIAL_PORT_MONITOR line.
+ * Useful for debugging. Requires no additional hardware in the simple case.
+ * Optionally depends on the DS3231 RTC chip, or an NTP client.
  *
  * Depends on the following libaries:
  *    * Wire  (built-in to Arduino IDE package)
+ *    * AceCommon (https://github.com/bxparks/AceCommon)
  *    * AceTime (https://github.com/bxparks/AceTime)
  *    * AceRoutine (https://github.com/bxparks/AceRoutine)
+ *    * AceUtils (https://github.com/bxparks/AceUtils)
+ *    * FastCRC (https://github.com/FrankBoesing/FastCRC)
  *
- * Supported boards are:
+ * Supported boards include:
  *    * Arduino Nano
  *    * Arduino Pro Mini
  *    * Arduino Leonardo or Pro Micro

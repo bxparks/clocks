@@ -1,7 +1,11 @@
 # CommandLine Clock
 
-A clock that provides access to basic functionality through a command
-line interface on the Serial port. The following functions are supported:
+A clock that provides access to basic functionality through a command line
+interface on the Serial port. It was primarily created to allow easier debugging
+of the AceTime library (https://github.com/bxparks/AceTime) on a Linux or MacOS
+desktop machine.
+
+The following functions are supported:
 
 ```
 help [command]
@@ -28,8 +32,10 @@ wifi (status | config [{ssid} {password}] | connect)
 ### Arduino
 
 * an Arduino-compatibile board with a serial port
-* AceTime library (https://github.com/bxparks/AceTime)
+* AceCommon library (https://github.com/bxparks/AceCommon)
 * AceRoutine library (https://github.com/bxparks/AceRoutine)
+* AceTime library (https://github.com/bxparks/AceTime)
+* AceUtils library (https://github.com/bxparks/AceUtils)
 * FastCRC (https://github.com/FrankBoesing/FastCRC)
 
 Use the Arduino IDE to compile and upload the program and use the Serial
