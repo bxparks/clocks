@@ -45,14 +45,14 @@
 
 #include <Wire.h>
 #include <AceRoutine.h>
-#include <ace_routine/cli/CommandManager.h>
+#include <CommandLineInterface.h>
 #include <AceTime.h>
 #include "config.h"
 #include "Controller.h"
 #include "PersistentStore.h"
 
 using namespace ace_routine;
-using namespace ace_routine::cli;
+using namespace cli;
 using namespace ace_time;
 using namespace ace_time::clock;
 

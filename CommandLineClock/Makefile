@@ -3,7 +3,7 @@
 
 LDFLAGS := -lz
 APP_NAME := CommandLineClock
-ARDUINO_LIBS := AceCommon AceTime AceRoutine
+ARDUINO_LIBS := AceCommon AceTime AceRoutine AceUtils
 MORE_CLEAN := more_clean
 include ../../UnixHostDuino/UnixHostDuino.mk
 
