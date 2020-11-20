@@ -100,36 +100,39 @@ COROUTINE(displayClock) {
 // Configure AceButton.
 //------------------------------------------------------------------
 
-ButtonConfig modeButtonConfig;
-AceButton modeButton(&modeButtonConfig);
+ButtonConfig buttonConfig;
+AceButton modeButton(&buttonConfig, MODE_BUTTON_PIN);
+AceButton changeButton(&buttonConfig, CHANGE_BUTTON_PIN);
 
-ButtonConfig changeButtonConfig;
-AceButton changeButton(&changeButtonConfig);
-
-void handleModeButton(AceButton* /* button */, uint8_t eventType,
+void handleButton(AceButton* button, uint8_t eventType,
     uint8_t /* buttonState */) {
-  switch (eventType) {
-    case AceButton::kEventReleased:
-      controller.modeButtonPress();
-      break;
-    case AceButton::kEventLongPressed:
-      controller.modeButtonLongPress();
-      break;
-  }
-}
+  uint8_t pin = button->getPin();
 
-void handleChangeButton(AceButton* /* button */, uint8_t eventType,
-    uint8_t /* buttonState */) {
-  switch (eventType) {
-    case AceButton::kEventPressed:
-      controller.changeButtonPress();
-      break;
-    case AceButton::kEventReleased:
-      controller.changeButtonRelease();
-      break;
-    case AceButton::kEventRepeatPressed:
-      controller.changeButtonRepeatPress();
-      break;
+  if (pin == CHANGE_BUTTON_PIN) {
+    switch (eventType) {
+      case AceButton::kEventPressed:
+        controller.changeButtonPress();
+        break;
+
+      case AceButton::kEventReleased:
+      case AceButton::kEventLongReleased:
+        controller.changeButtonRelease();
+        break;
+
+      case AceButton::kEventRepeatPressed:
+        controller.changeButtonRepeatPress();
+        break;
+    }
+  } else if (pin == MODE_BUTTON_PIN) {
+    switch (eventType) {
+      case AceButton::kEventReleased:
+        controller.modeButtonPress();
+        break;
+
+      case AceButton::kEventLongPressed:
+        controller.modeButtonLongPress();
+        break;
+    }
   }
 }
 
@@ -137,17 +140,11 @@ void setupAceButton() {
   pinMode(MODE_BUTTON_PIN, INPUT_PULLUP);
   pinMode(CHANGE_BUTTON_PIN, INPUT_PULLUP);
 
-  modeButton.init(MODE_BUTTON_PIN);
-  changeButton.init(CHANGE_BUTTON_PIN);
-
-  modeButtonConfig.setEventHandler(handleModeButton);
-  modeButtonConfig.setFeature(ButtonConfig::kFeatureLongPress);
-  modeButtonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
-
-  changeButtonConfig.setEventHandler(handleChangeButton);
-  changeButtonConfig.setFeature(ButtonConfig::kFeatureLongPress);
-  changeButtonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);
-  changeButtonConfig.setRepeatPressInterval(150);
+  buttonConfig.setEventHandler(handleButton);
+  buttonConfig.setFeature(ButtonConfig::kFeatureLongPress);
+  buttonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
+  buttonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);
+  buttonConfig.setRepeatPressInterval(150);
 }
 
 //------------------------------------------------------------------
