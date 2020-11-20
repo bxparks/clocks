@@ -150,14 +150,6 @@ void setupAceButton() {
   changeButtonConfig.setRepeatPressInterval(150);
 }
 
-COROUTINE(checkButton) {
-  COROUTINE_LOOP() {
-    modeButton.check();
-    changeButton.check();
-    COROUTINE_DELAY(5); // check button every 5 ms
-  }
-}
-
 //------------------------------------------------------------------
 // Main setup and loop
 //------------------------------------------------------------------
@@ -214,4 +206,6 @@ void setup() {
 
 void loop() {
   CoroutineScheduler::loop();
+  modeButton.check();
+  changeButton.check();
 }
