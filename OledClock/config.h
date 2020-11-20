@@ -22,10 +22,18 @@
 #define TIME_ZONE_TYPE_EXTENDED 2
 #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
+// Options that define the authoratative source of the time.
 #define TIME_SOURCE_TYPE_NONE 0
 #define TIME_SOURCE_TYPE_DS3231 1
 #define TIME_SOURCE_TYPE_NTP 2
 #define TIME_SOURCE_TYPE_BOTH 3 
+
+// Button options: either digital ButtonConfig or analog LadderButtonConfig.
+// AVR: 8-bit analog pin
+// ESP8266: 10-bit analog pin
+#define BUTTON_TYPE_DIGITAL 0
+#define BUTTON_TYPE_ANALOG 1
+#define BUTTON_TYPE BUTTON_TYPE_DIGITAL
 
 #ifndef AUNITER
   // Arduino IDE in interactive mode
@@ -69,8 +77,12 @@
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
 #elif defined(AUNITER_D1MINI)
-  #define MODE_BUTTON_PIN D7
-  #define CHANGE_BUTTON_PIN D5
+  #undef BUTTON_TYPE
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BITS 10
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP true
 #elif defined(AUNITER_ESP32)

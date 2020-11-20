@@ -100,9 +100,27 @@ COROUTINE(displayClock) {
 // Configure AceButton.
 //------------------------------------------------------------------
 
+#if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+
 ButtonConfig buttonConfig;
 AceButton modeButton(&buttonConfig, MODE_BUTTON_PIN);
 AceButton changeButton(&buttonConfig, CHANGE_BUTTON_PIN);
+
+#else
+
+  AceButton modeButton((uint8_t) MODE_BUTTON_PIN);
+  AceButton changeButton((uint8_t) CHANGE_BUTTON_PIN);
+  AceButton* const BUTTONS[] = {&modeButton, &changeButton};
+  #if ANALOG_BITS == 8
+    uint16_t LEVELS[] = {0, 128, 255};
+  #elif ANALOG_BITS == 10
+    uint16_t LEVELS[] = {0, 512, 1023};
+  #else
+    #error Unknown number of ADC bits
+  #endif
+  LadderButtonConfig buttonConfig(ANALOG_BUTTON_PIN, 3, LEVELS, 2, BUTTONS);
+
+#endif
 
 void handleButton(AceButton* button, uint8_t eventType,
     uint8_t /* buttonState */) {
@@ -137,8 +155,10 @@ void handleButton(AceButton* button, uint8_t eventType,
 }
 
 void setupAceButton() {
+#if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
   pinMode(MODE_BUTTON_PIN, INPUT_PULLUP);
   pinMode(CHANGE_BUTTON_PIN, INPUT_PULLUP);
+#endif
 
   buttonConfig.setEventHandler(handleButton);
   buttonConfig.setFeature(ButtonConfig::kFeatureLongPress);
@@ -203,6 +223,10 @@ void setup() {
 
 void loop() {
   CoroutineScheduler::loop();
+#if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
   modeButton.check();
   changeButton.check();
+#else
+  buttonConfig.checkButtons();
+#endif
 }
