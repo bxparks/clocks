@@ -253,7 +253,14 @@ class Controller {
     }
 
     void changeButtonRepeatPress() {
-      changeButtonPress();
+      // Ignore 12/24 changes from RepeatPressed events.
+      //  * It doesn't make sense to repeatedly change the 12/24 mode when the
+      //    button is held down.
+      //  * Each change of 12/24 mode causes a write to the EEPPROM, which
+      //    causes wear and tear.
+      if (mMode != MODE_DATE_TIME) {
+        changeButtonPress();
+      }
     }
 
     void changeButtonRelease() {
