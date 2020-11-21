@@ -153,7 +153,7 @@ COROUTINE(manageSleep) {
     COROUTINE_AWAIT((uint16_t) ((uint16_t) millis() - lastUserActionMillis)
         >= SLEEP_DELAY_MILLIS);
     controller.prepareToSleep();
-    if (ENABLE_SERIAL) {
+    if (ENABLE_SERIAL_DEBUG) {
       SERIAL_PORT_MONITOR.println("Powering down");
       COROUTINE_DELAY(500);
     }
@@ -168,7 +168,7 @@ COROUTINE(manageSleep) {
       if (runMode == RUN_MODE_AWAKE) break;
 
       isWakingUp = true;
-      if (ENABLE_SERIAL) {
+      if (ENABLE_SERIAL_DEBUG) {
         SERIAL_PORT_MONITOR.println(
             F("Dreaming for 1000ms... then going back to sleep"));
         COROUTINE_DELAY(500);
@@ -177,7 +177,7 @@ COROUTINE(manageSleep) {
       COROUTINE_DELAY(250);
     }
 
-    if (ENABLE_SERIAL) SERIAL_PORT_MONITOR.println("Powering up");
+    if (ENABLE_SERIAL_DEBUG) SERIAL_PORT_MONITOR.println("Powering up");
     controller.wakeup();
     isWakingUp = true;
     lastUserActionMillis = millis();
@@ -283,7 +283,7 @@ void setup() {
   TXLED0; // LED off
 #endif
 
-  if (ENABLE_SERIAL) {
+  if (ENABLE_SERIAL_DEBUG) {
     SERIAL_PORT_MONITOR.begin(115200);
     while (!SERIAL_PORT_MONITOR); // Wait until Serial is ready - Leonardo/Micro
     SERIAL_PORT_MONITOR.println(F("setup(): begin"));
@@ -314,7 +314,7 @@ void setup() {
   systemClock.setupCoroutine(F("systemClock"));
   CoroutineScheduler::setup();
 
-  if (ENABLE_SERIAL) SERIAL_PORT_MONITOR.println(F("setup(): end"));
+  if (ENABLE_SERIAL_DEBUG) SERIAL_PORT_MONITOR.println(F("setup(): end"));
 }
 
 void loop() {

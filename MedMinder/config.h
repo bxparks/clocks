@@ -4,6 +4,12 @@
 #define MED_MINDER_VERSION_STRING "0.1"
 
 //------------------------------------------------------------------
+
+#ifndef ENABLE_SERIAL_DEBUG
+#define ENABLE_SERIAL_DEBUG 0
+#endif
+
+//------------------------------------------------------------------
 // OLED display configuration
 //------------------------------------------------------------------
 
@@ -34,52 +40,38 @@
 
 #if ! defined(AUNITER)
   // Normal Arduino IDE
-  #define ENABLE_SERIAL 0
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
-#elif defined(AUNITER_MICRO) || defined(AUNITER_NANO) || \
-    defined(AUNITER_ESP8266) || defined(AUNITER_ESP32)
-  #define ENABLE_SERIAL 0
+#elif defined(AUNITER_NANO)
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
-#elif defined(AUNITER_MICRO_MINDER)
+#elif defined(AUNITER_MICRO)
   #undef TIME_ZONE_TYPE
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_MANUAL
-  #define ENABLE_SERIAL 0
   #define ENABLE_LOW_POWER 1
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP true
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
 #elif defined(AUNITER_MINI_MINDER)
-  #define ENABLE_SERIAL 0
   #define ENABLE_LOW_POWER 1
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
-#elif defined(AUNITER_ESP_MINDER)
-  #define ENABLE_SERIAL 0
+#elif defined(AUNITER_ESP8266)
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN D4
   #define CHANGE_BUTTON_PIN D3
-#elif defined(AUNITER_ESP_MINDER2)
-  #define ENABLE_SERIAL 0
-  #define ENABLE_LOW_POWER 0
-  #define TIME_PROVIDER TIME_PROVIDER_DS3231
-  #define OLED_REMAP true
-  #define MODE_BUTTON_PIN D4
-  #define CHANGE_BUTTON_PIN D3
-#elif defined(AUNITER_ESP32_MINDER)
-  #define ENABLE_SERIAL 1
+#elif defined(AUNITER_ESP32)
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_NTP
   #define OLED_REMAP false

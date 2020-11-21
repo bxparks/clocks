@@ -50,15 +50,15 @@ class Controller {
       bool isValid = mCrcEeprom.readWithCrc(kStoredInfoEepromAddress,
           &storedInfo, sizeof(StoredInfo));
       if (isValid) {
-      #if ENABLE_SERIAL == 1
-        SERIAL_PORT_MONITOR.println(F("setup(): valid StoredInfo"));
-      #endif
+        if (ENABLE_SERIAL_DEBUG == 1) {
+          SERIAL_PORT_MONITOR.println(F("setup(): valid StoredInfo"));
+        }
         restoreClockInfo(mClockInfo, storedInfo);
       } else {
-      #if ENABLE_SERIAL == 1
-        SERIAL_PORT_MONITOR.println(
-            F("setup(): invalid StoredInfo; initialiing"));
-      #endif
+        if (ENABLE_SERIAL_DEBUG == 1) {
+          SERIAL_PORT_MONITOR.println(
+              F("setup(): invalid StoredInfo; initializing"));
+        }
         setupClockInfo(nowSeconds);
       }
 

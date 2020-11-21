@@ -96,9 +96,9 @@ class Presenter {
     }
 
     void displayMed() const {
-    #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("displayMed()"));
-    #endif
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("displayMed()"));
+      }
       mOled.setFont(fixed_bold10x15);
       mOled.set1X();
 
@@ -108,9 +108,9 @@ class Presenter {
     }
 
     void displayAbout() const {
-    #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("displayAbout()"));
-    #endif
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("displayAbout()"));
+      }
       mOled.setFont(SystemFont5x7);
       mOled.set1X();
 
@@ -154,9 +154,9 @@ class Presenter {
     }
 
     void displayDateTime() const {
-    #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("displayDateTime()"));
-    #endif
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("displayDateTime()"));
+      }
       mOled.setFont(fixed_bold10x15);
       mOled.set1X();
 
