@@ -5,7 +5,9 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
-#define ENABLE_SERIAL 0
+#ifndef ENABLE_SERIAL_DEBUG
+#define ENABLE_SERIAL_DEBUG 0
+#endif
 
 // This program should compile for most target environments, including AVR,
 // ESP8266, and ESP32. The parameters below are for the specific device that I

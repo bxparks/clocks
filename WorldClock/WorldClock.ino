@@ -204,11 +204,11 @@ void setup() {
   TXLED0; // LED off
 #endif
 
-#if ENABLE_SERIAL == 1
-  SERIAL_PORT_MONITOR.begin(115200); // ESP8266 default of 74880 not supported on Linux
-  while (!SERIAL_PORT_MONITOR); // Wait until SERIAL_PORT_MONITOR is ready - Leonardo/Micro
-  SERIAL_PORT_MONITOR.println(F("setup(): begin"));
-#endif
+  if (ENABLE_SERIAL_DEBUG == 1) {
+    SERIAL_PORT_MONITOR.begin(115200);
+    while (!SERIAL_PORT_MONITOR); // Leonardo/Micro
+    SERIAL_PORT_MONITOR.println(F("setup(): begin"));
+  }
 
   Wire.begin();
   Wire.setClock(400000L);
@@ -222,9 +222,9 @@ void setup() {
 
   controller.setup();
 
-#if ENABLE_SERIAL == 1
-  SERIAL_PORT_MONITOR.println(F("setup(): end"));
-#endif
+  if (ENABLE_SERIAL_DEBUG == 1) {
+    SERIAL_PORT_MONITOR.println(F("setup(): end"));
+  }
 }
 
 void loop() {
