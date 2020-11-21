@@ -1,11 +1,11 @@
 #ifndef OLED_CLOCK_PRESERNTER_H
 #define OLED_CLOCK_PRESERNTER_H
 
+#include <Print.h>
 #include <AceCommon.h>
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
-#include <SSD1306AsciiWire.h>
 #include "config.h"
 #include "StoredInfo.h"
 #include "ClockInfo.h"
@@ -17,9 +17,17 @@ using ace_common::printPad2To;
 
 class Presenter {
   public:
-    /** Constructor. */
-    Presenter(SSD1306Ascii& oled):
-        mOled(oled) {}
+    /**
+     * Constructor.
+     * @param display either an OLED display or an LCD display
+     * @param isOverwriting if true, printing a character to a display
+     *        overwrites the existing bits, therefore, displayData() does
+     *        NOT need to clear the display
+     */
+    Presenter(Print& display, bool isOverwriting):
+        mDisplay(display),
+        mIsOverwriting(isOverwriting)
+      {}
 
     void display() {
       if (needsClear()) {
@@ -75,10 +83,22 @@ class Presenter {
           || mRenderingInfo.dateTime != mPrevRenderingInfo.dateTime;
     }
 
-    void clearDisplay() const { mOled.clear(); }
+    virtual void clearDisplay() = 0;
+
+    virtual void home() = 0;
+
+    virtual void renderDisplay() = 0;
+
+    virtual void setFont() = 0;
+
+    virtual void clearToEOL() = 0;
 
     void displayData() {
-      mOled.home();
+      home();
+      if (!mIsOverwriting) {
+        clearDisplay();
+      }
+      setFont();
 
       switch (mRenderingInfo.mode) {
         case MODE_DATE_TIME:
@@ -105,48 +125,49 @@ class Presenter {
           displayAbout();
           break;
       }
+
+      renderDisplay();
     }
 
-    void displayDateTime() const {
+    void displayDateTime() {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("displayDateTime()"));
       }
-      mOled.setFont(fixed_bold10x15);
       const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
       if (dateTime.isError()) {
-        mOled.println(F("<Error>"));
+        mDisplay.println(F("<Error>"));
         return;
       }
 
       displayTime(dateTime);
-      mOled.println();
+      mDisplay.println();
       displayDate(dateTime);
-      mOled.println();
+      mDisplay.println();
       displayWeekday(dateTime);
     }
 
-    void displayDate(const ZonedDateTime& dateTime) const {
+    void displayDate(const ZonedDateTime& dateTime) {
       if (shouldShowFor(MODE_CHANGE_YEAR)) {
-        mOled.print(dateTime.year());
+        mDisplay.print(dateTime.year());
       } else {
-        mOled.print("    ");
+        mDisplay.print("    ");
       }
-      mOled.print('-');
+      mDisplay.print('-');
       if (shouldShowFor(MODE_CHANGE_MONTH)) {
-        printPad2To(mOled, dateTime.month(), '0');
+        printPad2To(mDisplay, dateTime.month(), '0');
       } else {
-        mOled.print("  ");
+        mDisplay.print("  ");
       }
-      mOled.print('-');
+      mDisplay.print('-');
       if (shouldShowFor(MODE_CHANGE_DAY)) {
-        printPad2To(mOled, dateTime.day(), '0');
+        printPad2To(mDisplay, dateTime.day(), '0');
       } else{
-        mOled.print("  ");
+        mDisplay.print("  ");
       }
-      mOled.clearToEOL();
+      clearToEOL();
     }
 
-    void displayTime(const ZonedDateTime& dateTime) const {
+    void displayTime(const ZonedDateTime& dateTime) {
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
         uint8_t hour = dateTime.hour();
         if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
@@ -155,42 +176,41 @@ class Presenter {
           } else if (hour > 12) {
             hour -= 12;
           }
-          printPad2To(mOled, hour, ' ');
+          printPad2To(mDisplay, hour, ' ');
         } else {
-          printPad2To(mOled, hour, '0');
+          printPad2To(mDisplay, hour, '0');
         }
       } else {
-        mOled.print("  ");
+        mDisplay.print("  ");
       }
-      mOled.print(':');
+      mDisplay.print(':');
       if (shouldShowFor(MODE_CHANGE_MINUTE)) {
-        printPad2To(mOled, dateTime.minute(), '0');
+        printPad2To(mDisplay, dateTime.minute(), '0');
       } else {
-        mOled.print("  ");
+        mDisplay.print("  ");
       }
-      mOled.print(':');
+      mDisplay.print(':');
       if (shouldShowFor(MODE_CHANGE_SECOND)) {
-        printPad2To(mOled, dateTime.second(), '0');
+        printPad2To(mDisplay, dateTime.second(), '0');
       } else {
-        mOled.print("  ");
+        mDisplay.print("  ");
       }
-      mOled.print(' ');
+      mDisplay.print(' ');
       if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
-        mOled.print((dateTime.hour() < 12) ? "AM" : "PM");
+        mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
-      mOled.clearToEOL();
+      clearToEOL();
     }
 
-    void displayWeekday(const ZonedDateTime& dateTime) const {
-      mOled.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
-      mOled.clearToEOL();
+    void displayWeekday(const ZonedDateTime& dateTime) {
+      mDisplay.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
+      clearToEOL();
     }
 
-    void displayTimeZone() const {
+    void displayTimeZone() {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("displayTimeZone()"));
       }
-      mOled.setFont(fixed_bold10x15);
 
       // Don't use F() strings for short strings <= 4 characters. Seems to
       // increase flash memory, while saving only a few bytes of RAM.
@@ -199,7 +219,7 @@ class Presenter {
       // dateTime will contain a TimeZone, which points to the (singular)
       // Controller::mZoneProcessor, which will contain the old timeZone.
       auto& tz = mRenderingInfo.timeZone;
-      mOled.print("TZ: ");
+      mDisplay.print("TZ: ");
       const __FlashStringHelper* typeString;
       switch (tz.getType()) {
         case TimeZone::kTypeManual:
@@ -216,26 +236,26 @@ class Presenter {
         default:
           typeString = F("unknown");
       }
-      mOled.print(typeString);
-      mOled.clearToEOL();
+      mDisplay.print(typeString);
+      clearToEOL();
 
       switch (tz.getType()) {
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case TimeZone::kTypeManual:
-          mOled.println();
-          mOled.print("UTC");
+          mDisplay.println();
+          mDisplay.print("UTC");
           if (shouldShowFor(MODE_CHANGE_TIME_ZONE_OFFSET)) {
             TimeOffset offset = tz.getStdOffset();
-            offset.printTo(mOled);
+            offset.printTo(mDisplay);
           }
-          mOled.clearToEOL();
+          clearToEOL();
 
-          mOled.println();
-          mOled.print("DST: ");
+          mDisplay.println();
+          mDisplay.print("DST: ");
           if (shouldShowFor(MODE_CHANGE_TIME_ZONE_DST)) {
-            mOled.print((tz.getDstOffset().isZero()) ? "off " : "on");
+            mDisplay.print((tz.getDstOffset().isZero()) ? "off " : "on");
           }
-          mOled.clearToEOL();
+          clearToEOL();
           break;
 
       #else
@@ -244,46 +264,46 @@ class Presenter {
         case TimeZone::kTypeBasicManaged:
         case TimeZone::kTypeExtendedManaged:
           // Print name of timezone
-          mOled.println();
+          mDisplay.println();
           if (shouldShowFor(MODE_CHANGE_TIME_ZONE_NAME)) {
-            tz.printShortTo(mOled);
+            tz.printShortTo(mDisplay);
           }
-          mOled.clearToEOL();
+          clearToEOL();
 
           // Clear the DST: {on|off} line from a previous screen
-          mOled.println();
-          mOled.clearToEOL();
+          mDisplay.println();
+          clearToEOL();
           break;
       #endif
 
         default:
-          mOled.println();
-          mOled.print(F("<unknown>"));
-          mOled.clearToEOL();
-          mOled.println();
-          mOled.clearToEOL();
+          mDisplay.println();
+          mDisplay.print(F("<unknown>"));
+          clearToEOL();
+          mDisplay.println();
+          clearToEOL();
           break;
       }
     }
 
-    void displayAbout() const {
+    void displayAbout() {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("displayAbout()"));
       }
 
       // Use F() macros for these longer strings. Seems to save both
       // flash memory and RAM.
-      mOled.print(F("TZ: "));
-      mOled.println(zonedb::kTzDatabaseVersion);
-      mOled.println(F("AT: " ACE_TIME_VERSION_STRING));
-      mOled.println(F("AB: " ACE_BUTTON_VERSION_STRING));
-      mOled.print(F("AR: " ACE_ROUTINE_VERSION_STRING));
+      mDisplay.print(F("TZ: "));
+      mDisplay.println(zonedb::kTzDatabaseVersion);
+      mDisplay.println(F("AT: " ACE_TIME_VERSION_STRING));
+      mDisplay.println(F("AB: " ACE_BUTTON_VERSION_STRING));
+      mDisplay.print(F("AR: " ACE_ROUTINE_VERSION_STRING));
     }
 
-    SSD1306Ascii& mOled;
-
+    Print& mDisplay;
     RenderingInfo mRenderingInfo;
     RenderingInfo mPrevRenderingInfo;
+    bool mIsOverwriting;
 };
 
 #endif

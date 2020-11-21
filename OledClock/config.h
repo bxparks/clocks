@@ -14,8 +14,17 @@
 #define ENABLE_SERIAL_DEBUG 0
 #endif
 
+#ifndef ENABLE_FPS_DEBUG
+#define ENABLE_FPS_DEBUG 0
+#endif
+
 // Set to 1 to force the ClockInfo to its initial state
 #define FORCE_INITIALIZE 0
+
+// Define the display type, either a 128x64 OLED or a 88x48 LCD
+#define DISPLAY_TYPE_OLED 0
+#define DISPLAY_TYPE_LCD 1
+#define DISPLAY_TYPE DISPLAY_TYPE_OLED
 
 // Determine whether "auto" time zone uses Basic or Extended. Extended is too
 // big for a Nano or Pro Micro, but will work on an ESP8266 or ESP32.
@@ -52,8 +61,8 @@
   // Pro Micro has just enough memory for Basic TimeZone w/ 4 timezones.
   // In certain configurations, it does not have enough memory, in which case
   // the Manual timezones must be used.
-  //#undef TIME_ZONE_TYPE
-  //#define TIME_ZONE_TYPE TIME_ZONE_TYPE_MANUAL
+  #undef TIME_ZONE_TYPE
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_MANUAL
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
