@@ -180,14 +180,6 @@ void setupAceButton() {
   changeButtonConfig.setRepeatPressInterval(150);
 }
 
-COROUTINE(checkButton) {
-  COROUTINE_LOOP() {
-    modeButton.check();
-    changeButton.check();
-    COROUTINE_DELAY(5); // check buttons 200/sec
-  }
-}
-
 //------------------------------------------------------------------
 // Main setup and loop
 //------------------------------------------------------------------
@@ -232,6 +224,10 @@ void loop() {
   // bytes of extra flash memory. So run the coroutines manually instead of
   // call CoroutineScheduler::loop();
   updateController.runCoroutine();
-  checkButton.runCoroutine();
   systemClock.runCoroutine();
+
+  // Call AceButton::check directly instead of using COROUTINE() to save 174
+  // bytes in flash memory, and 31 bytes in static memory.
+  modeButton.check();
+  changeButton.check();
 }
