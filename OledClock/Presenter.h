@@ -107,9 +107,9 @@ class Presenter {
     }
 
     void displayDateTime() const {
-    #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("displayDateTime()"));
-    #endif
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("displayDateTime()"));
+      }
       mOled.setFont(fixed_bold10x15);
       const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
       if (dateTime.isError()) {
@@ -179,9 +179,9 @@ class Presenter {
     }
 
     void displayTimeZone() const {
-    #if ENABLE_SERIAL
-      SERIAL_PORT_MONITOR.println(F("displayTimeZone()"));
-    #endif
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("displayTimeZone()"));
+      }
       mOled.setFont(fixed_bold10x15);
 
       // Don't use F() strings for short strings <= 4 characters. Seems to
@@ -259,9 +259,9 @@ class Presenter {
     }
 
     void displayAbout() const {
-    #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("displayAbout()"));
-    #endif
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("displayAbout()"));
+      }
 
       // Use F() macros for these longer strings. Seems to save both
       // flash memory and RAM.

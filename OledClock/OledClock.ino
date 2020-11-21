@@ -17,10 +17,7 @@
  *   * [FastCRC](https://github.com/FrankBoesing/FastCRC)
  *   * [SSD1306Ascii](https://github.com/greiman/SSD1306Ascii)
  *
- * If ENABLE_SERIAL is set to 1, it prints diagnostics like this:
- *  * sizeof(ClockInfo): 32
- *  * sizeof(StoredInfo): 4
- *  * sizeof(RenderingInfo): 28
+ * If ENABLE_SERIAL_DEBUG is set to 1, it prints diagnostics.
  */
 
 #include <Wire.h>
@@ -183,9 +180,10 @@ void setup() {
   TXLED0; // LED off
 #endif
 
-#if ENABLE_SERIAL == 1
+if (ENABLE_SERIAL_DEBUG == 1) {
   SERIAL_PORT_MONITOR.begin(115200);
   while (!SERIAL_PORT_MONITOR); // Leonardo/Micro
+
   SERIAL_PORT_MONITOR.println(F("setup(): begin"));
   SERIAL_PORT_MONITOR.print(F("sizeof(ClockInfo): "));
   SERIAL_PORT_MONITOR.println(sizeof(ClockInfo));
@@ -193,7 +191,7 @@ void setup() {
   SERIAL_PORT_MONITOR.println(sizeof(StoredInfo));
   SERIAL_PORT_MONITOR.print(F("sizeof(RenderingInfo): "));
   SERIAL_PORT_MONITOR.println(sizeof(RenderingInfo));
-#endif
+}
 
   Wire.begin();
   Wire.setClock(400000L);
@@ -216,9 +214,9 @@ void setup() {
   systemClock.setupCoroutine(F("clock"));
   CoroutineScheduler::setup();
 
-#if ENABLE_SERIAL == 1
-  SERIAL_PORT_MONITOR.println(F("setup(): end"));
-#endif
+  if (ENABLE_SERIAL_DEBUG == 1) {
+    SERIAL_PORT_MONITOR.println(F("setup(): end"));
+  }
 }
 
 void loop() {

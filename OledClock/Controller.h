@@ -77,9 +77,9 @@ class Controller {
     }
 
     void modeButtonPress() {
-      #if ENABLE_SERIAL == 1
+      if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("modeButtonPress()"));
-      #endif
+      }
       switch (mMode) {
         // Cycle through the 3 main screens.
         case MODE_DATE_TIME:
@@ -130,9 +130,9 @@ class Controller {
     }
 
     void modeButtonLongPress() {
-      #if ENABLE_SERIAL == 1
+      if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("modeButtonLongPress()"));
-      #endif
+      }
       switch (mMode) {
         case MODE_DATE_TIME:
           mChangingClockInfo = mClockInfo;
@@ -172,9 +172,9 @@ class Controller {
     }
 
     void changeButtonPress() {
-      #if ENABLE_SERIAL == 1
+      if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("changeButtonPress()"));
-      #endif
+      }
       switch (mMode) {
         // Switch 12/24 modes if in MODE_DATA_TIME
         case MODE_DATE_TIME:
@@ -359,18 +359,18 @@ class Controller {
 
     /** Transfer info from ChangingClockInfo to ClockInfo. */
     void saveClockInfo() {
-    #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("saveClockInfo()"));
-    #endif
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("saveClockInfo()"));
+      }
       mClockInfo = mChangingClockInfo;
       preserveClockInfo(mClockInfo);
     }
 
     /** Save the clock info into EEPROM. */
     void preserveClockInfo(const ClockInfo& clockInfo) {
-    #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("preserveClockInfo()"));
-    #endif
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("preserveClockInfo()"));
+      }
       StoredInfo storedInfo;
       storedInfo.hourMode = clockInfo.hourMode;
       storedInfo.timeZoneData = clockInfo.timeZone.toTimeZoneData();
@@ -379,24 +379,29 @@ class Controller {
 
     /** Restore clockInfo from storedInfo. */
     void restoreClockInfo(ClockInfo& clockInfo, const StoredInfo& storedInfo) {
-    #if ENABLE_SERIAL == 1
-      SERIAL_PORT_MONITOR.println(F("restoreClockInfo()"));
-      SERIAL_PORT_MONITOR.print(F("hourMode: ")); SERIAL_PORT_MONITOR.println(storedInfo.hourMode);
-      SERIAL_PORT_MONITOR.print(F("type: ")); SERIAL_PORT_MONITOR.println(storedInfo.timeZoneData.type);
-      if (storedInfo.type == TimeZoneData::kTypeManual) {
-        SERIAL_PORT_MONITOR.print(F("std: "));
-        storedInfo.timeZoneData.stdOffset.printTo(SERIAL_PORT_MONITOR);
-        SERIAL_PORT_MONITOR.println();
-        SERIAL_PORT_MONITOR.print(F("dst: "));
-        storedInfo.timeZoneData.dstOffset.printTo(SERIAL_PORT_MONITOR);
-        SERIAL_PORT_MONITOR.println();
-      } else if (storedInfo.type == TimeZoneData::kTypeZoneId) {
-        SERIAL_PORT_MONITOR.print(F("zoneId: 0x"));
-        SERIAL_PORT_MONITOR.println(storedInfo.zoneId, 16);
-      } else {
-        SERIAL_PORT_MONITOR.println(F("<error>"));
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("restoreClockInfo()"));
+        SERIAL_PORT_MONITOR.print(F("hourMode: "));
+        SERIAL_PORT_MONITOR.println(storedInfo.hourMode);
+        SERIAL_PORT_MONITOR.print(F("type: "));
+        uint8_t type = storedInfo.timeZoneData.type;
+        SERIAL_PORT_MONITOR.println(type);
+        if (type == TimeZoneData::kTypeManual) {
+          SERIAL_PORT_MONITOR.print(F("std: "));
+          TimeOffset::forMinutes(storedInfo.timeZoneData.stdOffsetMinutes)
+              .printTo(SERIAL_PORT_MONITOR);
+          SERIAL_PORT_MONITOR.println();
+          SERIAL_PORT_MONITOR.print(F("dst: "));
+          TimeOffset::forMinutes(storedInfo.timeZoneData.dstOffsetMinutes)
+              .printTo(SERIAL_PORT_MONITOR);
+          SERIAL_PORT_MONITOR.println();
+        } else if (type == TimeZoneData::kTypeZoneId) {
+          SERIAL_PORT_MONITOR.print(F("zoneId: 0x"));
+          SERIAL_PORT_MONITOR.println(storedInfo.timeZoneData.zoneId, 16);
+        } else {
+          SERIAL_PORT_MONITOR.println(F("<error>"));
+        }
       }
-    #endif
       clockInfo.hourMode = storedInfo.hourMode;
 
     #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
