@@ -14,12 +14,16 @@
 #define ENABLE_SERIAL_DEBUG 0
 #endif
 
+// Set to 1 to enable periodic calculation of the frames-per-second.
 #ifndef ENABLE_FPS_DEBUG
 #define ENABLE_FPS_DEBUG 0
 #endif
 
 // Set to 1 to force the ClockInfo to its initial state
 #define FORCE_INITIALIZE 0
+
+// OLED address: 0X3C+SA0 - 0x3C or 0x3D
+#define OLED_I2C_ADDRESS 0x3C
 
 // Define the display type, either a 128x64 OLED or a 88x48 LCD
 #define DISPLAY_TYPE_OLED 0
@@ -90,6 +94,8 @@
 #elif defined(AUNITER_D1MINI)
   #undef BUTTON_TYPE
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+
+  #define SPI_DATA_COMMAND_PIN D4
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 1
   #define ANALOG_BUTTON_PIN A0

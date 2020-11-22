@@ -1,7 +1,7 @@
 /*
  * A simple digital clock using:
  *   * a DS3231 RTC chip and/or NTP server
- *   * an SSD1306 OLED display
+ *   * an SSD1306 OLED display (I2C) or a PCD8554 LCD display (SPI)
  *   * 2 push buttons
  *
  * Tested using:
@@ -63,11 +63,8 @@ using namespace ace_time::clock;
 #endif
 
 //------------------------------------------------------------------
-// Configure OLED display using SSD1306Ascii.
+// Configure OLED display or LCD display.
 //------------------------------------------------------------------
-
-// OLED address: 0X3C+SA0 - 0x3C or 0x3D
-#define OLED_I2C_ADDRESS 0x3C
 
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
   SSD1306AsciiWire oled;
@@ -80,7 +77,7 @@ using namespace ace_time::clock;
 
   OledPresenter presenter(oled);
 #else
-  Adafruit_PCD8544 lcd = Adafruit_PCD8544(D4, -1, -1);
+  Adafruit_PCD8544 lcd = Adafruit_PCD8544(SPI_DATA_COMMAND_PIN, -1, -1);
 
   void setupDisplay() {
     lcd.begin();
@@ -94,7 +91,7 @@ using namespace ace_time::clock;
 #endif
 
 //------------------------------------------------------------------
-// Create controller/presenter pair.
+// Create controller.
 //------------------------------------------------------------------
 
 PersistentStore persistentStore;
@@ -179,9 +176,9 @@ AceButton changeButton(&buttonConfig, CHANGE_BUTTON_PIN);
   AceButton changeButton((uint8_t) CHANGE_BUTTON_PIN);
   AceButton* const BUTTONS[] = {&modeButton, &changeButton};
   #if ANALOG_BITS == 8
-    uint16_t LEVELS[] = {0, 128, 255};
+    const uint16_t LEVELS[] = {0, 128, 255};
   #elif ANALOG_BITS == 10
-    uint16_t LEVELS[] = {0, 512, 1023};
+    const uint16_t LEVELS[] = {0, 512, 1023};
   #else
     #error Unknown number of ADC bits
   #endif
