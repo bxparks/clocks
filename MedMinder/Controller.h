@@ -493,7 +493,7 @@ class Controller {
     CrcEeprom& mCrcEeprom;
     Presenter& mPresenter;
   #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-    BasicZoneManager<kCacheSize> mZoneManager;;
+    BasicZoneManager<kCacheSize> mZoneManager;
   #endif
 
     uint8_t mMode; // current mode

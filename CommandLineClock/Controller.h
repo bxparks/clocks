@@ -211,10 +211,10 @@ class Controller {
     SystemClock& mSystemClock;
 
   #if ENABLE_TIME_ZONE_TYPE_BASIC
-    BasicZoneManager<1> mBasicZoneManager;;
+    BasicZoneManager<1> mBasicZoneManager;
   #endif
   #if ENABLE_TIME_ZONE_TYPE_EXTENDED
-    ExtendedZoneManager<1> mExtendedZoneManager;;
+    ExtendedZoneManager<1> mExtendedZoneManager;
   #endif
 
     TimeZone mTimeZone;

@@ -461,9 +461,9 @@ class Controller {
     Presenter& mPresenter;
 
   #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-    BasicZoneManager<2> mZoneManager;;
+    BasicZoneManager<2> mZoneManager;
   #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
-    ExtendedZoneManager<2> mZoneManager;;
+    ExtendedZoneManager<2> mZoneManager;
   #endif
 
     ClockInfo mClockInfo; // current clock
