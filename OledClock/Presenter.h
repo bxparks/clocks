@@ -1,8 +1,9 @@
 #ifndef OLED_CLOCK_PRESERNTER_H
 #define OLED_CLOCK_PRESERNTER_H
 
-#include <AceButton.h>
 #include <AceCommon.h>
+#include <AceButton.h>
+#include <AceRoutine.h>
 #include <AceTime.h>
 #include <SSD1306AsciiWire.h>
 #include "config.h"
@@ -267,10 +268,9 @@ class Presenter {
       // flash memory and RAM.
       mOled.print(F("TZ: "));
       mOled.println(zonedb::kTzDatabaseVersion);
-      mOled.print(F("AT: "));
-      mOled.println(ACE_TIME_VERSION_STRING);
-      mOled.print(F("AB: "));
-      mOled.print(ACE_BUTTON_VERSION_STRING);
+      mOled.println(F("AT: " ACE_TIME_VERSION_STRING));
+      mOled.println(F("AB: " ACE_BUTTON_VERSION_STRING));
+      mOled.print(F("AR: " ACE_ROUTINE_VERSION_STRING));
     }
 
     SSD1306Ascii& mOled;
