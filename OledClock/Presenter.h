@@ -118,7 +118,14 @@ class Presenter {
         return;
       }
 
-      // date
+      displayTime(dateTime);
+      mOled.println();
+      displayDate(dateTime);
+      mOled.println();
+      displayWeekday(dateTime);
+    }
+
+    void displayDate(const ZonedDateTime& dateTime) const {
       if (shouldShowFor(MODE_CHANGE_YEAR)) {
         mOled.print(dateTime.year());
       } else {
@@ -137,9 +144,9 @@ class Presenter {
         mOled.print("  ");
       }
       mOled.clearToEOL();
-      mOled.println();
+    }
 
-      // time
+    void displayTime(const ZonedDateTime& dateTime) const {
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
         uint8_t hour = dateTime.hour();
         if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
@@ -172,9 +179,9 @@ class Presenter {
         mOled.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
       mOled.clearToEOL();
-      mOled.println();
+    }
 
-      // week day
+    void displayWeekday(const ZonedDateTime& dateTime) const {
       mOled.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
       mOled.clearToEOL();
     }
