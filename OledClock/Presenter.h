@@ -232,9 +232,9 @@ class Presenter {
         return;
       }
 
-      displayTime(dateTime);
-      mDisplay.println();
       displayDate(dateTime);
+      mDisplay.println();
+      displayTime(dateTime);
       mDisplay.println();
       displayWeekday(dateTime);
     }
@@ -331,24 +331,25 @@ class Presenter {
       }
       mDisplay.print(typeString);
       clearToEOL();
+      mDisplay.println();
 
       switch (tz.getType()) {
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case TimeZone::kTypeManual:
-          mDisplay.println();
           mDisplay.print("UTC");
           if (shouldShowFor(MODE_CHANGE_TIME_ZONE_OFFSET)) {
             TimeOffset offset = tz.getStdOffset();
             offset.printTo(mDisplay);
           }
           clearToEOL();
-
           mDisplay.println();
+
           mDisplay.print("DST: ");
           if (shouldShowFor(MODE_CHANGE_TIME_ZONE_DST)) {
-            mDisplay.print((tz.getDstOffset().isZero()) ? "off " : "on");
+            mDisplay.print((tz.getDstOffset().isZero()) ? "off" : "on ");
           }
           clearToEOL();
+          mDisplay.println();
           break;
 
       #else
@@ -357,24 +358,24 @@ class Presenter {
         case TimeZone::kTypeBasicManaged:
         case TimeZone::kTypeExtendedManaged:
           // Print name of timezone
-          mDisplay.println();
           if (shouldShowFor(MODE_CHANGE_TIME_ZONE_NAME)) {
             tz.printShortTo(mDisplay);
           }
           clearToEOL();
+          mDisplay.println();
 
           // Clear the DST: {on|off} line from a previous screen
-          mDisplay.println();
           clearToEOL();
+          mDisplay.println();
           break;
       #endif
 
         default:
-          mDisplay.println();
           mDisplay.print(F("<unknown>"));
           clearToEOL();
           mDisplay.println();
           clearToEOL();
+          mDisplay.println();
           break;
       }
     }
@@ -390,7 +391,7 @@ class Presenter {
       mDisplay.println(zonedb::kTzDatabaseVersion);
       mDisplay.println(F("AT: " ACE_TIME_VERSION_STRING));
       mDisplay.println(F("AB: " ACE_BUTTON_VERSION_STRING));
-      mDisplay.print(F("AR: " ACE_ROUTINE_VERSION_STRING));
+      mDisplay.println(F("AR: " ACE_ROUTINE_VERSION_STRING));
     }
 
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
