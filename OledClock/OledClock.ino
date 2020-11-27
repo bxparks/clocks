@@ -28,11 +28,9 @@
 #include <SPI.h>
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
   #include <SSD1306AsciiWire.h>
-  #include "OledPresenter.h"
 #else
   #include <Adafruit_GFX.h>
   #include <Adafruit_PCD8544.h>
-  #include "LcdPresenter.h"
 #endif
 #include "PersistentStore.h"
 #include "Controller.h"
@@ -73,21 +71,26 @@ using namespace ace_time::clock;
     oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
     oled.displayRemap(OLED_REMAP);
     oled.clear();
+    oled.setScroll(false);
   }
 
-  OledPresenter presenter(oled);
+  Presenter presenter(oled, true /*isOverwriting*/);
 #else
   Adafruit_PCD8544 lcd = Adafruit_PCD8544(SPI_DATA_COMMAND_PIN, -1, -1);
 
   void setupDisplay() {
     lcd.begin();
+
+    // TODO: Move these to the Settings sceen
     lcd.setContrast(32);
     lcd.setBias(7);
+
+    lcd.setTextWrap(false);
     lcd.clearDisplay();
     lcd.display();
   }
 
-  LcdPresenter presenter(lcd);
+  Presenter presenter(lcd, false /*isOverwriting*/);
 #endif
 
 //------------------------------------------------------------------

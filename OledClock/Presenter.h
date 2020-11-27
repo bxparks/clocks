@@ -1,12 +1,17 @@
 #ifndef OLED_CLOCK_PRESERNTER_H
 #define OLED_CLOCK_PRESERNTER_H
 
+#include "config.h"
 #include <Print.h>
 #include <AceCommon.h>
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
-#include "config.h"
+#if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+  #include <Adafruit_PCD8544.h>
+#else
+  #include <SSD1306AsciiWire.h>
+#endif
 #include "StoredInfo.h"
 #include "ClockInfo.h"
 #include "RenderingInfo.h"
@@ -15,6 +20,29 @@
 using namespace ace_time;
 using ace_common::printPad2To;
 
+/**
+ * An abstraction layer around an LCD display or OLED display, both of whom
+ * implement the `Print` interface.
+ *    * Knows what content to render for various modes.
+ *    * Handles blinking by printing spaces when appropriate.
+ *    * Keeps track of current and previous UI states and updates only when
+ *      something has changed.
+ *
+ * The SSD1306 OLED display uses the SSD1306Ascii driver. This driver
+ * overwrites the background pixels when writing a single character, so we
+ * don't need to clear the entire display before rendering a new version of the
+ * frame. However, we must make sure that we clear the rest of the line with a
+ * clearToEOL() to prevent unwanted clutter from the prior frame.
+ *
+ * The PCD8554 LCD display (aka Nokia 5110) uses Adafruit's driver. Unlike the
+ * SSD1306 driver, the Adafruit driver does NOT overwrite the existing
+ * background bits of a character (i.e. bit are only turns on, not turned off.)
+ * We can either use a double-buffered canvas (did not want to take the time
+ * right now to figure that out), or we can erase the entire screen before
+ * rendering each frame. Normally, this would cause a flicker in the display.
+ * However, it seems like the LCD pixels have so much latency that I don't see
+ * any flickering at all. It works, so I'll just keep it like that for now.
+ */
 class Presenter {
   public:
     /**
@@ -24,7 +52,14 @@ class Presenter {
      *        overwrites the existing bits, therefore, displayData() does
      *        NOT need to clear the display
      */
-    Presenter(Print& display, bool isOverwriting):
+    Presenter(
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        Adafruit_PCD8544& display,
+      #else
+        SSD1306Ascii& display,
+      #endif
+        bool isOverwriting
+    ) :
         mDisplay(display),
         mIsOverwriting(isOverwriting)
       {}
@@ -55,6 +90,74 @@ class Presenter {
     Presenter(const Presenter&) = delete;
     Presenter& operator=(const Presenter&) = delete;
 
+  // These methods abtracts away the differences between a PCD8544 LCD and
+  // and SSD1306 OLED displays
+  private:
+    void clearDisplay() {
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      mDisplay.clearDisplay();
+    #else
+      mDisplay.clear();
+    #endif
+    }
+
+    void home() {
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      mDisplay.setCursor(0, 0);
+    #else
+      mDisplay.home();
+    #endif
+    }
+
+    void renderDisplay() {
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      mDisplay.display();
+    #else
+      // OLED display updates immediately upon println(), no need to call
+      // anything else.
+    #endif
+    }
+
+    void setFont() {
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      // Use default font
+    #else
+      mDisplay.setFont(fixed_bold10x15);
+      //mDisplay.setFont(Adafruit5x7);
+    #endif
+    }
+
+    void setSize(uint8_t size) {
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      mDisplay.setTextSize(size);
+    #else
+      if (size == 1) {
+        mDisplay.set1X();
+      } else if (size == 2) {
+        mDisplay.set2X();
+      }
+    #endif
+    }
+
+    void clearToEOL() {
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      // Not available, and not needed since the entire screen is clear
+      // on re-render.
+    #else
+      mDisplay.clearToEOL();
+    #endif
+    }
+
+    /* Set the cursor just under the AM/PM indicator */
+    void setCursorUnderAmPm() {
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      mDisplay.setCursor(60 /*x*/, 8 /*y*/);
+    #else
+      mDisplay.setCursor(60 /*x pixels*/, 1 /*y row number*/);
+    #endif
+    }
+
+  private:
     /**
      * True if the display should actually show the data. If the clock is in
      * "blinking" mode, then this will return false in accordance with the
@@ -83,16 +186,6 @@ class Presenter {
           || mRenderingInfo.dateTime != mPrevRenderingInfo.dateTime;
     }
 
-    virtual void clearDisplay() = 0;
-
-    virtual void home() = 0;
-
-    virtual void renderDisplay() = 0;
-
-    virtual void setFont() = 0;
-
-    virtual void clearToEOL() = 0;
-
     void displayData() {
       home();
       if (!mIsOverwriting) {
@@ -108,7 +201,7 @@ class Presenter {
         case MODE_CHANGE_HOUR:
         case MODE_CHANGE_MINUTE:
         case MODE_CHANGE_SECOND:
-          displayDateTime();
+          displayDateTimeMode();
           break;
 
         case MODE_TIME_ZONE:
@@ -118,20 +211,20 @@ class Presenter {
       #else
         case MODE_CHANGE_TIME_ZONE_NAME:
       #endif
-          displayTimeZone();
+          displayTimeZoneMode();
           break;
 
         case MODE_ABOUT:
-          displayAbout();
+          displayAboutMode();
           break;
       }
 
       renderDisplay();
     }
 
-    void displayDateTime() {
+    void displayDateTimeMode() {
       if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.println(F("displayDateTime()"));
+        SERIAL_PORT_MONITOR.println(F("displayDateTimeMode()"));
       }
       const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
       if (dateTime.isError()) {
@@ -207,9 +300,9 @@ class Presenter {
       clearToEOL();
     }
 
-    void displayTimeZone() {
+    void displayTimeZoneMode() {
       if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.println(F("displayTimeZone()"));
+        SERIAL_PORT_MONITOR.println(F("displayTimeZoneMode()"));
       }
 
       // Don't use F() strings for short strings <= 4 characters. Seems to
@@ -286,9 +379,9 @@ class Presenter {
       }
     }
 
-    void displayAbout() {
+    void displayAboutMode() {
       if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.println(F("displayAbout()"));
+        SERIAL_PORT_MONITOR.println(F("displayAboutMode()"));
       }
 
       // Use F() macros for these longer strings. Seems to save both
@@ -300,10 +393,14 @@ class Presenter {
       mDisplay.print(F("AR: " ACE_ROUTINE_VERSION_STRING));
     }
 
-    Print& mDisplay;
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+    Adafruit_PCD8544& mDisplay;
+  #else
+    SSD1306Ascii& mDisplay;
+  #endif
     RenderingInfo mRenderingInfo;
     RenderingInfo mPrevRenderingInfo;
-    bool mIsOverwriting;
+    bool const mIsOverwriting;
 };
 
 #endif
