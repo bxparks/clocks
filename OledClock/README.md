@@ -1,16 +1,35 @@
 # OledClock
 
-This is a USB-powered clock that supports at least 4 timezones
-using the AceTime library. It contains:
+This is spartan digital clock that supports multiple time zones using the
+AceTime library. It is intentinoally kept basic so that it can be used for
+testing purposes. I use it to test both software (e.g. AceTime, AceButton
+libraries), and hardware configurations (Pro Micro, D1 Mini, etc).
 
-* (1) MCU (e.g Nano, Pro Micro, ESP8266, or ESP32)
-* (1) SSD1306 OLED display on I2C
+Originally, this program supported only the SSD1306 OLED display, but was
+extended to support a PCD8544 LCD display while creating the `WorldClockLcd`
+program. Substantial parts of the `WorldClockLcd` code have been backported into
+this program for flexibility and consistency.
+
+The hardware is assumed to have something like the following
+
+* (1) an Arduino MCU (e.g Nano, Pro Micro, ESP8266, or ESP32)
+* digital display, one of the following:
+    * (1) 128x64 SSD1306 OLED display (I2C)
+    * (1) 84x48 PCD8544 LCD display (SPI)
 * (1) DS3231 RTC chip on I2C
-* (2) buttons on GPIO pins
+* (2) buttons, with 2 configuration choices:
+    * using 2 GPIO digital pins (using `ButtonConfig`)
+    * using 1 analog pin through a resister ladder (using `LadderButtonConfig`)
+
+The TimeZone can be selected by the user using the buttons. The menu of TimeZone
+choices is defined at compile-time, and is limited only by the available memory
+of the microcontroller.
 
 ## Schematic
 
-Here is the rough schematic of this example:
+### OLED Display on I2C
+
+Here is the rough schematic of a configuration using OLED display on I2C:
 ```
             5V or 3V3
               / \
@@ -39,9 +58,51 @@ D02, D03 = GPIO pins, could be assigned to some other pins
 SCL, SDA = I2C pins
 ```
 
-The TimeZone can be selected by the user using the buttons. The menu of TimeZone
-choices is defined at compile-time, and is limited only by the available memory
-of the microcontroller.
+### LCD Display on SPI
+
+Here is a rough schematic of the LCD Display on SPI. I often use a WeMos D1 Mini
+board which has a limited number of GPIO pins. Once the DS3231 and the LCD
+display are hooked up, there are no more pins available for the 2 buttons. I am
+forced to use the single analog `A0` pin to handle the 2 buttons.
+
+```
+              3V3
+              / \
+              | |
+D1Mini        R R
++-----+       | |        DS3231 (I2C)
+|     |       | |        +--------+
+|  SCL|-------+-.--------|SCL     |
+|  SDA|-------.-+--------|SDA     |
+|     |                  +--------+
+|     |
+|     |                  LCD (SPI)
+|     |                  +--------+
+| MOSI|------------------|Din     |
+| SCLK|------------------|CLK     |
+|   SS|------------------|CE      |
+|   D4|------------------|D/C     |
+|   D3|------------------|LIT     |
+|  RST|------------------|RST     |
+|     |                  +--------+
+|     |         3V3
+|     |          |
+|     |          R
+|     |         / \
+|   A0|---------+-+
++-----+         | |
+               R1 R2
+                | |
+               S1 S2
+                | |
+                \ /
+                GND
+
+R = 10k Ohms
+R1 = 470 Ohm
+R2 = 10k Ohm
+S1, S2 = momentary buttons
+```
 
 ## Photo
 
