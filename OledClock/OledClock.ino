@@ -34,6 +34,7 @@
 #endif
 #include "PersistentStore.h"
 #include "Controller.h"
+#include "ModeGroup.h"
 
 using namespace ace_button;
 using namespace ace_routine;
@@ -92,12 +93,106 @@ using namespace ace_time::clock;
   Presenter presenter(lcd, false /*isOverwriting*/);
 #endif
 
+//-----------------------------------------------------------------------------
+// Create mode groups that define the navigation path for the Mode button.
+// It forms a recursive tree structure that looks like this:
+//
+// - View date time
+//    - Change hour
+//    - Change minute
+//    - Change second
+//    - Change day
+//    - Change month
+//    - Change year
+// - View TimeZone
+//    - Change zone offset
+//    - Change zone dst
+//    - Change zone name
+// - About
+//
+// Operation:
+//
+// * A Press of the Mode button cycles through the sibling modes.
+// * A LongPress of the Mode button goes down or up the hierarchy. Since the
+// hierarchy is only 2-levels deep, we can use LongPress to alternate going up
+// or down the mode tree. In the general case, we would need a different button
+// event (e.g. double click?) to distinguish between going up or going down the
+// tree.
+//
+// Previous version of this encoded the navigation tree within the Controller.h
+// class itself, in the various switch statements. However, I found it to be
+// too difficult to maintain when modes or their ordering changed. This
+// solution defines the mode hierarchy in a data-driven way, so should be
+// easier to maintain.
+//-----------------------------------------------------------------------------
+
+// List of DateTime modes.
+const uint8_t DATE_TIME_MODES[] = {
+  MODE_CHANGE_YEAR,
+  MODE_CHANGE_MONTH,
+  MODE_CHANGE_DAY,
+  MODE_CHANGE_HOUR,
+  MODE_CHANGE_MINUTE,
+  MODE_CHANGE_SECOND,
+  0,
+};
+
+// List of TimeZone modes.
+const uint8_t TIME_ZONE_MODES[] = {
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+  MODE_CHANGE_TIME_ZONE_OFFSET,
+  MODE_CHANGE_TIME_ZONE_DST,
+#else
+  MODE_CHANGE_TIME_ZONE_NAME,
+#endif
+  0,
+};
+
+extern const ModeGroup rootModeGroup;
+
+// ModeGroup for the DateTime modes.
+const ModeGroup dateTimeModeGroup = {
+  &rootModeGroup /* parentGroup */,
+  DATE_TIME_MODES /* modes */,
+  nullptr /* childGroups */,
+};
+
+// MOdeGroup for the TimeZone modes.
+const ModeGroup timeZoneModeGroup = {
+  &rootModeGroup /* parentGroup */,
+  TIME_ZONE_MODES /* modes */,
+  nullptr /* childGroups */,
+};
+
+// List of top level modes.
+const uint8_t TOP_LEVEL_MODES[] = {
+  MODE_DATE_TIME,
+  MODE_TIME_ZONE,
+  MODE_ABOUT,
+  0,
+};
+
+// List of children ModeGroups for each element in TOP_LEVEL_MODES, in the same
+// order.
+const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
+  &dateTimeModeGroup,
+  &timeZoneModeGroup,
+  nullptr /* About mode has no submodes */,
+};
+
+// Root mode group
+const ModeGroup rootModeGroup = {
+  nullptr /* parentGroup */,
+  TOP_LEVEL_MODES /* modes */,
+  TOP_LEVEL_CHILD_GROUPS /* childGroups */,
+};
+
 //------------------------------------------------------------------
 // Create controller.
 //------------------------------------------------------------------
 
 PersistentStore persistentStore;
-Controller controller(persistentStore, systemClock, presenter);
+Controller controller(persistentStore, systemClock, presenter, &rootModeGroup);
 
 //------------------------------------------------------------------
 // Render the Clock periodically.
