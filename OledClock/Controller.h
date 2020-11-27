@@ -82,9 +82,9 @@ class Controller {
       mPresenter.display();
     }
 
-    void modeButtonPress() {
+    void handleModeButtonPress() {
       if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.println(F("modeButtonPress()"));
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
       performLeavingModeAction();
       changeSiblingMode();
@@ -112,9 +112,9 @@ class Controller {
       }
     }
 
-    void modeButtonLongPress() {
+    void handleModeButtonLongPress() {
       if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.println(F("modeButtonLongPress()"));
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
       }
 
       performLeavingModeAction();
@@ -216,9 +216,9 @@ class Controller {
       }
     }
 
-    void changeButtonPress() {
+    void handleChangeButtonPress() {
       if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.println(F("changeButtonPress()"));
+        SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
       switch (mMode) {
         // Switch 12/24 modes if in MODE_DATA_TIME
@@ -297,18 +297,18 @@ class Controller {
       update();
     }
 
-    void changeButtonRepeatPress() {
+    void handleChangeButtonRepeatPress() {
       // Ignore 12/24 changes from RepeatPressed events.
       //  * It doesn't make sense to repeatedly change the 12/24 mode when the
       //    button is held down.
       //  * Each change of 12/24 mode causes a write to the EEPPROM, which
       //    causes wear and tear.
       if (mMode != MODE_DATE_TIME) {
-        changeButtonPress();
+        handleChangeButtonPress();
       }
     }
 
-    void changeButtonRelease() {
+    void handleChangeButtonRelease() {
       switch (mMode) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
