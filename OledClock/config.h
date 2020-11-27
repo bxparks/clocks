@@ -92,15 +92,23 @@
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
 #elif defined(AUNITER_D1MINI)
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
   #undef BUTTON_TYPE
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-
-  #define SPI_DATA_COMMAND_PIN D4
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 1
   #define ANALOG_BUTTON_PIN A0
   #define ANALOG_BITS 10
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Display parameters
+  #undef DISPLAY_TYPE
+  #define DISPLAY_TYPE DISPLAY_TYPE_LCD
+  #define LCD_SPI_DATA_COMMAND_PIN D4
+  #define LCD_BACKLIGHT_PIN D3
+  #define LCD_INITIAL_CONTRAST 20
+  #define LCD_INITIAL_BIAS 7
   #define OLED_REMAP true
 #elif defined(AUNITER_ESP32)
   #define MODE_BUTTON_PIN 4

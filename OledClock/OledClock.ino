@@ -70,20 +70,19 @@ using namespace ace_time::clock;
   void setupDisplay() {
     oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
     oled.displayRemap(OLED_REMAP);
-    oled.clear();
     oled.setScroll(false);
+    oled.clear();
   }
 
   Presenter presenter(oled, true /*isOverwriting*/);
 #else
-  Adafruit_PCD8544 lcd = Adafruit_PCD8544(SPI_DATA_COMMAND_PIN, -1, -1);
+  Adafruit_PCD8544 lcd = Adafruit_PCD8544(LCD_SPI_DATA_COMMAND_PIN, -1, -1);
 
   void setupDisplay() {
     lcd.begin();
 
-    // TODO: Move these to the Settings sceen
-    lcd.setContrast(32);
-    lcd.setBias(7);
+    lcd.setContrast(LCD_INITIAL_CONTRAST);
+    lcd.setBias(LCD_INITIAL_BIAS);
 
     lcd.setTextWrap(false);
     lcd.clearDisplay();
