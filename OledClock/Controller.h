@@ -67,7 +67,6 @@ class Controller {
      */
     void update() {
       if (mMode == MODE_UNKNOWN) return;
-      if (mIsPreparingToSleep) return;
       updateDateTime();
       updateBlinkState();
       updateRenderingInfo();
@@ -474,8 +473,6 @@ class Controller {
     bool mSuppressBlink; // true if blinking should be suppressed
     bool mBlinkShowState = true; // true means actually show
     uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
-
-    bool mIsPreparingToSleep = false;
 };
 
 #endif
