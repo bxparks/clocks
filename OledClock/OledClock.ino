@@ -41,8 +41,68 @@ using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
 
+//-----------------------------------------------------------------------------
+// Configure time zones and ZoneManager.
+//-----------------------------------------------------------------------------
+
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+
+static ManualZoneManager zoneManager;
+
+#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+
+static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
+  &zonedb::kZoneAmerica_Los_Angeles,
+  &zonedb::kZoneAmerica_Denver,
+  &zonedb::kZoneAmerica_Chicago,
+  &zonedb::kZoneAmerica_New_York,
+};
+
+static const uint16_t ZONE_REGISTRY_SIZE =
+    sizeof(ZONE_REGISTRY) / sizeof(basic::ZoneInfo*);
+
+// Only 1 displayed at any given time, need 2 for conversions.
+static const uint16_t CACHE_SIZE = 1 + 1;
+static BasicZoneManager<CACHE_SIZE> zoneManager(
+    ZONE_REGISTRY_SIZE, ZONE_REGISTRY);
+
+#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+
+static const extended::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
+  &zonedbx::kZoneAmerica_Los_Angeles,
+  &zonedbx::kZoneAmerica_Denver,
+  &zonedbx::kZoneAmerica_Chicago,
+  &zonedbx::kZoneAmerica_New_York,
+};
+
+static const uint16_t ZONE_REGISTRY_SIZE =
+    sizeof(ZONE_REGISTRY) / sizeof(extended::ZoneInfo*);
+
+// Only 1 displayed at any given time, need 2 for conversions.
+static const uint16_t CACHE_SIZE = 1 + 1;
+static ExtendedZoneManager<CACHE_SIZE> zoneManager(
+    ZONE_REGISTRY_SIZE, ZONE_REGISTRY);
+
+#endif
+
+//-----------------------------------------------------------------------------
+// Create initial display timezone. Normally, these will be replaced by
+// the information retrieved from the EEPROM by the Controller.
+//-----------------------------------------------------------------------------
+
+#if TIME_ZONE_TYPE == TIME_ZONE_MANUAL
+
+  const TimeZoneData DISPLAY_ZONE = {-8*60, 0} /*-08:00*/;
+
+#else
+
+  // zoneIds are identical in zonedb:: and zonedbx::
+  const TimeZoneData DISPLAY_ZONE = {zonedb::kZoneIdAmerica_Los_Angeles};
+
+#endif
+
 //------------------------------------------------------------------
-// Configure various Clocks and Clocks.
+// Create clocks
 //------------------------------------------------------------------
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
@@ -61,6 +121,19 @@ using namespace ace_time::clock;
   #error Unknown clock option
 #endif
 
+void setupClocks() {
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+  dsClock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
+  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
+  dsClock.setup();
+  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
+#endif
+  systemClock.setup();
+  systemClock.setupCoroutine(F("clock"));
+}
+
 //------------------------------------------------------------------
 // Configure OLED display or LCD display.
 //------------------------------------------------------------------
@@ -74,8 +147,6 @@ using namespace ace_time::clock;
     oled.setScroll(false);
     oled.clear();
   }
-
-  Presenter presenter(oled, true /*isOverwriting*/);
 #else
   Adafruit_PCD8544 lcd = Adafruit_PCD8544(LCD_SPI_DATA_COMMAND_PIN, -1, -1);
 
@@ -89,9 +160,20 @@ using namespace ace_time::clock;
     lcd.clearDisplay();
     lcd.display();
   }
-
-  Presenter presenter(lcd, false /*isOverwriting*/);
 #endif
+
+//-----------------------------------------------------------------------------
+// Create presenter
+//-----------------------------------------------------------------------------
+
+#if DISPLAY_TYPE == DISPLAY_TYPE_OLED
+  Presenter presenter(zoneManager, oled, true /*isOverwriting*/);
+#else
+  Presenter presenter(zoneManager, lcd, false /*isOverwriting*/);
+#endif
+
+void setupPresenter() {
+}
 
 //-----------------------------------------------------------------------------
 // Create mode groups that define the navigation path for the Mode button.
@@ -187,12 +269,26 @@ const ModeGroup rootModeGroup = {
   TOP_LEVEL_CHILD_GROUPS /* childGroups */,
 };
 
+//-----------------------------------------------------------------------------
+// Create persistent store.
+//-----------------------------------------------------------------------------
+
+PersistentStore persistentStore;
+
+void setupPersistentStore() {
+  persistentStore.setup();
+}
+
 //------------------------------------------------------------------
 // Create controller.
 //------------------------------------------------------------------
 
-PersistentStore persistentStore;
-Controller controller(persistentStore, systemClock, presenter, &rootModeGroup);
+Controller controller(persistentStore, systemClock, presenter, zoneManager,
+  DISPLAY_ZONE, &rootModeGroup);
+
+void setupController(bool factoryReset) {
+  controller.setup(factoryReset);
+}
 
 //------------------------------------------------------------------
 // Render the Clock periodically.
@@ -363,21 +459,15 @@ if (ENABLE_SERIAL_DEBUG == 1) {
   Wire.setClock(400000L);
 
   setupAceButton();
+  setupClocks();
   setupDisplay();
+  setupPresenter();
+  setupPersistentStore();
 
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  dsClock.setup();
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  dsClock.setup();
-  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
-#endif
-  systemClock.setup();
-  controller.setup();
-  persistentStore.setup();
+  // Hold down the Mode button to perform factory reset.
+  bool isModePressedDuringBoot = modeButton.isPressedRaw();
+  setupController(isModePressedDuringBoot);
 
-  systemClock.setupCoroutine(F("clock"));
   CoroutineScheduler::setup();
 
   if (ENABLE_SERIAL_DEBUG == 1) {

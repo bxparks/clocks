@@ -15,7 +15,7 @@ struct ClockInfo {
   uint8_t hourMode;
 
   /** The desired timezone of the clock. */
-  ace_time::TimeZone timeZone;
+  ace_time::TimeZoneData timeZoneData;
 
   /** Current time. */
   ace_time::ZonedDateTime dateTime;

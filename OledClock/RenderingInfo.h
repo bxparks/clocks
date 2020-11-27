@@ -14,7 +14,7 @@ struct RenderingInfo {
   bool blinkShowState; // true if blinking info should be shown
 
   uint8_t hourMode; // ClockInfo::kTwelve or kTwentyFour
-  ace_time::TimeZone timeZone;
+  ace_time::TimeZoneData timeZoneData;
   ace_time::ZonedDateTime dateTime;
 };
 

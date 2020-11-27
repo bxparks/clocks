@@ -39,31 +39,23 @@ class Controller {
         PersistentStore& persistentStore,
         Clock& clock,
         Presenter& presenter,
+        ZoneManager& zoneManager,
+        TimeZoneData initialTimeZoneData,
         ModeGroup const* rootModeGroup
     ) :
         mPersistentStore(persistentStore),
         mClock(clock),
         mPresenter(presenter),
+        mZoneManager(zoneManager),
+        mInitialTimeZoneData(initialTimeZoneData),
         mCurrentModeGroup(rootModeGroup)
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC \
-          || TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
-        , mZoneManager(kZoneRegistrySize, kZoneRegistry)
-      #endif
     {}
 
-    void setup() {
-      // Restore from EEPROM to retrieve time zone.
-      StoredInfo storedInfo;
-      bool isValid = mPersistentStore.readStoredInfo(storedInfo);
-    #if FORCE_INITIALIZE
-      setupClockInfo();
-    #else
-      if (isValid) {
-        restoreClockInfo(mClockInfo, storedInfo);
-      } else {
-        setupClockInfo();
-      }
-    #endif
+    void setup(bool factoryReset) {
+      #if FORCE_INITIALIZE
+        factoryReset = true;
+      #endif
+      restoreClockInfo(factoryReset);
 
       // Retrieve current time from Clock and set the current clockInfo.
       updateDateTime();
@@ -104,6 +96,15 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
       }
+
+      #if TIME_ZONE_TYPE != TIME_ZONE_TYPE_MANUAL
+      switch (mMode) {
+        case MODE_CHANGE_TIME_ZONE_NAME:
+          mZoneRegistryIndex = mZoneManager.indexForZoneId(
+              mChangingClockInfo.timeZoneData.zoneId);
+          break;
+      }
+      #endif
     }
 
     void performLeavingModeAction() {
@@ -179,12 +180,6 @@ class Controller {
       }
 
       switch (mMode) {
-        case MODE_DATE_TIME:
-          mChangingClockInfo = mClockInfo;
-          mSecondFieldCleared = false;
-          mMode = MODE_CHANGE_YEAR;
-          break;
-
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -192,16 +187,6 @@ class Controller {
         case MODE_CHANGE_MINUTE:
         case MODE_CHANGE_SECOND:
           saveDateTime();
-          mMode = MODE_DATE_TIME;
-          break;
-
-        case MODE_TIME_ZONE:
-          mChangingClockInfo = mClockInfo;
-        #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-          mMode = MODE_CHANGE_TIME_ZONE_OFFSET;
-        #else
-          mMode = MODE_CHANGE_TIME_ZONE_NAME;
-        #endif
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -211,7 +196,6 @@ class Controller {
         case MODE_CHANGE_TIME_ZONE_NAME:
       #endif
           saveClockInfo();
-          mMode = MODE_TIME_ZONE;
           break;
       }
     }
@@ -255,39 +239,46 @@ class Controller {
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE_OFFSET:
-        {
+        case MODE_CHANGE_TIME_ZONE_OFFSET: {
           mSuppressBlink = true;
-          TimeOffset offset = mChangingClockInfo.timeZone.getStdOffset();
+
+          TimeZone tz = mZoneManager.createForTimeZoneData(
+              mChangingClockInfo.timeZoneData);
+          TimeOffset offset = tz.getStdOffset();
           time_offset_mutation::increment15Minutes(offset);
-          mChangingClockInfo.timeZone.setStdOffset(offset);
+          tz.setStdOffset(offset);
+          mChangingClockInfo.timeZoneData = tz.toTimeZoneData();
           break;
         }
-        case MODE_CHANGE_TIME_ZONE_DST:
-        {
+
+        case MODE_CHANGE_TIME_ZONE_DST: {
           mSuppressBlink = true;
-          TimeOffset dstOffset = mChangingClockInfo.timeZone.getDstOffset();
+
+          TimeZone tz = mZoneManager.createForTimeZoneData(
+              mChangingClockInfo.timeZoneData);
+          TimeOffset dstOffset = tz.getDstOffset();
           dstOffset = (dstOffset.isZero())
               ? TimeOffset::forMinutes(kDstOffsetMinutes)
               : TimeOffset();
-          mChangingClockInfo.timeZone.setDstOffset(dstOffset);
+          tz.setDstOffset(dstOffset);
+          mChangingClockInfo.timeZoneData = tz.toTimeZoneData();
           break;
         }
 
       #else
         // Cycle through the zones in the registry
-        case MODE_CHANGE_TIME_ZONE_NAME:
+        case MODE_CHANGE_TIME_ZONE_NAME: {
           mSuppressBlink = true;
-          mZoneIndex++;
-          if (mZoneIndex >= kZoneRegistrySize) {
-            mZoneIndex = 0;
+          mZoneRegistryIndex++;
+          if (mZoneRegistryIndex >= mZoneManager.registrySize()) {
+            mZoneRegistryIndex = 0;
           }
-          mChangingClockInfo.timeZone =
-              mZoneManager.createForZoneIndex(mZoneIndex);
+          TimeZone tz = mZoneManager.createForZoneIndex(mZoneRegistryIndex);
+          mChangingClockInfo.timeZoneData = tz.toTimeZoneData();
           mChangingClockInfo.dateTime =
-              mChangingClockInfo.dateTime.convertToTimeZone(
-                  mChangingClockInfo.timeZone);
+              mChangingClockInfo.dateTime.convertToTimeZone(tz);
           break;
+        }
 
       #endif
       }
@@ -328,19 +319,9 @@ class Controller {
     }
 
   private:
-  #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-    static const basic::ZoneInfo* const kZoneRegistry[];
-  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
-    static const extended::ZoneInfo* const kZoneRegistry[];
-  #endif
-    static const uint16_t kZoneRegistrySize;
-
     void updateDateTime() {
-      // TODO: It might be possible to track just the epochSeconds instead of
-      // converting it to a ZonedDateTime at each iteration.
-
-      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
-          mClock.getNow(), mClockInfo.timeZone);
+      TimeZone tz = mZoneManager.createForTimeZoneData(mClockInfo.timeZoneData);
+      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(mClock.getNow(), tz);
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update the mChangingDateTime.second field with the current second.
@@ -417,100 +398,65 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("preserveClockInfo()"));
       }
       StoredInfo storedInfo;
-      storedInfo.hourMode = clockInfo.hourMode;
-      storedInfo.timeZoneData = clockInfo.timeZone.toTimeZoneData();
+      storedInfoFromClockInfo(storedInfo, clockInfo);
       mPersistentStore.writeStoredInfo(storedInfo);
     }
 
-    /** Restore clockInfo from storedInfo. */
-    void restoreClockInfo(ClockInfo& clockInfo, const StoredInfo& storedInfo) {
-      if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.println(F("restoreClockInfo()"));
-        SERIAL_PORT_MONITOR.print(F("hourMode: "));
-        SERIAL_PORT_MONITOR.println(storedInfo.hourMode);
-        SERIAL_PORT_MONITOR.print(F("type: "));
-        uint8_t type = storedInfo.timeZoneData.type;
-        SERIAL_PORT_MONITOR.println(type);
-        if (type == TimeZoneData::kTypeManual) {
-          SERIAL_PORT_MONITOR.print(F("std: "));
-          TimeOffset::forMinutes(storedInfo.timeZoneData.stdOffsetMinutes)
-              .printTo(SERIAL_PORT_MONITOR);
-          SERIAL_PORT_MONITOR.println();
-          SERIAL_PORT_MONITOR.print(F("dst: "));
-          TimeOffset::forMinutes(storedInfo.timeZoneData.dstOffsetMinutes)
-              .printTo(SERIAL_PORT_MONITOR);
-          SERIAL_PORT_MONITOR.println();
-        } else if (type == TimeZoneData::kTypeZoneId) {
-          SERIAL_PORT_MONITOR.print(F("zoneId: 0x"));
-          SERIAL_PORT_MONITOR.println(storedInfo.timeZoneData.zoneId, 16);
-        } else {
-          SERIAL_PORT_MONITOR.println(F("<error>"));
-        }
-      }
+    /** Convert StoredInfo to ClockInfo. */
+    static void clockInfoFromStoredInfo(
+        ClockInfo& clockInfo, const StoredInfo& storedInfo) {
       clockInfo.hourMode = storedInfo.hourMode;
+      clockInfo.timeZoneData = storedInfo.timeZoneData;
+    }
 
-    #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-      if (storedInfo.timeZoneData.type == TimeZoneData::kTypeManual) {
-        clockInfo.timeZone = TimeZone::forTimeOffset(
-            TimeOffset::forMinutes(storedInfo.timeZoneData.stdOffsetMinutes),
-            TimeOffset::forMinutes(storedInfo.timeZoneData.dstOffsetMinutes));
-      } else {
-        clockInfo.timeZone = TimeZone::forTimeOffset(
-            TimeOffset::forMinutes(kDefaultOffsetMinutes),
-            TimeOffset());
-      }
-    #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC \
-        || TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
-      if (storedInfo.timeZoneData.type == TimeZoneData::kTypeZoneId) {
-        clockInfo.timeZone = mZoneManager.createForTimeZoneData(
-            storedInfo.timeZoneData);
-        if (! clockInfo.timeZone.isError()) {
-          mZoneIndex = mZoneManager.indexForZoneId(
-              storedInfo.timeZoneData.zoneId);
-        } else {
-          clockInfo.timeZone = mZoneManager.createForZoneIndex(0);
-          mZoneIndex = 0;
+    /** Convert ClockInfo to StoredInfo. */
+    static void storedInfoFromClockInfo(
+        StoredInfo& storedInfo, const ClockInfo& clockInfo) {
+      storedInfo.hourMode = clockInfo.hourMode;
+      storedInfo.timeZoneData = clockInfo.timeZoneData;
+    }
+
+    /** Attempt to restore from EEPROM, otherwise use factory defaults. */
+    void restoreClockInfo(bool factoryReset) {
+      StoredInfo storedInfo;
+      bool isValid;
+
+      if (factoryReset) {
+        if (ENABLE_SERIAL_DEBUG == 1) {
+          SERIAL_PORT_MONITOR.println(F("restoreClockInfo(): FACTORY RESET"));
         }
+        isValid = false;
       } else {
-        clockInfo.timeZone = mZoneManager.createForZoneIndex(0);
-        mZoneIndex = 0;
+        isValid = mPersistentStore.readStoredInfo(storedInfo);
+        if (ENABLE_SERIAL_DEBUG == 1) {
+          if (! isValid) {
+            SERIAL_PORT_MONITOR.println(F(
+                "restoreClockInfo(): EEPROM NOT VALID; "
+                "Using factory defaults"));
+          }
+        }
       }
-    #endif
 
+      if (isValid) {
+        clockInfoFromStoredInfo(mClockInfo, storedInfo);
+      } else {
+        setupClockInfo();
+        preserveClockInfo(mClockInfo);
+      }
     }
 
     /** Set up the initial ClockInfo states. */
     void setupClockInfo() {
-      StoredInfo storedInfo;
-      storedInfo.hourMode = StoredInfo::kTwentyFour;
-
-    #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-      storedInfo.timeZoneData.type = TimeZone::kTypeManual;
-      storedInfo.timeZoneData.stdOffsetMinutes = kDefaultOffsetMinutes;
-      storedInfo.timeZoneData.dstOffsetMinutes = 0;
-    #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-      storedInfo.timeZoneData.type = TimeZoneData::kTypeZoneId;
-      storedInfo.timeZoneData.zoneId =
-          BasicZone(&zonedb::kZoneAmerica_Los_Angeles).zoneId();
-    #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
-      storedInfo.timeZoneData.type = TimeZoneData::kTypeZoneId;
-      storedInfo.timeZoneData.zoneId =
-          ExtendedZone(&zonedbx::kZoneAmerica_Los_Angeles).zoneId();
-    #endif
-
-      restoreClockInfo(mClockInfo, storedInfo);
+      mClockInfo.hourMode = StoredInfo::kTwentyFour;
+      mClockInfo.timeZoneData = mInitialTimeZoneData;
     }
 
     PersistentStore& mPersistentStore;
     Clock& mClock;
     Presenter& mPresenter;
+    ZoneManager& mZoneManager;
+    TimeZoneData mInitialTimeZoneData;
     ModeGroup const* mCurrentModeGroup;
-
-  #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-    BasicZoneManager<2> mZoneManager;
-  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
-    ExtendedZoneManager<2> mZoneManager;
-  #endif
 
     ClockInfo mClockInfo; // current clock
     ClockInfo mChangingClockInfo; // the target clock
@@ -520,11 +466,7 @@ class Controller {
     uint8_t mCurrentModeIndex = 0;
     uint8_t mMode = MODE_DATE_TIME; // current mode
 
-    /**
-     * Zone index into the ZoneRegistry. Defined if TIME_ZONE_TYPE is BASIC or
-     * EXTENDED.
-     */
-    uint16_t mZoneIndex;
+    uint16_t mZoneRegistryIndex;
 
     bool mSecondFieldCleared;
 
