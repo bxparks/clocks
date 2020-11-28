@@ -273,14 +273,6 @@ void setupAceButton() {
   changeButtonConfig.setRepeatPressInterval(150);
 }
 
-COROUTINE(checkButton) {
-  COROUTINE_LOOP() {
-    modeButton.check();
-    changeButton.check();
-    COROUTINE_DELAY(5); // check button every 5 ms
-  }
-}
-
 //------------------------------------------------------------------
 // MedMinder main loop
 //------------------------------------------------------------------
@@ -326,4 +318,9 @@ void setup() {
 
 void loop() {
   CoroutineScheduler::loop();
+
+  // Calling AceButton loops directly instead of in a COROUTINE() saves 146
+  // bytes of flash, and 31 bytes of SRAM.
+  modeButton.check();
+  changeButton.check();
 }
