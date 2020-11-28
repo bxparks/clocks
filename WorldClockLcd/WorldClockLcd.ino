@@ -179,16 +179,6 @@ void setupClocks() {
 #endif
 
 //-----------------------------------------------------------------------------
-// Create persistent store.
-//-----------------------------------------------------------------------------
-
-PersistentStore persistentStore;
-
-void setupPersistentStore() {
-  persistentStore.setup();
-}
-
-//-----------------------------------------------------------------------------
 // Create presenter
 //-----------------------------------------------------------------------------
 
@@ -326,6 +316,16 @@ const ModeGroup rootModeGroup = {
   TOP_LEVEL_MODES /* modes */,
   TOP_LEVEL_CHILD_GROUPS /* childGroups */,
 };
+
+//-----------------------------------------------------------------------------
+// Create persistent store.
+//-----------------------------------------------------------------------------
+
+PersistentStore persistentStore;
+
+void setupPersistentStore() {
+  persistentStore.setup();
+}
 
 //-----------------------------------------------------------------------------
 // Create controller.

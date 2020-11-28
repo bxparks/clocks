@@ -65,6 +65,9 @@ class Controller {
         pinMode(LCD_BACKLIGHT_PIN, OUTPUT);
       #endif
 
+      #if FORCE_INITIALIZE
+        factoryReset = true;
+      #endif
       restoreClockInfo(factoryReset);
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
@@ -686,10 +689,6 @@ class Controller {
 
     /** Attempt to restore from EEPROM, otherwise use factory defaults. */
     void restoreClockInfo(bool factoryReset) {
-      #if FORCE_INITIALIZE
-        factoryReset = true;
-      #endif
-
       StoredInfo storedInfo;
       bool isValid;
       if (factoryReset) {
@@ -699,10 +698,13 @@ class Controller {
         isValid = false;
       } else {
         isValid = mPersistentStore.readStoredInfo(storedInfo);
+        isValid = true;
         if (ENABLE_SERIAL_DEBUG == 1) {
-          SERIAL_PORT_MONITOR.println(F(
-              "restoreClockInfo(): EEPROM NOT VALID; "
-              "Using factory defaults"));
+          if (! isValid) {
+            SERIAL_PORT_MONITOR.println(F(
+                "restoreClockInfo(): EEPROM NOT VALID; "
+                "Using factory defaults"));
+          }
         }
       }
 

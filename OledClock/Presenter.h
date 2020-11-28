@@ -53,6 +53,7 @@ class Presenter {
      *        NOT need to clear the display
      */
     Presenter(
+        ZoneManager& zoneManager,
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
         Adafruit_PCD8544& display,
       #else
@@ -60,6 +61,7 @@ class Presenter {
       #endif
         bool isOverwriting
     ) :
+        mZoneManager(zoneManager),
         mDisplay(display),
         mIsOverwriting(isOverwriting)
       {}
@@ -81,7 +83,7 @@ class Presenter {
       mRenderingInfo.suppressBlink = suppressBlink;
       mRenderingInfo.blinkShowState = blinkShowState;
       mRenderingInfo.hourMode = clockInfo.hourMode;
-      mRenderingInfo.timeZone = clockInfo.timeZone;
+      mRenderingInfo.timeZoneData = clockInfo.timeZoneData;
       mRenderingInfo.dateTime = clockInfo.dateTime;
     }
 
@@ -182,7 +184,7 @@ class Presenter {
               && (mRenderingInfo.blinkShowState
                   != mPrevRenderingInfo.blinkShowState))
           || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode
-          || mRenderingInfo.timeZone != mPrevRenderingInfo.timeZone
+          || mRenderingInfo.timeZoneData != mPrevRenderingInfo.timeZoneData
           || mRenderingInfo.dateTime != mPrevRenderingInfo.dateTime;
     }
 
@@ -311,7 +313,8 @@ class Presenter {
       // Display the timezone using the TimeZoneData, not the dateTime, since
       // dateTime will contain a TimeZone, which points to the (singular)
       // Controller::mZoneProcessor, which will contain the old timeZone.
-      auto& tz = mRenderingInfo.timeZone;
+      TimeZone tz = mZoneManager.createForTimeZoneData(
+          mRenderingInfo.timeZoneData);
       mDisplay.print("TZ: ");
       const __FlashStringHelper* typeString;
       switch (tz.getType()) {
@@ -394,6 +397,7 @@ class Presenter {
       mDisplay.println(F("AR: " ACE_ROUTINE_VERSION_STRING));
     }
 
+    ZoneManager& mZoneManager;
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     Adafruit_PCD8544& mDisplay;
   #else
