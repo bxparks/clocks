@@ -109,7 +109,9 @@ SSD1306AsciiWire oled;
 void setupOled() {
   oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
   oled.displayRemap(OLED_REMAP);
+  oled.setFont(fixed_bold10x15);
   oled.clear();
+  oled.setScroll(false);
 }
 
 //------------------------------------------------------------------

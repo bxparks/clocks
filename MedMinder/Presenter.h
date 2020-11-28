@@ -1,9 +1,11 @@
 #ifndef MED_MINDER_PRESENTER_H
 #define MED_MINDER_PRESENTER_H
 
+#include "config.h"
 #include <SSD1306AsciiWire.h>
 #include <AceTime.h>
-#include <ace_time/common/DateStrings.h>
+#include <AceButton.h>
+#include <AceRoutine.h>
 #include "RenderingInfo.h"
 #include "ClockInfo.h"
 
@@ -99,8 +101,6 @@ class Presenter {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("displayMed()"));
       }
-      mOled.setFont(fixed_bold10x15);
-      mOled.set1X();
 
       mOled.println(F("Med due"));
       mRenderingInfo.timePeriod.printTo(mOled);
@@ -111,28 +111,11 @@ class Presenter {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("displayAbout()"));
       }
-      mOled.setFont(SystemFont5x7);
-      mOled.set1X();
-
-      mOled.print(F("MedMinder: "));
-      mOled.print(MED_MINDER_VERSION_STRING);
-      mOled.println();
-      mOled.print(F("TZ: "));
-      mOled.print(zonedb::kTzDatabaseVersion);
-      mOled.println();
-      mOled.print(F("AceTime: "));
-      mOled.print(ACE_TIME_VERSION_STRING);
-      mOled.println();
-      mOled.print(F("Clock: "));
-    #if TIME_PROVIDER == TIME_PROVIDER_DS3231
-      mOled.print(F("DS3231"));
-    #elif TIME_PROVIDER == TIME_PROVIDER_NTP
-      mOled.print(F("NTP"));
-    #elif TIME_PROVIDER == TIME_PROVIDER_SYSTEM
-      mOled.print(F("millis()"));
-    #else
-      mOled.print(F("<Unknown>"));
-    #endif
+      mOled.print(F("TZ:"));
+      mOled.println(zonedb::kTzDatabaseVersion);
+      mOled.println(F("AT:" ACE_TIME_VERSION_STRING));
+      mOled.println(F("AB:" ACE_BUTTON_VERSION_STRING));
+      mOled.println(F("AR:" ACE_ROUTINE_VERSION_STRING));
     }
 
     void displayChangeMed() const {
@@ -157,8 +140,6 @@ class Presenter {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("displayDateTime()"));
       }
-      mOled.setFont(fixed_bold10x15);
-      mOled.set1X();
 
       displayDate();
       mOled.println();
