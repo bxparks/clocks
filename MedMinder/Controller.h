@@ -472,8 +472,7 @@ class Controller {
       storedInfo.timeZoneData.dstOffsetMinutes = 0;
     #else
       storedInfo.timeZoneData.type = TimeZoneData::kTypeZoneId;
-      storedInfo.timeZoneData.zoneId =
-          BasicZone(&zonedb::kZoneAmerica_Los_Angeles).zoneId();
+      storedInfo.timeZoneData.zoneId = zonedb::kZoneIdAmerica_Los_Angeles;
     #endif
 
       storedInfo.medInterval = TimePeriod(86400); // one day

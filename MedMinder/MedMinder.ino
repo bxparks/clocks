@@ -71,7 +71,7 @@ using namespace ace_time;
 // Configure CrcEeprom.
 //------------------------------------------------------------------
 
-// Needed by ESP32 chips. Has no effect on other chips.
+// Needed by ESP32 and ESP8266 chips. Has no effect on other chips.
 // Should be bigger than (sizeof(crc32) + sizeof(StoredInfo)).
 #define EEPROM_SIZE 32
 
@@ -91,6 +91,15 @@ CrcEeprom crcEeprom;
   SystemClockCoroutine systemClock(nullptr, nullptr);
 #endif
 
+void setupClocks() {
+#if TIME_PROVIDER == TIME_PROVIDER_DS3231
+  dsClock.setup();
+#elif TIME_PROVIDER == TIME_PROVIDER_NTP
+  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
+#endif
+  systemClock.setup();
+}
+
 //------------------------------------------------------------------
 // Configure the OLED display.
 //------------------------------------------------------------------
@@ -109,6 +118,10 @@ void setupOled() {
 
 Presenter presenter(oled);
 Controller controller(systemClock, crcEeprom, presenter);
+
+void setupController() {
+  controller.setup();
+}
 
 //------------------------------------------------------------------
 // Run the controller.
@@ -293,16 +306,10 @@ void setup() {
   Wire.setClock(400000L);
 
   crcEeprom.begin(EEPROM_SIZE);
-#if TIME_PROVIDER == TIME_PROVIDER_DS3231
-  dsClock.setup();
-#elif TIME_PROVIDER == TIME_PROVIDER_NTP
-  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
-#endif
-  systemClock.setup();
-
+  setupClocks();
   setupAceButton();
   setupOled();
-  controller.setup();
+  setupController();
 
 #if ENABLE_LOW_POWER == 1
   enableInterrupt(MODE_BUTTON_PIN, buttonInterrupt, CHANGE);
