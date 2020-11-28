@@ -95,7 +95,7 @@ void setupClocks() {
 #if TIME_PROVIDER == TIME_PROVIDER_DS3231
   dsClock.setup();
 #elif TIME_PROVIDER == TIME_PROVIDER_NTP
-  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
+  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
 #endif
   systemClock.setup();
 }

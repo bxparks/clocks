@@ -125,10 +125,10 @@ void setupClocks() {
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   dsClock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
+  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
   dsClock.setup();
-  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
+  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
 #endif
   systemClock.setup();
   systemClock.setupCoroutine(F("clock"));

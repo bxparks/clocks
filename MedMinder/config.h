@@ -33,20 +33,32 @@
 // $HOME/.auniter.ini and the AUNITER_XXX macro is set by auniter.sh.
 //------------------------------------------------------------------
 
+// If using Arduino IDE, AUNITER is not defined.
 #if ! defined(AUNITER)
-  // Normal Arduino IDE
+  // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
+  #define WIFI_SSID "your wifi ssid here"
+  #define WIFI_PASSWORD "your wifi password here"
+
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
 #elif defined(AUNITER_NANO)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
 #elif defined(AUNITER_MICRO)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #undef TIME_ZONE_TYPE
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_MANUAL
   #define ENABLE_LOW_POWER 1
@@ -55,18 +67,30 @@
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
 #elif defined(AUNITER_MED_MINDER8)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define ENABLE_LOW_POWER 1
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
 #elif defined(AUNITER_ESP8266)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN D4
   #define CHANGE_BUTTON_PIN D3
 #elif defined(AUNITER_ESP32)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_NTP
   #define OLED_REMAP false

@@ -50,18 +50,30 @@
 #define BUTTON_TYPE_ANALOG 1
 #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
 
+// If using Arduino IDE, AUNITER is not defined.
 #ifndef AUNITER
-  // Arduino IDE in interactive mode
+  // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
+  #define WIFI_SSID "your wifi ssid here"
+  #define WIFI_PASSWORD "your wifi password here"
+
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
 #elif defined(AUNITER_NANO)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
 #elif defined(AUNITER_MICRO)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   // Pro Micro has just enough memory for Basic TimeZone w/ 4 timezones.
   // In certain configurations, it does not have enough memory, in which case
   // the Manual timezones must be used.
@@ -72,26 +84,46 @@
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP true
 #elif defined(AUNITER_MINI_MINDER)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
 #elif defined(AUNITER_MEGA)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
 #elif defined(AUNITER_SAMD)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define MODE_BUTTON_PIN 11
   #define CHANGE_BUTTON_PIN 10
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP true
 #elif defined(AUNITER_ESP8266)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define MODE_BUTTON_PIN D4
   #define CHANGE_BUTTON_PIN D3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
 #elif defined(AUNITER_D1MINI)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
@@ -111,6 +143,10 @@
   #define LCD_INITIAL_BIAS 7
   #define OLED_REMAP true
 #elif defined(AUNITER_ESP32)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
   #define MODE_BUTTON_PIN 4
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_NTP

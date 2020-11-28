@@ -82,12 +82,17 @@ If you are using the Arduino IDE (as most people probably are), the
 configuration parameters inside the following are the ones you need to change:
 
 ```C++
+// If using Arduino IDE, AUNITER is not defined.
 #ifndef AUNITER
-  // Arduino IDE in interactive mode
+  // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
+  #define WIFI_SSID "your wifi ssid here"
+  #define WIFI_PASSWORD "your wifi password here"
+
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
+#elif [...]
 ```
 
 All the other ones are the parameters needed by my various boards, so you can
