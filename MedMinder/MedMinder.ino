@@ -214,7 +214,7 @@ void handleButton(AceButton* button, uint8_t eventType,
   if (pin == CHANGE_BUTTON_PIN) {
     switch (eventType) {
       case AceButton::kEventPressed:
-        controller.changeButtonPress();
+        controller.handleChangeButtonPress();
         break;
 
       case AceButton::kEventReleased:
@@ -226,15 +226,15 @@ void handleButton(AceButton* button, uint8_t eventType,
           return;
         }
       #endif
-        controller.changeButtonRelease();
+        controller.handleChangeButtonRelease();
         break;
 
       case AceButton::kEventRepeatPressed:
-        controller.changeButtonRepeatPress();
+        controller.handleChangeButtonRepeatPress();
         break;
 
       case AceButton::kEventLongPressed:
-        controller.changeButtonLongPress();
+        controller.handleChangeButtonLongPress();
         break;
     }
   } else if (pin == MODE_BUTTON_PIN) {
@@ -247,11 +247,11 @@ void handleButton(AceButton* button, uint8_t eventType,
           return;
         }
       #endif
-        controller.modeButtonPress();
+        controller.handleModeButtonPress();
         break;
 
       case AceButton::kEventLongPressed:
-        controller.modeButtonLongPress();
+        controller.handleModeButtonLongPress();
         break;
     }
   }
