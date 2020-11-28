@@ -73,7 +73,7 @@ using namespace ace_time;
 
 // Needed by ESP32 and ESP8266 chips. Has no effect on other chips.
 // Should be bigger than (sizeof(crc32) + sizeof(StoredInfo)).
-#define EEPROM_SIZE 32
+const int EEPROM_SIZE = sizeof(StoredInfo) + 4;
 
 CrcEeprom crcEeprom;
 
@@ -145,9 +145,9 @@ COROUTINE(runController) {
 // Sleep Manager
 //------------------------------------------------------------------
 
-#define RUN_MODE_AWAKE 0
-#define RUN_MODE_SLEEPING 1
-#define RUN_MODE_DREAMING 2
+const uint8_t RUN_MODE_AWAKE = 0;
+const uint8_t RUN_MODE_SLEEPING = 1;
+const uint8_t RUN_MODE_DREAMING = 2;
 
 static uint16_t lastUserActionMillis;
 
