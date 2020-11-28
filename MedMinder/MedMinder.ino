@@ -202,75 +202,70 @@ COROUTINE(manageSleep) {
 // Configurations for AceButton
 //------------------------------------------------------------------
 
-ButtonConfig modeButtonConfig;
-AceButton modeButton(&modeButtonConfig);
+ButtonConfig buttonConfig;
+AceButton modeButton(&buttonConfig, MODE_BUTTON_PIN);
+AceButton changeButton(&buttonConfig, CHANGE_BUTTON_PIN);
 
-ButtonConfig changeButtonConfig;
-AceButton changeButton(&changeButtonConfig);
-
-void handleModeButton(AceButton* /* button */, uint8_t eventType,
+void handleButton(AceButton* button, uint8_t eventType,
     uint8_t /* buttonState */) {
   lastUserActionMillis = millis();
+  uint8_t pin = button->getPin();
 
-  switch (eventType) {
-    case AceButton::kEventReleased:
-#if ENABLE_LOW_POWER
-      // Eat the first button event if just woken up.
-      if (isWakingUp) {
-        isWakingUp = false;
-        return;
-      }
-#endif
-      controller.modeButtonPress();
-      break;
-    case AceButton::kEventLongPressed:
-      controller.modeButtonLongPress();
-      break;
-  }
-}
+  if (pin == CHANGE_BUTTON_PIN) {
+    switch (eventType) {
+      case AceButton::kEventPressed:
+        controller.changeButtonPress();
+        break;
 
-void handleChangeButton(AceButton* /* button */, uint8_t eventType,
-    uint8_t /* buttonState */) {
-  lastUserActionMillis = millis();
+      case AceButton::kEventReleased:
+      case AceButton::kEventLongReleased:
+      #if ENABLE_LOW_POWER
+        // Eat the first button release event if just woken up.
+        if (isWakingUp) {
+          isWakingUp = false;
+          return;
+        }
+      #endif
+        controller.changeButtonRelease();
+        break;
 
-  switch (eventType) {
-    case AceButton::kEventPressed:
-      controller.changeButtonPress();
-      break;
-    case AceButton::kEventReleased:
-#if ENABLE_LOW_POWER
-      // Eat the first button release event if just woken up.
-      if (isWakingUp) {
-        isWakingUp = false;
-        return;
-      }
-#endif
-      controller.changeButtonRelease();
-      break;
-    case AceButton::kEventRepeatPressed:
-      controller.changeButtonRepeatPress();
-      break;
-    case AceButton::kEventLongPressed:
-      controller.changeButtonLongPress();
-      break;
+      case AceButton::kEventRepeatPressed:
+        controller.changeButtonRepeatPress();
+        break;
+
+      case AceButton::kEventLongPressed:
+        controller.changeButtonLongPress();
+        break;
+    }
+  } else if (pin == MODE_BUTTON_PIN) {
+    switch (eventType) {
+      case AceButton::kEventReleased:
+      #if ENABLE_LOW_POWER
+        // Eat the first button event if just woken up.
+        if (isWakingUp) {
+          isWakingUp = false;
+          return;
+        }
+      #endif
+        controller.modeButtonPress();
+        break;
+
+      case AceButton::kEventLongPressed:
+        controller.modeButtonLongPress();
+        break;
+    }
   }
 }
 
 void setupAceButton() {
   pinMode(MODE_BUTTON_PIN, INPUT_PULLUP);
-  modeButton.init(MODE_BUTTON_PIN);
-
   pinMode(CHANGE_BUTTON_PIN, INPUT_PULLUP);
-  changeButton.init(CHANGE_BUTTON_PIN);
 
-  modeButtonConfig.setEventHandler(handleModeButton);
-  modeButtonConfig.setFeature(ButtonConfig::kFeatureLongPress);
-  modeButtonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
-
-  changeButtonConfig.setEventHandler(handleChangeButton);
-  changeButtonConfig.setFeature(ButtonConfig::kFeatureLongPress);
-  changeButtonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);
-  changeButtonConfig.setRepeatPressInterval(150);
+  buttonConfig.setEventHandler(handleButton);
+  buttonConfig.setFeature(ButtonConfig::kFeatureLongPress);
+  buttonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
+  buttonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);
+  buttonConfig.setRepeatPressInterval(150);
 }
 
 //------------------------------------------------------------------
