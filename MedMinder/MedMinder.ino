@@ -71,9 +71,9 @@ using namespace ace_time;
 // Configure CrcEeprom.
 //------------------------------------------------------------------
 
-// Needed by ESP32 chips. Has no effect on other chips.
+// Needed by ESP32 and ESP8266 chips. Has no effect on other chips.
 // Should be bigger than (sizeof(crc32) + sizeof(StoredInfo)).
-#define EEPROM_SIZE 32
+const int EEPROM_SIZE = sizeof(StoredInfo) + 4;
 
 CrcEeprom crcEeprom;
 
@@ -91,6 +91,15 @@ CrcEeprom crcEeprom;
   SystemClockCoroutine systemClock(nullptr, nullptr);
 #endif
 
+void setupClocks() {
+#if TIME_PROVIDER == TIME_PROVIDER_DS3231
+  dsClock.setup();
+#elif TIME_PROVIDER == TIME_PROVIDER_NTP
+  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
+#endif
+  systemClock.setup();
+}
+
 //------------------------------------------------------------------
 // Configure the OLED display.
 //------------------------------------------------------------------
@@ -100,7 +109,9 @@ SSD1306AsciiWire oled;
 void setupOled() {
   oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
   oled.displayRemap(OLED_REMAP);
+  oled.setFont(fixed_bold10x15);
   oled.clear();
+  oled.setScroll(false);
 }
 
 //------------------------------------------------------------------
@@ -109,6 +120,10 @@ void setupOled() {
 
 Presenter presenter(oled);
 Controller controller(systemClock, crcEeprom, presenter);
+
+void setupController() {
+  controller.setup();
+}
 
 //------------------------------------------------------------------
 // Run the controller.
@@ -130,9 +145,9 @@ COROUTINE(runController) {
 // Sleep Manager
 //------------------------------------------------------------------
 
-#define RUN_MODE_AWAKE 0
-#define RUN_MODE_SLEEPING 1
-#define RUN_MODE_DREAMING 2
+const uint8_t RUN_MODE_AWAKE = 0;
+const uint8_t RUN_MODE_SLEEPING = 1;
+const uint8_t RUN_MODE_DREAMING = 2;
 
 static uint16_t lastUserActionMillis;
 
@@ -189,83 +204,70 @@ COROUTINE(manageSleep) {
 // Configurations for AceButton
 //------------------------------------------------------------------
 
-ButtonConfig modeButtonConfig;
-AceButton modeButton(&modeButtonConfig);
+ButtonConfig buttonConfig;
+AceButton modeButton(&buttonConfig, MODE_BUTTON_PIN);
+AceButton changeButton(&buttonConfig, CHANGE_BUTTON_PIN);
 
-ButtonConfig changeButtonConfig;
-AceButton changeButton(&changeButtonConfig);
-
-void handleModeButton(AceButton* /* button */, uint8_t eventType,
+void handleButton(AceButton* button, uint8_t eventType,
     uint8_t /* buttonState */) {
   lastUserActionMillis = millis();
+  uint8_t pin = button->getPin();
 
-  switch (eventType) {
-    case AceButton::kEventReleased:
-#if ENABLE_LOW_POWER
-      // Eat the first button event if just woken up.
-      if (isWakingUp) {
-        isWakingUp = false;
-        return;
-      }
-#endif
-      controller.modeButtonPress();
-      break;
-    case AceButton::kEventLongPressed:
-      controller.modeButtonLongPress();
-      break;
-  }
-}
+  if (pin == CHANGE_BUTTON_PIN) {
+    switch (eventType) {
+      case AceButton::kEventPressed:
+        controller.handleChangeButtonPress();
+        break;
 
-void handleChangeButton(AceButton* /* button */, uint8_t eventType,
-    uint8_t /* buttonState */) {
-  lastUserActionMillis = millis();
+      case AceButton::kEventReleased:
+      case AceButton::kEventLongReleased:
+      #if ENABLE_LOW_POWER
+        // Eat the first button release event if just woken up.
+        if (isWakingUp) {
+          isWakingUp = false;
+          return;
+        }
+      #endif
+        controller.handleChangeButtonRelease();
+        break;
 
-  switch (eventType) {
-    case AceButton::kEventPressed:
-      controller.changeButtonPress();
-      break;
-    case AceButton::kEventReleased:
-#if ENABLE_LOW_POWER
-      // Eat the first button release event if just woken up.
-      if (isWakingUp) {
-        isWakingUp = false;
-        return;
-      }
-#endif
-      controller.changeButtonRelease();
-      break;
-    case AceButton::kEventRepeatPressed:
-      controller.changeButtonRepeatPress();
-      break;
-    case AceButton::kEventLongPressed:
-      controller.changeButtonLongPress();
-      break;
+      case AceButton::kEventRepeatPressed:
+        controller.handleChangeButtonRepeatPress();
+        break;
+
+      case AceButton::kEventLongPressed:
+        controller.handleChangeButtonLongPress();
+        break;
+    }
+  } else if (pin == MODE_BUTTON_PIN) {
+    switch (eventType) {
+      case AceButton::kEventReleased:
+      #if ENABLE_LOW_POWER
+        // Eat the first button event if just woken up.
+        if (isWakingUp) {
+          isWakingUp = false;
+          return;
+        }
+      #endif
+        controller.handleModeButtonPress();
+        break;
+
+      case AceButton::kEventLongPressed:
+        controller.handleModeButtonLongPress();
+        break;
+    }
   }
 }
 
 void setupAceButton() {
   pinMode(MODE_BUTTON_PIN, INPUT_PULLUP);
-  modeButton.init(MODE_BUTTON_PIN);
-
   pinMode(CHANGE_BUTTON_PIN, INPUT_PULLUP);
-  changeButton.init(CHANGE_BUTTON_PIN);
 
-  modeButtonConfig.setEventHandler(handleModeButton);
-  modeButtonConfig.setFeature(ButtonConfig::kFeatureLongPress);
-  modeButtonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
-
-  changeButtonConfig.setEventHandler(handleChangeButton);
-  changeButtonConfig.setFeature(ButtonConfig::kFeatureLongPress);
-  changeButtonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);
-  changeButtonConfig.setRepeatPressInterval(150);
-}
-
-COROUTINE(checkButton) {
-  COROUTINE_LOOP() {
-    modeButton.check();
-    changeButton.check();
-    COROUTINE_DELAY(5); // check button every 5 ms
-  }
+  buttonConfig.setEventHandler(handleButton);
+  buttonConfig.setFeature(ButtonConfig::kFeatureLongPress);
+  buttonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
+  buttonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);
+  buttonConfig.setRepeatPressInterval(150);
 }
 
 //------------------------------------------------------------------
@@ -293,16 +295,10 @@ void setup() {
   Wire.setClock(400000L);
 
   crcEeprom.begin(EEPROM_SIZE);
-#if TIME_PROVIDER == TIME_PROVIDER_DS3231
-  dsClock.setup();
-#elif TIME_PROVIDER == TIME_PROVIDER_NTP
-  ntpClock.setup(AUNITER_SSID, AUNITER_PASSWORD);
-#endif
-  systemClock.setup();
-
+  setupClocks();
   setupAceButton();
   setupOled();
-  controller.setup();
+  setupController();
 
 #if ENABLE_LOW_POWER == 1
   enableInterrupt(MODE_BUTTON_PIN, buttonInterrupt, CHANGE);
@@ -319,4 +315,9 @@ void setup() {
 
 void loop() {
   CoroutineScheduler::loop();
+
+  // Calling AceButton loops directly instead of in a COROUTINE() saves 146
+  // bytes of flash, and 31 bytes of SRAM.
+  modeButton.check();
+  changeButton.check();
 }

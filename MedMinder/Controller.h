@@ -90,7 +90,7 @@ class Controller {
       mPresenter.prepareToSleep();
     }
 
-    void modeButtonPress()  {
+    void handleModeButtonPress()  {
       switch (mMode) {
         case MODE_VIEW_MED:
           mMode = MODE_VIEW_DATE_TIME;
@@ -148,7 +148,7 @@ class Controller {
       }
     }
 
-    void modeButtonLongPress() {
+    void handleModeButtonLongPress() {
       switch (mMode) {
         case MODE_VIEW_MED:
           mChangingClockInfo = mClockInfo;
@@ -217,7 +217,7 @@ class Controller {
       preserveInfo();
     }
 
-    void changeButtonPress() {
+    void handleChangeButtonPress() {
       switch (mMode) {
         case MODE_CHANGE_MED_HOUR:
           mSuppressBlink = true;
@@ -298,11 +298,11 @@ class Controller {
       update();
     }
 
-    void changeButtonRepeatPress() {
-      changeButtonPress();
+    void handleChangeButtonRepeatPress() {
+      handleChangeButtonPress();
     }
 
-    void changeButtonRelease() {
+    void handleChangeButtonRelease() {
       switch (mMode) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
@@ -323,7 +323,7 @@ class Controller {
       }
     }
 
-    void changeButtonLongPress() {
+    void handleChangeButtonLongPress() {
       switch (mMode) {
         case MODE_VIEW_MED:
           mClockInfo.medStartTime = mClockInfo.dateTime.toEpochSeconds();
@@ -472,8 +472,7 @@ class Controller {
       storedInfo.timeZoneData.dstOffsetMinutes = 0;
     #else
       storedInfo.timeZoneData.type = TimeZoneData::kTypeZoneId;
-      storedInfo.timeZoneData.zoneId =
-          BasicZone(&zonedb::kZoneAmerica_Los_Angeles).zoneId();
+      storedInfo.timeZoneData.zoneId = zonedb::kZoneIdAmerica_Los_Angeles;
     #endif
 
       storedInfo.medInterval = TimePeriod(86400); // one day

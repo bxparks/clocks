@@ -1,24 +1,19 @@
 #ifndef MED_MINDER_CONFIG_H
 #define MED_MINDER_CONFIG_H
 
-#define MED_MINDER_VERSION_STRING "0.1"
-
+//------------------------------------------------------------------
+// Compile-time selectors and options
 //------------------------------------------------------------------
 
+#define MED_MINDER_VERSION_STRING "0.1"
+
+// Set to 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
 #define ENABLE_SERIAL_DEBUG 0
 #endif
 
-//------------------------------------------------------------------
-// OLED display configuration
-//------------------------------------------------------------------
-
 // OLED address: 0X3C+SA0 - 0x3C or 0x3D
 #define OLED_I2C_ADDRESS 0x3C
-
-//------------------------------------------------------------------
-// Compile-time selectors and options
-//------------------------------------------------------------------
 
 // Options for the time sync provider.
 #define TIME_PROVIDER_DS3231 0
@@ -59,7 +54,7 @@
   #define OLED_REMAP true
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
-#elif defined(AUNITER_MINI_MINDER)
+#elif defined(AUNITER_MED_MINDER8)
   #define ENABLE_LOW_POWER 1
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP false
