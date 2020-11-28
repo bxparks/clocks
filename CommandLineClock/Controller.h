@@ -122,31 +122,30 @@ class Controller {
 
   #if ENABLE_TIME_ZONE_TYPE_BASIC
     /** Print list of supported zones. */
-    void printBasicZonesTo(Print& printer) const {
-      const BasicZoneRegistrar& registrar = mBasicZoneManager.getRegistrar();
-      for (uint16_t i = 0; i < registrar.registrySize(); i++) {
+    void printBasicZonesTo(Print& printer) {
+      for (uint16_t i = 0; i < mBasicZoneManager.registrySize(); i++) {
         printer.print('[');
         printer.print(i);
         printer.print(']');
         printer.print(' ');
-        const basic::ZoneInfo* zoneInfo = registrar.getZoneInfoForIndex(i);
-        printer.println(BasicZone(zoneInfo).name());
+        TimeZone tz = mBasicZoneManager.createForZoneIndex(i);
+        tz.printTo(printer);
+        printer.println();
       }
     }
   #endif
 
   #if ENABLE_TIME_ZONE_TYPE_EXTENDED
     /** Print list of supported zones. */
-    void printExtendedZonesTo(Print& printer) const {
-      const ExtendedZoneRegistrar& registrar =
-          mExtendedZoneManager.getRegistrar();
-      for (uint16_t i = 0; i < registrar.registrySize(); i++) {
+    void printExtendedZonesTo(Print& printer) {
+      for (uint16_t i = 0; i < mExtendedZoneManager.registrySize(); i++) {
         printer.print('[');
         printer.print(i);
         printer.print(']');
         printer.print(' ');
-        const extended::ZoneInfo* zoneInfo = registrar.getZoneInfoForIndex(i);
-        printer.println(ExtendedZone(zoneInfo).name());
+        TimeZone tz = mExtendedZoneManager.createForZoneIndex(i);
+        tz.printTo(printer);
+        printer.println();
       }
     }
   #endif
