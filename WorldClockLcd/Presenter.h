@@ -303,17 +303,38 @@ class Presenter {
       // Display alternates in normal font.
       TimeZone tz = mZoneManager.createForTimeZoneData(mRenderingInfo.zones[1]);
       ZonedDateTime altDateTime = dateTime.convertToTimeZone(tz);
+      displayDateChangeIndicator(dateTime, altDateTime);
       displayTimeWithAbbrev(altDateTime);
 
       tz = mZoneManager.createForTimeZoneData(mRenderingInfo.zones[2]);
       altDateTime = dateTime.convertToTimeZone(tz);
+      displayDateChangeIndicator(dateTime, altDateTime);
       displayTimeWithAbbrev(altDateTime);
 
       tz = mZoneManager.createForTimeZoneData(mRenderingInfo.zones[3]);
       altDateTime = dateTime.convertToTimeZone(tz);
+      displayDateChangeIndicator(dateTime, altDateTime);
       displayTimeWithAbbrev(altDateTime);
 
       displayHumanDate(dateTime);
+    }
+
+    // Print a '>' or '<' if the date of the target time is different.
+    void displayDateChangeIndicator(
+        const ZonedDateTime& current,
+        const ZonedDateTime& target) {
+      const LocalDate& currentDate = current.localDateTime().localDate();
+      const LocalDate& targetDate = target.localDateTime().localDate();
+      int8_t compare = targetDate.compareTo(currentDate);
+      char indicator;
+      if (compare < 0) {
+        indicator = '<';
+      } else if (compare > 0) {
+        indicator = '>';
+      } else {
+        indicator = ' ';
+      }
+      mDisplay.print(indicator);
     }
 
     static uint8_t convert24To12(uint8_t hour) {
