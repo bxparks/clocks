@@ -349,7 +349,10 @@ class Presenter {
       } else {
         mDisplay.print("  ");
       }
-      mDisplay.print(' ');
+
+      // With monospaced fonts, this extra space does not seem necessary.
+      //mDisplay.print(' ');
+
       if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
         mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
@@ -414,14 +417,15 @@ class Presenter {
       } else {
         mDisplay.print("  ");
       }
-      mDisplay.print(' ');
 
       // AM/PM
       if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
-        mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
-        mDisplay.print(' ');
+        // With monospaced fonts, this extra space does not seem necessary.
+        //mDisplay.print(' ');
+        mDisplay.print((dateTime.hour() < 12) ? "A" : "P");
       }
 
+      mDisplay.print(' ');
       displayTimeZoneAbbrev(dateTime);
       mDisplay.println();
     }
@@ -524,7 +528,7 @@ class Presenter {
     // Don't use F() strings for short strings <= 4 characters. Seems to
     // increase flash memory, while saving only a few bytes of RAM.
     void displayTimeZoneType() {
-      mDisplay.print("TZ: ");
+      mDisplay.print("TZ:");
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         mDisplay.print(F("manual"));
       #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
@@ -637,11 +641,12 @@ class Presenter {
 
       // Use F() macros for these longer strings. Seems to save both
       // flash memory and RAM.
-      mDisplay.print(F("TZ: "));
+      mDisplay.print(F("TZ:"));
       mDisplay.println(zonedb::kTzDatabaseVersion);
-      mDisplay.println(F("AT: " ACE_TIME_VERSION_STRING));
-      mDisplay.println(F("AB: " ACE_BUTTON_VERSION_STRING));
-      mDisplay.println(F("AR: " ACE_ROUTINE_VERSION_STRING));
+      mDisplay.println(F("AT:" ACE_TIME_VERSION_STRING));
+      mDisplay.println(F("AB:" ACE_BUTTON_VERSION_STRING));
+      mDisplay.println(F("AR:" ACE_ROUTINE_VERSION_STRING));
+      mDisplay.println(F("AC:" ACE_COMMON_VERSION_STRING));
     }
 
     ZoneManager& mZoneManager;
