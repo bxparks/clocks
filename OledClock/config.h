@@ -147,10 +147,10 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
-  #define MODE_BUTTON_PIN 4
-  #define CHANGE_BUTTON_PIN 3
+  #define MODE_BUTTON_PIN 2
+  #define CHANGE_BUTTON_PIN 4
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_NTP
-  #define OLED_REMAP true
+  #define OLED_REMAP false
 #else
   #error Unknown AUNITER environment
 #endif
