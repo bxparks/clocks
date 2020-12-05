@@ -230,18 +230,19 @@ const uint8_t TIME_ZONE_MODES[] = {
   0,
 };
 
-extern const ModeGroup rootModeGroup;
+// The Arduino compiler becomes confused without this.
+extern const ModeGroup ROOT_MODE_GROUP;
 
 // ModeGroup for the DateTime modes.
 const ModeGroup dateTimeModeGroup = {
-  &rootModeGroup /* parentGroup */,
+  &ROOT_MODE_GROUP /* parentGroup */,
   DATE_TIME_MODES /* modes */,
   nullptr /* childGroups */,
 };
 
 // MOdeGroup for the TimeZone modes.
 const ModeGroup timeZoneModeGroup = {
-  &rootModeGroup /* parentGroup */,
+  &ROOT_MODE_GROUP /* parentGroup */,
   TIME_ZONE_MODES /* modes */,
   nullptr /* childGroups */,
 };
@@ -263,7 +264,7 @@ const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
 };
 
 // Root mode group
-const ModeGroup rootModeGroup = {
+const ModeGroup ROOT_MODE_GROUP = {
   nullptr /* parentGroup */,
   TOP_LEVEL_MODES /* modes */,
   TOP_LEVEL_CHILD_GROUPS /* childGroups */,
@@ -284,7 +285,7 @@ void setupPersistentStore() {
 //------------------------------------------------------------------
 
 Controller controller(persistentStore, systemClock, presenter, zoneManager,
-  DISPLAY_ZONE, &rootModeGroup);
+  DISPLAY_ZONE, &ROOT_MODE_GROUP);
 
 void setupController(bool factoryReset) {
   controller.setup(factoryReset);
