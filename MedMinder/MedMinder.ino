@@ -18,7 +18,7 @@
  *    * AceButton (https://github.com/bxparks/AceButton)
  *    * AceRoutine (https://github.com/bxparks/AceRoutine)
  *    * AceTime (https://github.com/bxparks/AceTime)
- *    * FastCRC (https://github.com/FrankBoesing/FastCRC)
+ *    * AceCRC (https://github.com/bxparks/AceCRC)
  *    * SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
  *    * Low-Power (https://github.com/rocketscream/Low-Power)
  *    * EnableInterrupt (https://github.com/GreyGnome/EnableInterrupt)

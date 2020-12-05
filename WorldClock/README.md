@@ -61,8 +61,10 @@ The following libraries are required:
 * AceTime (https://github.com/bxparks/AceTime)
 * AceButton (https://github.com/bxparks/AceButton)
 * AceRoutine (https://github.com/bxparks/AceRoutine)
+* AceCommon (https://github.com/bxparks/AceCommon)
+* AceUtils (https://github.com/bxparks/AceUtils)
+* AceCRC (https://github.com/bxparks/AceCRC)
 * SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
-* FastCRC (https://github.com/FrankBoesing/FastCRC)
 
 ## User Guide
 

@@ -11,11 +11,13 @@
  *   * ESP8266
  *
  * Dependencies:
- *   * [AceTime](https://github.com/bxparks/AceTime)
- *   * [AceRoutine](https://github.com/bxparks/AceRoutine)
- *   * [AceButton](https://github.com/bxparks/AceButton)
- *   * [FastCRC](https://github.com/FrankBoesing/FastCRC)
- *   * [SSD1306Ascii](https://github.com/greiman/SSD1306Ascii)
+ *   *  AceTime (https://github.com/bxparks/AceTime)
+ *   *  AceRoutine (https://github.com/bxparks/AceRoutine)
+ *   *  AceButton (https://github.com/bxparks/AceButton)
+ *   *  AceCommon (https://github.com/bxparks/AceCommon)
+ *   *  AceUtils (https://github.com/bxparks/AceUtils)
+ *   *  AceCRC (https://github.com/bxparks/AceCRC)
+ *   *  SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
  *
  * If ENABLE_SERIAL_DEBUG is set to 1, it prints diagnostics.
  */

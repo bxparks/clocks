@@ -36,7 +36,7 @@ wifi (status | config [{ssid} {password}] | connect)
 * AceRoutine library (https://github.com/bxparks/AceRoutine)
 * AceTime library (https://github.com/bxparks/AceTime)
 * AceUtils library (https://github.com/bxparks/AceUtils)
-* FastCRC (https://github.com/FrankBoesing/FastCRC)
+* AceCRC library (https://github.com/bxparks/AceCRC)
 
 Use the Arduino IDE to compile and upload the program and use the Serial
 Monitor to type in the commands listed above.

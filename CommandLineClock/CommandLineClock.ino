@@ -9,7 +9,7 @@
  *    * AceTime (https://github.com/bxparks/AceTime)
  *    * AceRoutine (https://github.com/bxparks/AceRoutine)
  *    * AceUtils (https://github.com/bxparks/AceUtils)
- *    * FastCRC (https://github.com/FrankBoesing/FastCRC)
+ *    * AceCRC (https://github.com/bxparks/AceCRC)
  *
  * Supported boards include:
  *    * Arduino Nano

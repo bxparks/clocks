@@ -10,13 +10,14 @@
  *   * ESP8266
  *
  * Dependencies:
- *   * [AceCommon](https://github.com/bxparks/AceCommon)
- *   * [AceTime](https://github.com/bxparks/AceTime)
- *   * [AceRoutine](https://github.com/bxparks/AceRoutine)
- *   * [AceButton](https://github.com/bxparks/AceButton)
- *   * [FastCRC](https://github.com/FrankBoesing/FastCRC)
- *   * [SSD1306Ascii](https://github.com/greiman/SSD1306Ascii)
- *   * [Adafruit-PCD8544-Nokia-5110-LCD-library](https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library)
+ *   *  AceCommon (https://github.com/bxparks/AceCommon)
+ *   *  AceTime (https://github.com/bxparks/AceTime)
+ *   *  AceRoutine (https://github.com/bxparks/AceRoutine)
+ *   *  AceButton (https://github.com/bxparks/AceButton)
+ *   *  AceUtils (https://github.com/bxparks/AceUtils)
+ *   *  AceCRC (https://github.com/bxparks/AceCRC)
+ *   *  SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
+ *   *  Adafruit-PCD8544-Nokia-5110-LCD-library (https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library)
  *
  * If ENABLE_SERIAL_DEBUG is set to 1, it prints diagnostics.
  */
