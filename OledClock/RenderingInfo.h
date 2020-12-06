@@ -9,7 +9,7 @@
  * what needs to be displayed.
  */ 
 struct RenderingInfo {
-  uint8_t mode; // display mode, see MODE_xxx in config.h
+  uint8_t mode = MODE_UNKNOWN; // display mode, see MODE_xxx in config.h
   bool suppressBlink; // true if blinking should be suppressed
   bool blinkShowState; // true if blinking info should be shown
 

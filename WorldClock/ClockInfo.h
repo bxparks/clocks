@@ -15,8 +15,10 @@ struct ClockInfo {
   static uint8_t const kTwentyFour = 1;
 
   /** Construct from ZoneProcessor. */
-  ClockInfo(const ace_time::TimeZone& tz, const char* theName):
-      timeZone(tz), name(theName) {}
+  ClockInfo(const ace_time::TimeZone& tz, const char* theName) :
+      timeZone(tz),
+      name(theName)
+  {}
 
   /** Hour mode, 12H or 24H. */
   uint8_t hourMode = kTwelve;
@@ -29,6 +31,12 @@ struct ClockInfo {
 
   /** Name of this clock, e.g. City or Time Zone ID */
   const char* name;
+
+  /**
+   * Contrast level for OLED dislay, [0, 9] -> [25, 255]. Essentially brightness
+   * because the background is black.
+   */
+  uint8_t contrastLevel = 5;
 };
 
 #endif

@@ -9,6 +9,9 @@
 #define ENABLE_SERIAL_DEBUG 0
 #endif
 
+// Set to 1 to factory reset.
+#define FORCE_INITIALIZE 0
+
 // This program should compile for most target environments, including AVR,
 // ESP8266, and ESP32. The parameters below are for the specific device that I
 // built which has a Pro Micro with 3 OLED displays using SPI, a DS3231 over
@@ -35,7 +38,7 @@
 
 const uint8_t MODE_UNKNOWN = 0; // uninitialized
 const uint8_t MODE_DATE_TIME = 1;
-const uint8_t MODE_CLOCK_INFO = 2;
+const uint8_t MODE_SETTINGS = 2;
 const uint8_t MODE_ABOUT = 3;
 
 const uint8_t MODE_CHANGE_YEAR = 10;
@@ -47,6 +50,7 @@ const uint8_t MODE_CHANGE_SECOND = 15;
 
 const uint8_t MODE_CHANGE_HOUR_MODE = 20;
 const uint8_t MODE_CHANGE_BLINKING_COLON = 21;
+const uint8_t MODE_CHANGE_CONTRAST = 22; // OLED contrast/brightness
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
 const uint8_t MODE_CHANGE_TIME_ZONE_DST0 = 30;
