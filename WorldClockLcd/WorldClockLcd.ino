@@ -227,6 +227,9 @@ void setupPresenter() {
 // easier to maintain.
 //-----------------------------------------------------------------------------
 
+// The Arduino compiler becomes confused without this.
+extern const ModeGroup ROOT_MODE_GROUP;
+
 // List of DateTime modes.
 const uint8_t DATE_TIME_MODES[] = {
   MODE_CHANGE_HOUR,
@@ -236,6 +239,14 @@ const uint8_t DATE_TIME_MODES[] = {
   MODE_CHANGE_MONTH,
   MODE_CHANGE_YEAR,
   0,
+};
+
+// The Arduino compiler becomes confused without this.
+// ModeGroup for the DateTime modes.
+const ModeGroup DATE_TIME_MODE_GROUP = {
+  &ROOT_MODE_GROUP /* parentGroup */,
+  DATE_TIME_MODES /* modes */,
+  nullptr /* childGroups */,
 };
 
 // List of TimeZone modes.
@@ -258,6 +269,13 @@ const uint8_t TIME_ZONE_MODES[] = {
   0,
 };
 
+// ModeGroup for the TimeZone modes.
+const ModeGroup TIME_ZONE_MODE_GROUP = {
+  &ROOT_MODE_GROUP /* parentGroup */,
+  TIME_ZONE_MODES /* modes */,
+  nullptr /* childGroups */,
+};
+
 // List of Settings modes.
 const uint8_t SETTINGS_MODES[] = {
 #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
@@ -270,25 +288,8 @@ const uint8_t SETTINGS_MODES[] = {
   0,
 };
 
-// The Arduino compiler becomes confused without this.
-extern const ModeGroup ROOT_MODE_GROUP;
-
-// ModeGroup for the DateTime modes.
-const ModeGroup dateTimeModeGroup = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  DATE_TIME_MODES /* modes */,
-  nullptr /* childGroups */,
-};
-
-// MOdeGroup for the TimeZone modes.
-const ModeGroup timeZoneModeGroup = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  TIME_ZONE_MODES /* modes */,
-  nullptr /* childGroups */,
-};
-
 // ModeGroup for the Settings modes.
-const ModeGroup settingsModeGroup = {
+const ModeGroup SETTINGS_MODE_GROUP = {
   &ROOT_MODE_GROUP /* parentGroup */,
   SETTINGS_MODES /* modes */,
   nullptr /* childGroups */,
@@ -306,9 +307,9 @@ const uint8_t TOP_LEVEL_MODES[] = {
 // List of children ModeGroups for each element in TOP_LEVEL_MODES, in the same
 // order.
 const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
-  &dateTimeModeGroup,
-  &timeZoneModeGroup,
-  &settingsModeGroup,
+  &DATE_TIME_MODE_GROUP,
+  &TIME_ZONE_MODE_GROUP,
+  &SETTINGS_MODE_GROUP,
   nullptr /* About mode has no submodes */,
 };
 
