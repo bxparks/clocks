@@ -52,40 +52,18 @@ class Controller {
         mPresenter2(presenter2),
         mClockInfo0(tz0, name0),
         mClockInfo1(tz1, name1),
-        mClockInfo2(tz2, name2),
-        mMode(MODE_UNKNOWN)
+        mClockInfo2(tz2, name2)
     {}
 
     /** Initialize the controller with the various time zones of each clock. */
-    void setup() {
-      // Restore from EEPROM to other settings
-      StoredInfo storedInfo;
-      bool isValid = mCrcEeprom.readWithCrc(kStoredInfoEepromAddress,
-          &storedInfo, sizeof(StoredInfo));
-
-      if (isValid) {
-        mClockInfo0.hourMode = storedInfo.hourMode;
-        mClockInfo0.blinkingColon = storedInfo.blinkingColon;
-
-        mClockInfo1.hourMode = storedInfo.hourMode;
-        mClockInfo1.blinkingColon = storedInfo.blinkingColon;
-
-        mClockInfo2.hourMode = storedInfo.hourMode;
-        mClockInfo2.blinkingColon = storedInfo.blinkingColon;
-
-    #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        mClockInfo0.timeZone.setDst(storedInfo.isDst0);
-        mClockInfo1.timeZone.setDst(storedInfo.isDst1);
-        mClockInfo2.timeZone.setDst(storedInfo.isDst2);
-    #endif
-      } else {
-        mClockInfo0.contrastLevel = 5;
-        mClockInfo0.hourMode = ClockInfo::kTwelve;
-        mClockInfo0.blinkingColon = false;
-        preserveInfo();
+    void setup(bool factoryReset) {
+      if (FORCE_INITIALIZE == 1) {
+        factoryReset = true;
       }
-
+      restoreClockInfo(factoryReset);
       mMode = MODE_DATE_TIME;
+      updateContrast();
+      updateDateTime();
     }
 
     /**
@@ -294,6 +272,11 @@ class Controller {
       update();
     }
 
+    /**
+     * Set the brightness of the OLEDs to their states. We assume the
+     * contrastLevel of all displays are identical, but that can be changed if
+     * we really wanted independent control.
+     */
     void updateContrast() {
       uint8_t contrastValue = getContrastValue(mClockInfo0.contrastLevel);
       mPresenter0.setContrast(contrastValue);
@@ -426,29 +409,107 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("saveClockInfo()"));
       }
-      preserveInfo();
+      preserveClockInfo();
     }
 
-    void preserveInfo() {
+    /** Save to EEPROM. */
+    void preserveClockInfo() {
       StoredInfo storedInfo;
-
-      // Create hourMode and blinkingColon from clock0. The others will be
-      // identical.
-      storedInfo.hourMode = mClockInfo0.hourMode;
-      storedInfo.blinkingColon = mClockInfo0.blinkingColon;
-      storedInfo.contrastLevel = mClockInfo0.contrastLevel;
-
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-      storedInfo.isDst0 = mClockInfo0.timeZone.isDst();
-      storedInfo.isDst1 = mClockInfo1.timeZone.isDst();
-      storedInfo.isDst2 = mClockInfo2.timeZone.isDst();
-#endif
+      storedInfoFromClockInfo(storedInfo);
 
       mCrcEeprom.writeWithCrc(
           kStoredInfoEepromAddress,
           &storedInfo,
           sizeof(StoredInfo)
       );
+    }
+
+    /** Restore from EEPROM. If that fails, set initial states. */
+    void restoreClockInfo(bool factoryReset) {
+      StoredInfo storedInfo;
+      bool isValid;
+
+      if (factoryReset) {
+        if (ENABLE_SERIAL_DEBUG == 1) {
+          SERIAL_PORT_MONITOR.println(F("restoreClockInfo(): FACTORY RESET"));
+        }
+        isValid = false;
+      } else {
+        isValid = mCrcEeprom.readWithCrc(
+            kStoredInfoEepromAddress,
+            &storedInfo,
+            sizeof(StoredInfo)
+        );
+        if (ENABLE_SERIAL_DEBUG == 1) {
+          if (! isValid) {
+            SERIAL_PORT_MONITOR.println(F(
+                "restoreClockInfo(): EEPROM NOT VALID; "
+                "Using factory defaults"));
+          }
+        }
+      }
+
+      if (isValid) {
+        clockInfoFromStoredInfo(storedInfo);
+      } else {
+        setupClockInfo();
+        preserveClockInfo();
+      }
+    }
+
+    /** Set various mClockInfo to their initial states. */
+    void setupClockInfo() {
+      mClockInfo0.hourMode = ClockInfo::kTwelve;
+      mClockInfo1.hourMode = ClockInfo::kTwelve;
+      mClockInfo2.hourMode = ClockInfo::kTwelve;
+
+      mClockInfo0.blinkingColon = false;
+      mClockInfo1.blinkingColon = false;
+      mClockInfo2.blinkingColon = false;
+
+      mClockInfo0.contrastLevel = 5;
+      mClockInfo1.contrastLevel = 5;
+      mClockInfo2.contrastLevel = 5;
+    }
+
+    /** Set the various mClockInfo{N} from the given storedInfo. */
+    void clockInfoFromStoredInfo(const StoredInfo& storedInfo) {
+      mClockInfo0.hourMode = storedInfo.hourMode;
+      mClockInfo1.hourMode = storedInfo.hourMode;
+      mClockInfo2.hourMode = storedInfo.hourMode;
+
+      mClockInfo0.blinkingColon = storedInfo.blinkingColon;
+      mClockInfo1.blinkingColon = storedInfo.blinkingColon;
+      mClockInfo2.blinkingColon = storedInfo.blinkingColon;
+
+      mClockInfo0.contrastLevel = storedInfo.contrastLevel;
+      mClockInfo1.contrastLevel = storedInfo.contrastLevel;
+      mClockInfo2.contrastLevel = storedInfo.contrastLevel;
+
+    #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+      mClockInfo0.timeZone.setDst(storedInfo.isDst0);
+      mClockInfo1.timeZone.setDst(storedInfo.isDst1);
+      mClockInfo2.timeZone.setDst(storedInfo.isDst2);
+    #endif
+    }
+
+    /**
+     * Set the given storedInfo from the various mClockInfo{N}. Currently, only
+     * the mClockInfo0 is used, but this can change in the future if we allow
+     * the user to set the time zone of each clock at run time.
+     */
+    void storedInfoFromClockInfo(StoredInfo& storedInfo) {
+      // Create hourMode and blinkingColon from clock0. The others will be
+      // identical.
+      storedInfo.hourMode = mClockInfo0.hourMode;
+      storedInfo.blinkingColon = mClockInfo0.blinkingColon;
+      storedInfo.contrastLevel = mClockInfo0.contrastLevel;
+
+    #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+      storedInfo.isDst0 = mClockInfo0.timeZone.isDst();
+      storedInfo.isDst1 = mClockInfo1.timeZone.isDst();
+      storedInfo.isDst2 = mClockInfo2.timeZone.isDst();
+    #endif
     }
 
   private:
@@ -471,13 +532,13 @@ class Controller {
     // Navigation
     uint8_t mTopLevelIndexSave = 0;
     uint8_t mCurrentModeIndex = 0;
-    uint8_t mMode = MODE_DATE_TIME; // current mode
+    uint8_t mMode = MODE_UNKNOWN; // current mode
 
     ZonedDateTime mChangingDateTime; // source of now() in "Change" modes
-    bool mSecondFieldCleared;
+    bool mSecondFieldCleared = false;
 
     // Handle blinking
-    bool mSuppressBlink; // true if blinking should be suppressed
+    bool mSuppressBlink = false; // true if blinking should be suppressed
     bool mBlinkShowState = true; // true means actually show
     uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
 };

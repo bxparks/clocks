@@ -9,6 +9,9 @@
 #define ENABLE_SERIAL_DEBUG 0
 #endif
 
+// Set to 1 to factory reset.
+#define FORCE_INITIALIZE 0
+
 // This program should compile for most target environments, including AVR,
 // ESP8266, and ESP32. The parameters below are for the specific device that I
 // built which has a Pro Micro with 3 OLED displays using SPI, a DS3231 over

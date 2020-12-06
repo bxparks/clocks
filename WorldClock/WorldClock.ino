@@ -89,6 +89,11 @@ void setupOled() {
 Presenter presenter0(oled0);
 Presenter presenter1(oled1);
 Presenter presenter2(oled2);
+
+//----------------------------------------------------------------------------
+// Setup time zones.
+//----------------------------------------------------------------------------
+
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
 TimeZone tz0 = TimeZone::forTimeOffset(TimeOffset::forHours(-8));
 TimeZone tz1 = TimeZone::forTimeOffset(TimeOffset::forHours(-5));
@@ -316,7 +321,9 @@ void setup() {
   dsClock.setup();
   systemClock.setup();
 
-  controller.setup();
+  // Hold down the Mode button to perform factory reset.
+  bool isModePressedDuringBoot = modeButton.isPressedRaw();
+  controller.setup(isModePressedDuringBoot);
 
   if (ENABLE_SERIAL_DEBUG == 1) {
     SERIAL_PORT_MONITOR.println(F("setup(): end"));
