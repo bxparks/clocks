@@ -14,18 +14,19 @@
  *  * AceTime (https://github.com/bxparks/AceTime)
  *  * AceRoutine (https://github.com/bxparks/AceRoutine)
  *  * AceButton (https://github.com/bxparks/AceButton)
+ *  * AceCommon (https://github.com/bxparks/AceCommon)
  *  * AceUtils (https://github.com/bxparks/AceUtils)
  *  * AceCRC (https://github.com/bxparks/AceCRC)
  *  * SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
  */
 
+#include "config.h"
 #include <Wire.h>
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
 #include <CrcEeprom.h>
 #include <SSD1306AsciiSpi.h>
-#include "config.h"
 #include "ClockInfo.h"
 #include "Controller.h"
 
@@ -34,26 +35,26 @@ using namespace ace_routine;
 using namespace ace_time;
 using crc_eeprom::CrcEeprom;
 
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Configure CrcEeprom.
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 // Needed by ESP32 chips. Has no effect on other chips.
 // Should be bigger than (sizeof(crc32) + sizeof(StoredInfo)).
-static const uint16_t EEPROM_SIZE = sizeof(StoredInfo) + sizeof(acetime_t);
+static const uint16_t EEPROM_SIZE = sizeof(StoredInfo) + sizeof(uint32_t);
 
 CrcEeprom crcEeprom;
 
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Configure various Clocks.
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 DS3231Clock dsClock;
 SystemClockCoroutine systemClock(&dsClock, &dsClock);
 
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Configure OLED display using SSD1306Ascii.
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 SSD1306AsciiSpi oled0;
 SSD1306AsciiSpi oled1;
@@ -78,9 +79,9 @@ void setupOled() {
   digitalWrite(OLED_CS2_PIN, HIGH);
 }
 
-//------------------------------------------------------------------
-// Create controller with 3 presenters for the 3 OLED displays.
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// Create 3 Presenters for 3 OLED displays
+//----------------------------------------------------------------------------
 
 Presenter presenter0(oled0);
 Presenter presenter1(oled1);
@@ -112,7 +113,107 @@ TimeZone tz2 = TimeZone::forZoneInfo(&zonedbx::kZoneEurope_London,
 #else
   #error Unknown TIME_ZONE_TYPE
 #endif
-Controller controller(systemClock, crcEeprom,
+
+//-----------------------------------------------------------------------------
+// Create mode groups that define the navigation path for the Mode button.
+// It forms a recursive tree structure that looks like this:
+//
+// - View Date Time
+//    - Change hour
+//    - Change minute
+//    - Change second
+//    - Change day
+//    - Change month
+//    - Change year
+// - View Settings
+//    - Change 12/24 mode
+//    - Change Blinking mode
+// - About
+//    - (no submodes)
+
+// The Arduino compiler becomes confused without this.
+extern const ModeGroup ROOT_MODE_GROUP;
+
+// List of DateTime modes.
+const uint8_t DATE_TIME_MODES[] = {
+  MODE_CHANGE_YEAR,
+  MODE_CHANGE_MONTH,
+  MODE_CHANGE_DAY,
+  MODE_CHANGE_HOUR,
+  MODE_CHANGE_MINUTE,
+  MODE_CHANGE_SECOND,
+  0,
+};
+
+// ModeGroup for the DateTime modes.
+const ModeGroup DATE_TIME_MODE_GROUP = {
+  &ROOT_MODE_GROUP /* parentGroup */,
+  DATE_TIME_MODES /* modes */,
+  nullptr /* childGroups */,
+};
+
+// List of TimeZone modes.
+//const uint8_t TIME_ZONE_MODES[] = {
+//#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+//  MODE_CHANGE_TIME_ZONE_OFFSET,
+//  MODE_CHANGE_TIME_ZONE_DST,
+//#else
+//  MODE_CHANGE_TIME_ZONE_NAME,
+//#endif
+//  0,
+//};
+
+// MOdeGroup for the TimeZone modes.
+//const ModeGroup TIME_ZONE_MODE_GROUP = {
+//  &ROOT_MODE_GROUP /* parentGroup */,
+//  TIME_ZONE_MODES /* modes */,
+//  nullptr /* childGroups */,
+//};
+
+// List of Settings modes.
+const uint8_t SETTINGS_MODES[] = {
+  MODE_CHANGE_HOUR_MODE,
+  MODE_CHANGE_BLINKING_COLON,
+  0,
+};
+
+// ModeGroup for the Settings modes.
+const ModeGroup SETTINGS_MODE_GROUP = {
+  &ROOT_MODE_GROUP /* parentGroup */,
+  SETTINGS_MODES /* modes */,
+  nullptr /* childGroups */,
+};
+
+// List of top level modes.
+const uint8_t TOP_LEVEL_MODES[] = {
+  MODE_DATE_TIME,
+  //MODE_TIME_ZONE,
+  MODE_SETTINGS,
+  MODE_ABOUT,
+  0,
+};
+
+// List of children ModeGroups for each element in TOP_LEVEL_MODES, in the same
+// order.
+const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
+  &DATE_TIME_MODE_GROUP,
+  //&TIME_ZONE_MODE_GROUP,
+  &SETTINGS_MODE_GROUP,
+  nullptr /* About mode has no submodes */,
+};
+
+// Root mode group
+const ModeGroup ROOT_MODE_GROUP = {
+  nullptr /* parentGroup */,
+  TOP_LEVEL_MODES /* modes */,
+  TOP_LEVEL_CHILD_GROUPS /* childGroups */,
+};
+
+//----------------------------------------------------------------------------
+// Create controller with 3 presenters for the 3 OLED displays.
+//----------------------------------------------------------------------------
+
+Controller controller(systemClock, crcEeprom, &ROOT_MODE_GROUP,
     presenter0, presenter1, presenter2,
     tz0, tz1, tz2, "SFO", "PHL", "LHR");
 
@@ -127,9 +228,9 @@ COROUTINE(updateController) {
   }
 }
 
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Configure AceButton.
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 AceButton modeButton((uint8_t) MODE_BUTTON_PIN);
 AceButton changeButton((uint8_t) CHANGE_BUTTON_PIN);
@@ -141,23 +242,23 @@ void handleButton(AceButton* button, uint8_t eventType,
   if (pin == CHANGE_BUTTON_PIN) {
     switch (eventType) {
       case AceButton::kEventPressed:
-        controller.changeButtonPress();
+        controller.handleChangeButtonPress();
         break;
       case AceButton::kEventReleased:
       case AceButton::kEventLongReleased:
-        controller.changeButtonRelease();
+        controller.handleChangeButtonRelease();
         break;
       case AceButton::kEventRepeatPressed:
-        controller.changeButtonRepeatPress();
+        controller.handleChangeButtonRepeatPress();
         break;
     }
   } else if (pin == MODE_BUTTON_PIN) {
     switch (eventType) {
       case AceButton::kEventReleased:
-        controller.modeButtonPress();
+        controller.handleModeButtonPress();
         break;
       case AceButton::kEventLongPressed:
-        controller.modeButtonLongPress();
+        controller.handleModeButtonLongPress();
         break;
     }
   }
@@ -175,9 +276,9 @@ void setupAceButton() {
   buttonConfig->setRepeatPressInterval(150);
 }
 
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // Main setup and loop
-//------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 void setup() {
   // Wait for stability on some boards.

@@ -71,7 +71,7 @@ class Presenter {
           displayAbout();
           break;
 
-        case MODE_CLOCK_INFO:
+        case MODE_SETTINGS:
         case MODE_CHANGE_HOUR_MODE:
         case MODE_CHANGE_BLINKING_COLON:
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL

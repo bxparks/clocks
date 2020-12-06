@@ -35,7 +35,7 @@
 
 const uint8_t MODE_UNKNOWN = 0; // uninitialized
 const uint8_t MODE_DATE_TIME = 1;
-const uint8_t MODE_CLOCK_INFO = 2;
+const uint8_t MODE_SETTINGS = 2;
 const uint8_t MODE_ABOUT = 3;
 
 const uint8_t MODE_CHANGE_YEAR = 10;

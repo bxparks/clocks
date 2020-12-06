@@ -4,6 +4,7 @@
 #include <AceTime.h>
 #include <CrcEeprom.h>
 #include "RenderingInfo.h"
+#include "ModeGroup.h"
 #include "StoredInfo.h"
 #include "Presenter.h"
 
@@ -27,19 +28,31 @@ class Controller {
      * @param crcEeprom stores objects into the EEPROM with CRC
      * @param presenter renders the date and time info to the screen
      */
-    Controller(Clock& clock, CrcEeprom& crcEeprom,
-            Presenter& presenter0, Presenter& presenter1, Presenter& presenter2,
-            const TimeZone& tz0, const TimeZone& tz1, const TimeZone& tz2,
-            const char* name0, const char* name1, const char* name2):
+    Controller(
+        Clock& clock,
+        CrcEeprom& crcEeprom,
+        ModeGroup* rootModeGroup,
+        Presenter& presenter0,
+        Presenter& presenter1,
+        Presenter& presenter2,
+        const TimeZone& tz0,
+        const TimeZone& tz1,
+        const TimeZone& tz2,
+        const char* name0,
+        const char* name1,
+        const char* name2
+    ) :
         mClock(clock),
         mCrcEeprom(crcEeprom),
+        mCurrentModeGroup(rootModeGroup),
         mPresenter0(presenter0),
         mPresenter1(presenter1),
         mPresenter2(presenter2),
         mClockInfo0(tz0, name0),
         mClockInfo1(tz1, name1),
         mClockInfo2(tz2, name2),
-        mMode(MODE_UNKNOWN) {}
+        mMode(MODE_UNKNOWN)
+    {}
 
     /** Initialize the controller with the various time zones of each clock. */
     void setup();
@@ -59,69 +72,99 @@ class Controller {
       mPresenter2.display();
     }
 
-    void modeButtonPress() {
+    void handleModeButtonPress() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
+      }
+      performLeavingModeAction();
+      changeSiblingMode();
+      performEnteringModeAction();
+    }
+
+    // ModeGroup common code
+    /** Navigate to sibling mode. */
+    void changeSiblingMode() {
+      mCurrentModeIndex++;
+      if (mCurrentModeGroup->modes[mCurrentModeIndex] == 0) {
+        mCurrentModeIndex = 0;
+      }
+      mMode = mCurrentModeGroup->modes[mCurrentModeIndex];
+    }
+
+    void performEnteringModeAction() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
+      }
+    }
+
+    void performLeavingModeAction() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("performLeavingModeAction()"));
+      }
+    }
+
+    // ModeGroup common code
+    void handleModeButtonLongPress() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
+      }
+
+      performLeavingModeAction();
+      performLeavingModeGroupAction();
+      changeModeGroup();
+      performEnteringModeGroupAction();
+      performEnteringModeAction();
+    }
+
+    // ModeGroup common code
+    /** Navigate to Mode Group. */
+    void changeModeGroup() {
+      const ModeGroup* parentGroup = mCurrentModeGroup->parentGroup;
+
+      if (parentGroup) {
+        mCurrentModeGroup = parentGroup;
+        mCurrentModeIndex = mTopLevelIndexSave;
+      } else {
+        const ModeGroup* const* childGroups = mCurrentModeGroup->childGroups;
+        const ModeGroup* childGroup = childGroups
+            ? childGroups[mCurrentModeIndex]
+            : nullptr;
+        if (childGroup) {
+          mCurrentModeGroup = childGroup;
+          // Save the current top level index so that we can go back to it.
+          mTopLevelIndexSave = mCurrentModeIndex;
+          mCurrentModeIndex = 0;
+        }
+      }
+
+      mMode = mCurrentModeGroup->modes[mCurrentModeIndex];
+    }
+
+    void performEnteringModeGroupAction() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
+      }
+
       switch (mMode) {
-        // Cycle through the 3 main screens.
-        case MODE_DATE_TIME:
-          mMode = MODE_CLOCK_INFO;
-          break;
-        case MODE_CLOCK_INFO:
-          mMode = MODE_ABOUT;
-          break;
-        case MODE_ABOUT:
-          mMode = MODE_DATE_TIME;
-          break;
-
-        // Cycle through the various changeable date time fields.
         case MODE_CHANGE_YEAR:
-          mMode = MODE_CHANGE_MONTH;
-          break;
         case MODE_CHANGE_MONTH:
-          mMode = MODE_CHANGE_DAY;
-          break;
         case MODE_CHANGE_DAY:
-          mMode = MODE_CHANGE_HOUR;
-          break;
         case MODE_CHANGE_HOUR:
-          mMode = MODE_CHANGE_MINUTE;
-          break;
         case MODE_CHANGE_MINUTE:
-          mMode = MODE_CHANGE_SECOND;
-          break;
         case MODE_CHANGE_SECOND:
-          mMode = MODE_CHANGE_YEAR;
-          break;
-
-        // Cycle through the various changeable clock config fields.
-        case MODE_CHANGE_HOUR_MODE:
-          mMode = MODE_CHANGE_BLINKING_COLON;
-          break;
-        case MODE_CHANGE_BLINKING_COLON:
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-          mMode = MODE_CHANGE_TIME_ZONE_DST0;
-          break;
-        case MODE_CHANGE_TIME_ZONE_DST0:
-          mMode = MODE_CHANGE_TIME_ZONE_DST1;
-          break;
-        case MODE_CHANGE_TIME_ZONE_DST1:
-          mMode = MODE_CHANGE_TIME_ZONE_DST2;
-          break;
-        case MODE_CHANGE_TIME_ZONE_DST2:
-#endif
-          mMode = MODE_CHANGE_HOUR_MODE;
+          mChangingDateTime = ZonedDateTime::forEpochSeconds(
+              mClock.getNow(), mClockInfo0.timeZone);
+          mSecondFieldCleared = false;
           break;
       }
     }
 
-    void modeButtonLongPress() {
-      switch (mMode) {
-        case MODE_DATE_TIME:
-          mChangingDateTime = ZonedDateTime::forEpochSeconds(
-              mClock.getNow(), mClockInfo0.timeZone);
-          mSecondFieldCleared = false;
-          mMode = MODE_CHANGE_YEAR;
-          break;
+    void performLeavingModeGroupAction() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
+      }
 
+      switch (mMode) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -129,11 +172,6 @@ class Controller {
         case MODE_CHANGE_MINUTE:
         case MODE_CHANGE_SECOND:
           saveDateTime();
-          mMode = MODE_DATE_TIME;
-          break;
-
-        case MODE_CLOCK_INFO:
-          mMode = MODE_CHANGE_HOUR_MODE;
           break;
 
         case MODE_CHANGE_HOUR_MODE:
@@ -144,12 +182,14 @@ class Controller {
         case MODE_CHANGE_TIME_ZONE_DST2:
 #endif
           saveClockInfo();
-          mMode = MODE_CLOCK_INFO;
           break;
       }
     }
 
-    void changeButtonPress() {
+    void handleChangeButtonPress() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
+      }
       switch (mMode) {
         case MODE_CHANGE_YEAR:
           mSuppressBlink = true;
@@ -213,11 +253,11 @@ class Controller {
       update();
     }
 
-    void changeButtonRepeatPress() {
-      changeButtonPress();
+    void handleChangeButtonRepeatPress() {
+      handleChangeButtonPress();
     }
 
-    void changeButtonRelease() {
+    void handleChangeButtonRelease() {
       switch (mMode) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
@@ -236,6 +276,7 @@ class Controller {
           break;
       }
     }
+
   protected:
     void updateDateTime() {
       // If in CHANGE mode, and the 'second' field has not been cleared,
@@ -272,7 +313,7 @@ class Controller {
     void updateRenderingInfo() {
       switch (mMode) {
         case MODE_DATE_TIME:
-        case MODE_CLOCK_INFO:
+        case MODE_SETTINGS:
         case MODE_ABOUT: {
           acetime_t now = mClock.getNow();
           mPresenter0.update(mMode, now, mBlinkShowState, mSuppressBlink,
@@ -355,6 +396,7 @@ class Controller {
 
     Clock& mClock;
     CrcEeprom& mCrcEeprom;
+    ModeGroup const* mCurrentModeGroup;
     Presenter& mPresenter0;
     Presenter& mPresenter1;
     Presenter& mPresenter2;
@@ -362,12 +404,16 @@ class Controller {
     ClockInfo mClockInfo1;
     ClockInfo mClockInfo2;
 
-    uint8_t mMode; // current mode
+    // Navigation
+    uint8_t mTopLevelIndexSave = 0;
+    uint8_t mCurrentModeIndex = 0;
+    uint8_t mMode = MODE_DATE_TIME; // current mode
+
     ZonedDateTime mChangingDateTime; // source of now() in "Change" modes
-
     bool mSecondFieldCleared;
-    bool mSuppressBlink; // true if blinking should be suppressed
 
+    // Handle blinking
+    bool mSuppressBlink; // true if blinking should be suppressed
     bool mBlinkShowState = true; // true means actually show
     uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
 };
