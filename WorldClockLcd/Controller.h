@@ -698,7 +698,6 @@ class Controller {
         isValid = false;
       } else {
         isValid = mPersistentStore.readStoredInfo(storedInfo);
-        isValid = true;
         if (ENABLE_SERIAL_DEBUG == 1) {
           if (! isValid) {
             SERIAL_PORT_MONITOR.println(F(
