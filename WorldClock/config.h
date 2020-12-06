@@ -47,6 +47,7 @@ const uint8_t MODE_CHANGE_SECOND = 15;
 
 const uint8_t MODE_CHANGE_HOUR_MODE = 20;
 const uint8_t MODE_CHANGE_BLINKING_COLON = 21;
+const uint8_t MODE_CHANGE_CONTRAST = 22; // OLED contrast/brightness
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
 const uint8_t MODE_CHANGE_TIME_ZONE_DST0 = 30;

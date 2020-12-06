@@ -1,6 +1,7 @@
 #ifndef WORLD_CLOCK_CONTROLLER_H
 #define WORLD_CLOCK_CONTROLLER_H
 
+#include <AceCommon.h> // incrementMod
 #include <AceTime.h>
 #include <CrcEeprom.h>
 #include "RenderingInfo.h"
@@ -11,6 +12,7 @@
 using namespace ace_time;
 using namespace ace_time::clock;
 using crc_eeprom::CrcEeprom;
+using ace_common::incrementMod;
 
 /**
  * Maintains the internal state of the world clock, handling button inputs,
@@ -55,7 +57,36 @@ class Controller {
     {}
 
     /** Initialize the controller with the various time zones of each clock. */
-    void setup();
+    void setup() {
+      // Restore from EEPROM to other settings
+      StoredInfo storedInfo;
+      bool isValid = mCrcEeprom.readWithCrc(kStoredInfoEepromAddress,
+          &storedInfo, sizeof(StoredInfo));
+
+      if (isValid) {
+        mClockInfo0.hourMode = storedInfo.hourMode;
+        mClockInfo0.blinkingColon = storedInfo.blinkingColon;
+
+        mClockInfo1.hourMode = storedInfo.hourMode;
+        mClockInfo1.blinkingColon = storedInfo.blinkingColon;
+
+        mClockInfo2.hourMode = storedInfo.hourMode;
+        mClockInfo2.blinkingColon = storedInfo.blinkingColon;
+
+    #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        mClockInfo0.timeZone.setDst(storedInfo.isDst0);
+        mClockInfo1.timeZone.setDst(storedInfo.isDst1);
+        mClockInfo2.timeZone.setDst(storedInfo.isDst2);
+    #endif
+      } else {
+        mClockInfo0.contrastLevel = 5;
+        mClockInfo0.hourMode = ClockInfo::kTwelve;
+        mClockInfo0.blinkingColon = false;
+        preserveInfo();
+      }
+
+      mMode = MODE_DATE_TIME;
+    }
 
     /**
      * This should be called every 0.1s to support blinking mode and to avoid
@@ -176,6 +207,7 @@ class Controller {
 
         case MODE_CHANGE_HOUR_MODE:
         case MODE_CHANGE_BLINKING_COLON:
+        case MODE_CHANGE_CONTRAST:
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
         case MODE_CHANGE_TIME_ZONE_DST1:
@@ -223,11 +255,20 @@ class Controller {
           mClockInfo1.hourMode ^= 0x1;
           mClockInfo2.hourMode ^= 0x1;
           break;
+
         case MODE_CHANGE_BLINKING_COLON:
           mSuppressBlink = true;
           mClockInfo0.blinkingColon = !mClockInfo0.blinkingColon;
           mClockInfo1.blinkingColon = !mClockInfo1.blinkingColon;
           mClockInfo2.blinkingColon = !mClockInfo2.blinkingColon;
+          break;
+
+        case MODE_CHANGE_CONTRAST:
+          mSuppressBlink = true;
+          incrementMod(mClockInfo0.contrastLevel, (uint8_t) 10);
+          incrementMod(mClockInfo1.contrastLevel, (uint8_t) 10);
+          incrementMod(mClockInfo2.contrastLevel, (uint8_t) 10);
+          updateContrast();
           break;
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -253,6 +294,18 @@ class Controller {
       update();
     }
 
+    void updateContrast() {
+      uint8_t contrastValue = getContrastValue(mClockInfo0.contrastLevel);
+      mPresenter0.setContrast(contrastValue);
+      mPresenter1.setContrast(contrastValue);
+      mPresenter2.setContrast(contrastValue);
+    }
+
+    static uint8_t getContrastValue(uint8_t level) {
+      if (level > 9) level = 9;
+      return kContrastValues[level];
+    }
+
     void handleChangeButtonRepeatPress() {
       handleChangeButtonPress();
     }
@@ -267,6 +320,7 @@ class Controller {
         case MODE_CHANGE_SECOND:
         case MODE_CHANGE_HOUR_MODE:
         case MODE_CHANGE_BLINKING_COLON:
+        case MODE_CHANGE_CONTRAST:
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
         case MODE_CHANGE_TIME_ZONE_DST1:
@@ -333,6 +387,7 @@ class Controller {
         case MODE_CHANGE_SECOND:
         case MODE_CHANGE_HOUR_MODE:
         case MODE_CHANGE_BLINKING_COLON: {
+        case MODE_CHANGE_CONTRAST:
           acetime_t now = mChangingDateTime.toEpochSeconds();
           mPresenter0.update(mMode, now, mBlinkShowState, mSuppressBlink,
               mClockInfo0);
@@ -368,6 +423,9 @@ class Controller {
     }
 
     void saveClockInfo() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("saveClockInfo()"));
+      }
       preserveInfo();
     }
 
@@ -378,6 +436,7 @@ class Controller {
       // identical.
       storedInfo.hourMode = mClockInfo0.hourMode;
       storedInfo.blinkingColon = mClockInfo0.blinkingColon;
+      storedInfo.contrastLevel = mClockInfo0.contrastLevel;
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
       storedInfo.isDst0 = mClockInfo0.timeZone.isDst();
@@ -385,14 +444,19 @@ class Controller {
       storedInfo.isDst2 = mClockInfo2.timeZone.isDst();
 #endif
 
-      mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, &storedInfo,
-          sizeof(StoredInfo));
+      mCrcEeprom.writeWithCrc(
+          kStoredInfoEepromAddress,
+          &storedInfo,
+          sizeof(StoredInfo)
+      );
     }
 
   private:
     // Disable copy-constructor and assignment operator
     Controller(const Controller&) = delete;
     Controller& operator=(const Controller&) = delete;
+
+    static const uint8_t kContrastValues[];
 
     Clock& mClock;
     CrcEeprom& mCrcEeprom;

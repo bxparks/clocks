@@ -20,6 +20,9 @@ struct StoredInfo {
 
   /** Blink the colon in HH:MM. */
   bool blinkingColon;
+
+  /** Oled contrast level [0-9]. */
+  uint8_t contrastLevel;
 };
 
 #endif

@@ -62,21 +62,24 @@ SSD1306AsciiSpi oled2;
 
 void setupOled() {
   pinMode(OLED_CS0_PIN, OUTPUT);
-  digitalWrite(OLED_CS0_PIN, HIGH);
-
   pinMode(OLED_CS1_PIN, OUTPUT);
-  digitalWrite(OLED_CS1_PIN, HIGH);
-
   pinMode(OLED_CS2_PIN, OUTPUT);
+
+  digitalWrite(OLED_CS0_PIN, HIGH);
+  digitalWrite(OLED_CS1_PIN, HIGH);
   digitalWrite(OLED_CS2_PIN, HIGH);
 
   oled0.begin(&Adafruit128x64, OLED_CS0_PIN, OLED_DC_PIN, OLED_RST_PIN);
   oled1.begin(&Adafruit128x64, OLED_CS1_PIN, OLED_DC_PIN);
   oled2.begin(&Adafruit128x64, OLED_CS2_PIN, OLED_DC_PIN);
 
-  digitalWrite(OLED_CS0_PIN, HIGH);
-  digitalWrite(OLED_CS1_PIN, HIGH);
-  digitalWrite(OLED_CS2_PIN, HIGH);
+  oled0.clear();
+  oled1.clear();
+  oled2.clear();
+
+  oled0.setScroll(false);
+  oled1.setScroll(false);
+  oled2.setScroll(false);
 }
 
 //----------------------------------------------------------------------------
@@ -128,6 +131,7 @@ TimeZone tz2 = TimeZone::forZoneInfo(&zonedbx::kZoneEurope_London,
 // - View Settings
 //    - Change 12/24 mode
 //    - Change Blinking mode
+//    - Change Contrast
 // - About
 //    - (no submodes)
 
@@ -142,7 +146,7 @@ const uint8_t DATE_TIME_MODES[] = {
   MODE_CHANGE_HOUR,
   MODE_CHANGE_MINUTE,
   MODE_CHANGE_SECOND,
-  0,
+  0, // end of list
 };
 
 // ModeGroup for the DateTime modes.
@@ -174,7 +178,8 @@ const ModeGroup DATE_TIME_MODE_GROUP = {
 const uint8_t SETTINGS_MODES[] = {
   MODE_CHANGE_HOUR_MODE,
   MODE_CHANGE_BLINKING_COLON,
-  0,
+  MODE_CHANGE_CONTRAST,
+  0, // end of list
 };
 
 // ModeGroup for the Settings modes.
@@ -190,7 +195,7 @@ const uint8_t TOP_LEVEL_MODES[] = {
   //MODE_TIME_ZONE,
   MODE_SETTINGS,
   MODE_ABOUT,
-  0,
+  0, // end of list
 };
 
 // List of children ModeGroups for each element in TOP_LEVEL_MODES, in the same
@@ -199,7 +204,7 @@ const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
   &DATE_TIME_MODE_GROUP,
   //&TIME_ZONE_MODE_GROUP,
   &SETTINGS_MODE_GROUP,
-  nullptr /* About mode has no submodes */,
+  nullptr, // About mode has no submodes
 };
 
 // Root mode group
@@ -213,9 +218,12 @@ const ModeGroup ROOT_MODE_GROUP = {
 // Create controller with 3 presenters for the 3 OLED displays.
 //----------------------------------------------------------------------------
 
-Controller controller(systemClock, crcEeprom, &ROOT_MODE_GROUP,
+Controller controller(
+    systemClock, crcEeprom, &ROOT_MODE_GROUP,
     presenter0, presenter1, presenter2,
-    tz0, tz1, tz2, "SFO", "PHL", "LHR");
+    tz0, tz1, tz2,
+    "SFO", "PHL", "LHR"
+);
 
 // The RTC has a resolution of only 1s, so we need to poll it fast enough to
 // make it appear that the display is tracking it correctly. The benchmarking

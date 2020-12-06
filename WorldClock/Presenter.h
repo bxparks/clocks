@@ -46,10 +46,16 @@ class Presenter {
       mRenderingInfo.suppressBlink = suppressBlink;
       mRenderingInfo.blinkShowState = blinkShowState;
 
+      mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
       mRenderingInfo.name = clockInfo.name;
       mRenderingInfo.hourMode = clockInfo.hourMode;
       mRenderingInfo.blinkingColon = clockInfo.blinkingColon;
       mRenderingInfo.timeZone = clockInfo.timeZone;
+    }
+
+    /** Set the OLED contrast value. */
+    void setContrast(uint8_t value) {
+      mOled.setContrast(value);
     }
 
   private:
@@ -74,6 +80,7 @@ class Presenter {
         case MODE_SETTINGS:
         case MODE_CHANGE_HOUR_MODE:
         case MODE_CHANGE_BLINKING_COLON:
+        case MODE_CHANGE_CONTRAST:
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
         case MODE_CHANGE_TIME_ZONE_DST1:
@@ -140,9 +147,9 @@ class Presenter {
       printPad2To(mOled, dateTime.day(), '0');
       mOled.print(' ');
       mOled.clearToEOL();
+      mOled.println();
 
       // place name
-      mOled.println();
       acetime_t epochSeconds = dateTime.toEpochSeconds();
       mOled.print(dateTime.timeZone().getAbbrev(epochSeconds));
       mOled.print(' ');
@@ -150,6 +157,7 @@ class Presenter {
       mOled.print(mRenderingInfo.name);
       mOled.print(')');
       mOled.clearToEOL();
+      mOled.println();
     }
 
     void displayChangeableDateTime() const {
@@ -178,9 +186,9 @@ class Presenter {
         mOled.print("  ");
       }
       mOled.clearToEOL();
+      mOled.println();
 
       // time
-      mOled.println();
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
         uint8_t hour = dateTime.hour();
         if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
@@ -213,9 +221,9 @@ class Presenter {
         mOled.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
       mOled.clearToEOL();
+      mOled.println();
 
       // week day
-      mOled.println();
       mOled.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
       mOled.clearToEOL();
 
@@ -227,6 +235,7 @@ class Presenter {
       mOled.print(mRenderingInfo.name);
       mOled.print(')');
       mOled.clearToEOL();
+      mOled.println();
     }
 
     void displayClockInfo() const {
@@ -237,14 +246,23 @@ class Presenter {
       } else {
         mOled.print("  ");
       }
-
       mOled.println();
+
       mOled.print(F("Blink: "));
       if (shouldShowFor(MODE_CHANGE_BLINKING_COLON)) {
         mOled.print(mRenderingInfo.blinkingColon ? "on " : "off");
       } else {
         mOled.print("   ");
       }
+      mOled.println();
+
+      mOled.print(F("Contrast: "));
+      if (shouldShowFor(MODE_CHANGE_CONTRAST)) {
+        mOled.print(mRenderingInfo.contrastLevel);
+      } else {
+        mOled.print(' ');
+      }
+      mOled.println();
 
       // Extract time zone info.
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -254,15 +272,14 @@ class Presenter {
       uint8_t minute;
       timeOffset.toHourMinute(hour, minute);
 
-      mOled.println();
       mOled.print("UTC");
       mOled.print((hour < 0) ? '-' : '+');
       if (hour < 0) hour = -hour;
       printPad2To(mOled, hour, '0');
       mOled.print(':');
       printPad2To(mOled, minute, '0');
-
       mOled.println();
+
       mOled.print("DST: ");
       if (shouldShowFor(MODE_CHANGE_TIME_ZONE_DST0)
           && shouldShowFor(MODE_CHANGE_TIME_ZONE_DST1)
@@ -271,6 +288,7 @@ class Presenter {
       } else {
         mOled.print("   ");
       }
+      mOled.println();
 #endif
     }
 
@@ -302,6 +320,7 @@ class Presenter {
                   != mPrevRenderingInfo.blinkShowState))
           || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode
           || mRenderingInfo.blinkingColon != mPrevRenderingInfo.blinkingColon
+          || mRenderingInfo.contrastLevel != mPrevRenderingInfo.contrastLevel
           || mRenderingInfo.name != mPrevRenderingInfo.name
           || mRenderingInfo.timeZone != mPrevRenderingInfo.timeZone;
     }

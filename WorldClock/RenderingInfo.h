@@ -14,12 +14,13 @@ using namespace ace_time;
  */ 
 struct RenderingInfo {
   uint8_t mode = MODE_UNKNOWN; // display mode
-  acetime_t now; // seconds from AceTime epoch
   bool suppressBlink = false; // true if blinking should be suppressed
   bool blinkShowState = true; // true if blinking info should be shown
-  const char* name;
   uint8_t hourMode;
   bool blinkingColon;
+  uint8_t contrastLevel;
+  const char* name;
+  acetime_t now; // seconds from AceTime epoch
   TimeZone timeZone;
 };
 
