@@ -10,6 +10,7 @@
 #include "PersistentStore.h"
 #include "Presenter.h"
 #include "ModeGroup.h"
+#include "ModeNavigator.h"
 
 using namespace ace_time;
 using namespace ace_time::clock;
@@ -50,7 +51,7 @@ class Controller {
         mPresenter(presenter),
         mZoneManager(zoneManager),
         mInitialTimeZoneData(initialTimeZoneData),
-        mCurrentModeGroup(rootModeGroup)
+        mNavigator(rootModeGroup)
     {}
 
     void setup(bool factoryReset) {
@@ -68,7 +69,7 @@ class Controller {
      * noticeable drift against the RTC which has a 1 second resolution.
      */
     void update() {
-      if (mMode == MODE_UNKNOWN) return;
+      if (mNavigator.mode() == MODE_UNKNOWN) return;
       updateDateTime();
       updateBlinkState();
       updateRenderingInfo();
@@ -80,14 +81,8 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
       performLeavingModeAction();
-      changeSiblingMode();
+      mNavigator.changeMode();
       performEnteringModeAction();
-    }
-
-    /** Navigate to sibling mode. */
-    void changeSiblingMode() {
-      incrementMod(mCurrentModeIndex, mCurrentModeGroup->numModes);
-      mMode = mCurrentModeGroup->modes[mCurrentModeIndex];
     }
 
     void performEnteringModeAction() {
@@ -96,7 +91,7 @@ class Controller {
       }
 
       #if TIME_ZONE_TYPE != TIME_ZONE_TYPE_MANUAL
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_TIME_ZONE_NAME:
           mZoneRegistryIndex = mZoneManager.indexForZoneId(
               mChangingClockInfo.timeZoneData.zoneId);
@@ -118,32 +113,9 @@ class Controller {
 
       performLeavingModeAction();
       performLeavingModeGroupAction();
-      changeModeGroup();
+      mNavigator.changeGroup();
       performEnteringModeGroupAction();
       performEnteringModeAction();
-    }
-
-    /** Navigate to Mode Group. */
-    void changeModeGroup() {
-      const ModeGroup* parentGroup = mCurrentModeGroup->parentGroup;
-
-      if (parentGroup) {
-        mCurrentModeGroup = parentGroup;
-        mCurrentModeIndex = mTopLevelIndexSave;
-      } else {
-        const ModeGroup* const* childGroups = mCurrentModeGroup->childGroups;
-        const ModeGroup* childGroup = childGroups
-            ? childGroups[mCurrentModeIndex]
-            : nullptr;
-        if (childGroup) {
-          mCurrentModeGroup = childGroup;
-          // Save the current top level index so that we can go back to it.
-          mTopLevelIndexSave = mCurrentModeIndex;
-          mCurrentModeIndex = 0;
-        }
-      }
-
-      mMode = mCurrentModeGroup->modes[mCurrentModeIndex];
     }
 
     /** Do action associated with entering a ModeGroup due to a LongPress. */
@@ -152,7 +124,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
       }
 
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -177,7 +149,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
       }
 
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -202,7 +174,7 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         // Switch 12/24 modes if in MODE_DATA_TIME
         case MODE_DATE_TIME:
           mClockInfo.hourMode ^= 0x1;
@@ -292,13 +264,13 @@ class Controller {
       //    button is held down.
       //  * Each change of 12/24 mode causes a write to the EEPPROM, which
       //    causes wear and tear.
-      if (mMode != MODE_DATE_TIME) {
+      if (mNavigator.mode() != MODE_DATE_TIME) {
         handleChangeButtonPress();
       }
     }
 
     void handleChangeButtonRelease() {
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -323,7 +295,7 @@ class Controller {
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update the mChangingDateTime.second field with the current second.
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -350,12 +322,13 @@ class Controller {
     }
 
     void updateRenderingInfo() {
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_DATE_TIME:
         case MODE_TIME_ZONE:
         case MODE_ABOUT:
-          mPresenter.setRenderingInfo(mMode, mSuppressBlink, mBlinkShowState,
-              mClockInfo);
+          mPresenter.setRenderingInfo(
+              mNavigator.mode(), mSuppressBlink, mBlinkShowState, mClockInfo
+          );
           break;
 
         case MODE_CHANGE_YEAR:
@@ -370,8 +343,10 @@ class Controller {
       #else
         case MODE_CHANGE_TIME_ZONE_NAME:
       #endif
-          mPresenter.setRenderingInfo(mMode, mSuppressBlink, mBlinkShowState,
-              mChangingClockInfo);
+          mPresenter.setRenderingInfo(
+            mNavigator.mode(), mSuppressBlink, mBlinkShowState,
+            mChangingClockInfo
+          );
           break;
       }
     }
@@ -454,18 +429,12 @@ class Controller {
     Presenter& mPresenter;
     ZoneManager& mZoneManager;
     TimeZoneData mInitialTimeZoneData;
-    ModeGroup const* mCurrentModeGroup;
+    ModeNavigator mNavigator;
 
     ClockInfo mClockInfo; // current clock
     ClockInfo mChangingClockInfo; // the target clock
 
-    // Navigation
-    uint8_t mTopLevelIndexSave = 0;
-    uint8_t mCurrentModeIndex = 0;
-    uint8_t mMode = MODE_DATE_TIME; // current mode
-
     uint16_t mZoneRegistryIndex;
-
     bool mSecondFieldCleared;
 
     // Handle blinking
