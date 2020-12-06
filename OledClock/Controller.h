@@ -52,9 +52,9 @@ class Controller {
     {}
 
     void setup(bool factoryReset) {
-      #if FORCE_INITIALIZE
+      if (FORCE_INITIALIZE == 1) {
         factoryReset = true;
-      #endif
+      }
       restoreClockInfo(factoryReset);
 
       // Retrieve current time from Clock and set the current clockInfo.
