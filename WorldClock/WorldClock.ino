@@ -25,7 +25,7 @@
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
-#include <CrcEeprom.h>
+#include <AceUtilsCrcEeprom.h>
 #include <AceUtilsModeGroup.h>
 #include <SSD1306AsciiSpi.h>
 #include "ClockInfo.h"
@@ -34,7 +34,7 @@
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
-using crc_eeprom::CrcEeprom;
+using ace_utils::crc_eeprom::CrcEeprom;
 using ace_utils::mode_group::ModeGroup;
 
 //----------------------------------------------------------------------------

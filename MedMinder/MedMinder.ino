@@ -52,7 +52,7 @@
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
-#include <CrcEeprom.h>
+#include <AceUtilsCrcEeprom.h>
 
 #include "config.h"
 #if ENABLE_LOW_POWER == 1
@@ -61,11 +61,11 @@
 #endif
 #include "Presenter.h"
 #include "Controller.h"
-#include <ace_time/hw/HardwareDateTime.h>
 
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
+using ace_utils::crc_eeprom::CrcEeprom;
 
 //------------------------------------------------------------------
 // Configure CrcEeprom.

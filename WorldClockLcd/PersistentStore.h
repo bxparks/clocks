@@ -3,13 +3,13 @@
 
 #include <AceTime.h>
 #if ! defined(ARDUINO_ARCH_SAMD)
-  #include <CrcEeprom.h>
+  #include <AceUtilsCrcEeprom.h>
 #endif
 #include "config.h"
 #include "StoredInfo.h"
 
 using namespace ace_time;
-using crc_eeprom::CrcEeprom;
+using ace_utils::crc_eeprom::CrcEeprom;
 
 class PersistentStore {
   public:

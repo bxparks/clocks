@@ -4,7 +4,7 @@
 #include "config.h"
 #include <AceCommon.h> // incrementMod
 #include <AceTime.h>
-#include <CrcEeprom.h>
+#include <AceUtilsCrcEeprom.h>
 #include <AceUtilsModeGroup.h>
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
@@ -12,8 +12,8 @@
 
 using namespace ace_time;
 using namespace ace_time::clock;
-using crc_eeprom::CrcEeprom;
 using ace_common::incrementMod;
+using ace_utils::crc_eeprom::CrcEeprom;
 using ace_utils::mode_group::ModeGroup;
 using ace_utils::mode_group::ModeNavigator;
 

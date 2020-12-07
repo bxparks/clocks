@@ -3,7 +3,7 @@
 
 #include <SSD1306AsciiWire.h>
 #include <AceTime.h>
-#include <CrcEeprom.h>
+#include <AceUtilsCrcEeprom.h>
 #include "config.h"
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
@@ -12,7 +12,7 @@
 
 using namespace ace_time;
 using namespace ace_time::clock;
-using crc_eeprom::CrcEeprom;
+using ace_utils::crc_eeprom::CrcEeprom;
 
 /**
  * Class responsible for handling user button presses, and determining
