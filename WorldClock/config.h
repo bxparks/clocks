@@ -38,7 +38,9 @@
 // Rendering modes.
 //------------------------------------------------------------------
 
-const uint8_t MODE_UNKNOWN = 0; // uninitialized
+// must be identical to ace_utils::mode_groups::kModeUnknown
+const uint8_t MODE_UNKNOWN = 0;
+
 const uint8_t MODE_DATE_TIME = 1;
 const uint8_t MODE_SETTINGS = 2;
 const uint8_t MODE_ABOUT = 3;

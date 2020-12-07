@@ -60,8 +60,7 @@ class Controller {
         factoryReset = true;
       }
       restoreClockInfo(factoryReset);
-
-      // Retrieve current time from Clock and set the current clockInfo.
+      mNavigator.setup();
       updateDateTime();
     }
 

@@ -64,7 +64,7 @@ class Controller {
         factoryReset = true;
       }
       restoreClockInfo(factoryReset);
-      // TODO: mNavigator.setup()
+      mNavigator.setup();
       updateContrast();
       updateDateTime();
     }

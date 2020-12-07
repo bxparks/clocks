@@ -72,6 +72,7 @@ class Controller {
         factoryReset = true;
       #endif
       restoreClockInfo(factoryReset);
+      mNavigator.setup();
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
         updateBacklight();
