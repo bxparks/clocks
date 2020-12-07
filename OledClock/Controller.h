@@ -1,6 +1,7 @@
 #ifndef OLED_CLOCK_CONTROLLER_H
 #define OLED_CLOCK_CONTROLLER_H
 
+#include <AceCommon.h> // incrementMod()
 #include <AceTime.h>
 #include "config.h"
 #include "ClockInfo.h"
@@ -12,6 +13,7 @@
 
 using namespace ace_time;
 using namespace ace_time::clock;
+using ace_common::incrementMod;
 
 /**
  * Class responsible for rendering the RenderingInfo to the indicated display.
@@ -84,10 +86,7 @@ class Controller {
 
     /** Navigate to sibling mode. */
     void changeSiblingMode() {
-      mCurrentModeIndex++;
-      if (mCurrentModeGroup->modes[mCurrentModeIndex] == 0) {
-        mCurrentModeIndex = 0;
-      }
+      incrementMod(mCurrentModeIndex, mCurrentModeGroup->numModes);
       mMode = mCurrentModeGroup->modes[mCurrentModeIndex];
     }
 
