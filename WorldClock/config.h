@@ -1,6 +1,8 @@
 #ifndef WORLD_CLOCK_CONFIG_H
 #define WORLD_CLOCK_CONFIG_H
 
+#include <stdint.h>
+
 //------------------------------------------------------------------
 // Configuration parameters.
 //------------------------------------------------------------------
