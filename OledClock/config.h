@@ -1,6 +1,8 @@
 #ifndef OLED_CLOCK_CONFIG_H
 #define OLED_CLOCK_CONFIG_H
 
+#include <stdint.h>
+
 //------------------------------------------------------------------
 // Configuration parameters.
 //------------------------------------------------------------------
@@ -159,7 +161,9 @@
 // Button state transition nodes.
 //------------------------------------------------------------------
 
-const uint8_t MODE_UNKNOWN = 0; // uninitialized
+// must be identical to ace_utils::mode_groups::kModeUnknown
+const uint8_t MODE_UNKNOWN = 0;
+
 const uint8_t MODE_DATE_TIME = 1;
 const uint8_t MODE_TIME_ZONE = 2;
 const uint8_t MODE_ABOUT = 3;

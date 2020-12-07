@@ -27,6 +27,7 @@
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
+#include <AceUtilsModeGroup.h>
 #include <SPI.h>
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
   #include <SSD1306AsciiWire.h>
@@ -36,12 +37,12 @@
 #endif
 #include "PersistentStore.h"
 #include "Controller.h"
-#include "ModeGroup.h"
 
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
+using ace_utils::mode_group::ModeGroup;
 
 //-----------------------------------------------------------------------------
 // Configure time zones and ZoneManager.

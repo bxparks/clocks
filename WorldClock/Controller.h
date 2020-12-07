@@ -1,11 +1,12 @@
 #ifndef WORLD_CLOCK_CONTROLLER_H
 #define WORLD_CLOCK_CONTROLLER_H
 
+#include "config.h"
 #include <AceCommon.h> // incrementMod
 #include <AceTime.h>
 #include <CrcEeprom.h>
+#include <AceUtilsModeGroup.h>
 #include "RenderingInfo.h"
-#include "ModeGroup.h"
 #include "StoredInfo.h"
 #include "Presenter.h"
 
@@ -13,6 +14,8 @@ using namespace ace_time;
 using namespace ace_time::clock;
 using crc_eeprom::CrcEeprom;
 using ace_common::incrementMod;
+using ace_utils::mode_group::ModeGroup;
+using ace_utils::mode_group::ModeNavigator;
 
 /**
  * Maintains the internal state of the world clock, handling button inputs,
@@ -46,7 +49,7 @@ class Controller {
     ) :
         mClock(clock),
         mCrcEeprom(crcEeprom),
-        mCurrentModeGroup(rootModeGroup),
+        mNavigator(rootModeGroup),
         mPresenter0(presenter0),
         mPresenter1(presenter1),
         mPresenter2(presenter2),
@@ -61,7 +64,7 @@ class Controller {
         factoryReset = true;
       }
       restoreClockInfo(factoryReset);
-      mMode = MODE_DATE_TIME;
+      mNavigator.setup();
       updateContrast();
       updateDateTime();
     }
@@ -71,7 +74,7 @@ class Controller {
      * noticeable drift against the RTC which has a 1 second resolution.
      */
     void update() {
-      if (mMode == MODE_UNKNOWN) return;
+      if (mNavigator.mode() == MODE_UNKNOWN) return;
       updateDateTime();
       updateBlinkState();
       updateRenderingInfo();
@@ -86,15 +89,20 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
       performLeavingModeAction();
-      changeSiblingMode();
+      mNavigator.changeMode();
       performEnteringModeAction();
     }
 
-    // ModeGroup common code
-    /** Navigate to sibling mode. */
-    void changeSiblingMode() {
-      incrementMod(mCurrentModeIndex, mCurrentModeGroup->numModes);
-      mMode = mCurrentModeGroup->modes[mCurrentModeIndex];
+    void handleModeButtonLongPress() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
+      }
+
+      performLeavingModeAction();
+      performLeavingModeGroupAction();
+      mNavigator.changeGroup();
+      performEnteringModeGroupAction();
+      performEnteringModeAction();
     }
 
     void performEnteringModeAction() {
@@ -109,49 +117,12 @@ class Controller {
       }
     }
 
-    // ModeGroup common code
-    void handleModeButtonLongPress() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
-      }
-
-      performLeavingModeAction();
-      performLeavingModeGroupAction();
-      changeModeGroup();
-      performEnteringModeGroupAction();
-      performEnteringModeAction();
-    }
-
-    // ModeGroup common code
-    /** Navigate to Mode Group. */
-    void changeModeGroup() {
-      const ModeGroup* parentGroup = mCurrentModeGroup->parentGroup;
-
-      if (parentGroup) {
-        mCurrentModeGroup = parentGroup;
-        mCurrentModeIndex = mTopLevelIndexSave;
-      } else {
-        const ModeGroup* const* childGroups = mCurrentModeGroup->childGroups;
-        const ModeGroup* childGroup = childGroups
-            ? childGroups[mCurrentModeIndex]
-            : nullptr;
-        if (childGroup) {
-          mCurrentModeGroup = childGroup;
-          // Save the current top level index so that we can go back to it.
-          mTopLevelIndexSave = mCurrentModeIndex;
-          mCurrentModeIndex = 0;
-        }
-      }
-
-      mMode = mCurrentModeGroup->modes[mCurrentModeIndex];
-    }
-
     void performEnteringModeGroupAction() {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
       }
 
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -170,7 +141,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
       }
 
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -197,7 +168,7 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementYear(mChangingDateTime);
@@ -291,7 +262,7 @@ class Controller {
     }
 
     void handleChangeButtonRelease() {
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -315,7 +286,7 @@ class Controller {
     void updateDateTime() {
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update the mChangingDateTime.second field with the current second.
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -345,16 +316,19 @@ class Controller {
     }
 
     void updateRenderingInfo() {
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_DATE_TIME:
         case MODE_SETTINGS:
         case MODE_ABOUT: {
           acetime_t now = mClock.getNow();
-          mPresenter0.update(mMode, now, mBlinkShowState, mSuppressBlink,
+          mPresenter0.update(
+              mNavigator.mode(), now, mBlinkShowState, mSuppressBlink,
               mClockInfo0);
-          mPresenter1.update(mMode, now, mBlinkShowState, mSuppressBlink,
+          mPresenter1.update(
+              mNavigator.mode(), now, mBlinkShowState, mSuppressBlink,
               mClockInfo1);
-          mPresenter2.update(mMode, now, mBlinkShowState, mSuppressBlink,
+          mPresenter2.update(
+              mNavigator.mode(), now, mBlinkShowState, mSuppressBlink,
               mClockInfo2);
           break;
         }
@@ -369,10 +343,13 @@ class Controller {
         case MODE_CHANGE_BLINKING_COLON: {
         case MODE_CHANGE_CONTRAST:
           acetime_t now = mChangingDateTime.toEpochSeconds();
-          mPresenter0.update(mMode, now, mBlinkShowState, mSuppressBlink,
+          mPresenter0.update(
+              mNavigator.mode(), now, mBlinkShowState, mSuppressBlink,
               mClockInfo0);
-          mPresenter1.update(mMode, now, mBlinkShowState, true, mClockInfo1);
-          mPresenter2.update(mMode, now, mBlinkShowState, true, mClockInfo2);
+          mPresenter1.update(
+              mNavigator.mode(), now, mBlinkShowState, true, mClockInfo1);
+          mPresenter2.update(
+              mNavigator.mode(), now, mBlinkShowState, true, mClockInfo2);
           break;
         }
 
@@ -392,9 +369,12 @@ class Controller {
 
     void updateChangingDst(uint8_t clockId) {
       acetime_t now = mChangingDateTime.toEpochSeconds();
-      mPresenter0.update(mMode, now, mBlinkShowState, clockId!=0, mClockInfo0);
-      mPresenter1.update(mMode, now, mBlinkShowState, clockId!=1, mClockInfo1);
-      mPresenter2.update(mMode, now, mBlinkShowState, clockId!=2, mClockInfo2);
+      mPresenter0.update(
+          mNavigator.mode(), now, mBlinkShowState, clockId!=0, mClockInfo0);
+      mPresenter1.update(
+          mNavigator.mode(), now, mBlinkShowState, clockId!=1, mClockInfo1);
+      mPresenter2.update(
+          mNavigator.mode(), now, mBlinkShowState, clockId!=2, mClockInfo2);
     }
 
     /** Save the current UTC ZonedDateTime to the RTC. */
@@ -518,18 +498,14 @@ class Controller {
 
     Clock& mClock;
     CrcEeprom& mCrcEeprom;
-    ModeGroup const* mCurrentModeGroup;
+    ModeNavigator mNavigator;
+
     Presenter& mPresenter0;
     Presenter& mPresenter1;
     Presenter& mPresenter2;
     ClockInfo mClockInfo0;
     ClockInfo mClockInfo1;
     ClockInfo mClockInfo2;
-
-    // Navigation
-    uint8_t mTopLevelIndexSave = 0;
-    uint8_t mCurrentModeIndex = 0;
-    uint8_t mMode = MODE_UNKNOWN; // current mode
 
     ZonedDateTime mChangingDateTime; // source of now() in "Change" modes
     bool mSecondFieldCleared = false;

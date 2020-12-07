@@ -1,6 +1,8 @@
 #ifndef WORLD_CLOCK_LCD_CONFIG_H
 #define WORLD_CLOCK_LCD_CONFIG_H
 
+#include <stdint.h>
+
 //------------------------------------------------------------------
 // Configuration parameters.
 //------------------------------------------------------------------
@@ -162,7 +164,9 @@
 // Button state transition nodes.
 //------------------------------------------------------------------
 
-const uint8_t MODE_UNKNOWN = 0; // uninitialized
+// must be identical to ace_utils::mode_groups::kModeUnknown
+const uint8_t MODE_UNKNOWN = 0;
+
 const uint8_t MODE_DATE_TIME = 1;
 const uint8_t MODE_TIME_ZONE = 2;
 const uint8_t MODE_SETTINGS = 3; // misc settings

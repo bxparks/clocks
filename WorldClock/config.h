@@ -1,6 +1,8 @@
 #ifndef WORLD_CLOCK_CONFIG_H
 #define WORLD_CLOCK_CONFIG_H
 
+#include <stdint.h>
+
 //------------------------------------------------------------------
 // Configuration parameters.
 //------------------------------------------------------------------
@@ -36,7 +38,9 @@
 // Rendering modes.
 //------------------------------------------------------------------
 
-const uint8_t MODE_UNKNOWN = 0; // uninitialized
+// must be identical to ace_utils::mode_groups::kModeUnknown
+const uint8_t MODE_UNKNOWN = 0;
+
 const uint8_t MODE_DATE_TIME = 1;
 const uint8_t MODE_SETTINGS = 2;
 const uint8_t MODE_ABOUT = 3;
