@@ -77,9 +77,9 @@ void setupOled() {
   oled1.clear();
   oled2.clear();
 
-  oled0.setScroll(false);
-  oled1.setScroll(false);
-  oled2.setScroll(false);
+  oled0.setScrollMode(false);
+  oled1.setScrollMode(false);
+  oled2.setScrollMode(false);
 }
 
 //----------------------------------------------------------------------------

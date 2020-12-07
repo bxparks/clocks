@@ -111,7 +111,7 @@ void setupOled() {
   oled.displayRemap(OLED_REMAP);
   oled.setFont(fixed_bold10x15);
   oled.clear();
-  oled.setScroll(false);
+  oled.setScrollMode(false);
 }
 
 //------------------------------------------------------------------

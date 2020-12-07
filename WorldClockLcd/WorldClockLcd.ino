@@ -161,7 +161,7 @@ void setupClocks() {
     oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
     oled.displayRemap(OLED_REMAP);
     oled.clear();
-    oled.setScroll(false);
+    oled.setScrollMode(false);
   }
 #else
   Adafruit_PCD8544 lcd = Adafruit_PCD8544(LCD_SPI_DATA_COMMAND_PIN, -1, -1);

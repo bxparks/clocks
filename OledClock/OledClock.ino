@@ -146,7 +146,7 @@ void setupClocks() {
   void setupDisplay() {
     oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
     oled.displayRemap(OLED_REMAP);
-    oled.setScroll(false);
+    oled.setScrollMode(false);
     oled.clear();
   }
 #else

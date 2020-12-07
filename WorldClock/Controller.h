@@ -33,7 +33,7 @@ class Controller {
     Controller(
         Clock& clock,
         CrcEeprom& crcEeprom,
-        ModeGroup* rootModeGroup,
+        const ModeGroup* rootModeGroup,
         Presenter& presenter0,
         Presenter& presenter1,
         Presenter& presenter2,
