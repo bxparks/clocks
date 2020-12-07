@@ -93,10 +93,7 @@ class Controller {
     // ModeGroup common code
     /** Navigate to sibling mode. */
     void changeSiblingMode() {
-      mCurrentModeIndex++;
-      if (mCurrentModeGroup->modes[mCurrentModeIndex] == 0) {
-        mCurrentModeIndex = 0;
-      }
+      incrementMod(mCurrentModeIndex, mCurrentModeGroup->numModes);
       mMode = mCurrentModeGroup->modes[mCurrentModeIndex];
     }
 

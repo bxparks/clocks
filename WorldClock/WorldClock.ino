@@ -151,13 +151,13 @@ const uint8_t DATE_TIME_MODES[] = {
   MODE_CHANGE_HOUR,
   MODE_CHANGE_MINUTE,
   MODE_CHANGE_SECOND,
-  0, // end of list
 };
 
 // ModeGroup for the DateTime modes.
 const ModeGroup DATE_TIME_MODE_GROUP = {
   &ROOT_MODE_GROUP /* parentGroup */,
   DATE_TIME_MODES /* modes */,
+  sizeof(DATE_TIME_MODES) / sizeof(uint8_t),
   nullptr /* childGroups */,
 };
 
@@ -169,13 +169,13 @@ const ModeGroup DATE_TIME_MODE_GROUP = {
 //#else
 //  MODE_CHANGE_TIME_ZONE_NAME,
 //#endif
-//  0,
 //};
 
 // MOdeGroup for the TimeZone modes.
 //const ModeGroup TIME_ZONE_MODE_GROUP = {
 //  &ROOT_MODE_GROUP /* parentGroup */,
 //  TIME_ZONE_MODES /* modes */,
+//  sizeof(TIME_ZONE_MODES) / sizeof(uint8_t),
 //  nullptr /* childGroups */,
 //};
 
@@ -184,13 +184,13 @@ const uint8_t SETTINGS_MODES[] = {
   MODE_CHANGE_HOUR_MODE,
   MODE_CHANGE_BLINKING_COLON,
   MODE_CHANGE_CONTRAST,
-  0, // end of list
 };
 
 // ModeGroup for the Settings modes.
 const ModeGroup SETTINGS_MODE_GROUP = {
   &ROOT_MODE_GROUP /* parentGroup */,
   SETTINGS_MODES /* modes */,
+  sizeof(SETTINGS_MODES) / sizeof(uint8_t),
   nullptr /* childGroups */,
 };
 
@@ -200,7 +200,6 @@ const uint8_t TOP_LEVEL_MODES[] = {
   //MODE_TIME_ZONE,
   MODE_SETTINGS,
   MODE_ABOUT,
-  0, // end of list
 };
 
 // List of children ModeGroups for each element in TOP_LEVEL_MODES, in the same
@@ -216,6 +215,7 @@ const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
 const ModeGroup ROOT_MODE_GROUP = {
   nullptr /* parentGroup */,
   TOP_LEVEL_MODES /* modes */,
+  sizeof(TOP_LEVEL_MODES) / sizeof(uint8_t),
   TOP_LEVEL_CHILD_GROUPS /* childGroups */,
 };
 

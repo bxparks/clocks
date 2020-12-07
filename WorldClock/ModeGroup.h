@@ -9,16 +9,22 @@
  * memory efficient, but less aesthetically pleasing.
  */
 struct ModeGroup {
-  const ModeGroup* const parentGroup; // set to nullptr for the root group
+  /** Pointer to the parent ModeGroup. Set to nullptr for the root group. */
+  const ModeGroup* const parentGroup;
 
-  // variable length list of mode identifiers, ending with a 0
+  /** Number of modes. */
+  const uint8_t numModes;
+
+  /** Array of mode identifiers of size numModes. */
   const uint8_t* const modes;
 
-  // List of child ModeGroup corresponding to each element in 'modes'. If
-  // childGroups is set to nullptr, that is equivalent to setting each element
-  // to nullptr. In other words, if there are 3 elements in modes, then we
-  // could make childGroups point to an array of {nullptr, nullptr, nullptr}.
-  // But it's more space efficient to set childGroups = nullptr.
+  /**
+   * List of child ModeGroup corresponding to each element in 'modes'. If
+   * childGroups is set to nullptr, that is equivalent to setting each element
+   * to nullptr. In other words, if there are 3 elements in modes, then we
+   * could make childGroups point to an array of {nullptr, nullptr, nullptr}.
+   * But it's more space efficient to set childGroups = nullptr.
+   */
   const ModeGroup* const* const childGroups;
 };
 
