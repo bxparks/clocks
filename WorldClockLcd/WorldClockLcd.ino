@@ -238,13 +238,13 @@ const uint8_t DATE_TIME_MODES[] = {
   MODE_CHANGE_DAY,
   MODE_CHANGE_MONTH,
   MODE_CHANGE_YEAR,
-  0,
 };
 
 // The Arduino compiler becomes confused without this.
 // ModeGroup for the DateTime modes.
 const ModeGroup DATE_TIME_MODE_GROUP = {
   &ROOT_MODE_GROUP /* parentGroup */,
+  sizeof(DATE_TIME_MODES) / sizeof(uint8_t),
   DATE_TIME_MODES /* modes */,
   nullptr /* childGroups */,
 };
@@ -266,12 +266,12 @@ const uint8_t TIME_ZONE_MODES[] = {
   MODE_CHANGE_TIME_ZONE2_NAME,
   MODE_CHANGE_TIME_ZONE3_NAME,
 #endif
-  0,
 };
 
 // ModeGroup for the TimeZone modes.
 const ModeGroup TIME_ZONE_MODE_GROUP = {
   &ROOT_MODE_GROUP /* parentGroup */,
+  sizeof(TIME_ZONE_MODES) / sizeof(uint8_t),
   TIME_ZONE_MODES /* modes */,
   nullptr /* childGroups */,
 };
@@ -285,12 +285,12 @@ const uint8_t SETTINGS_MODES[] = {
 #else
   MODE_CHANGE_SETTINGS_CONTRAST,
 #endif
-  0,
 };
 
 // ModeGroup for the Settings modes.
 const ModeGroup SETTINGS_MODE_GROUP = {
   &ROOT_MODE_GROUP /* parentGroup */,
+  sizeof(SETTINGS_MODES) / sizeof(uint8_t),
   SETTINGS_MODES /* modes */,
   nullptr /* childGroups */,
 };
@@ -301,7 +301,6 @@ const uint8_t TOP_LEVEL_MODES[] = {
   MODE_TIME_ZONE,
   MODE_SETTINGS,
   MODE_ABOUT,
-  0,
 };
 
 // List of children ModeGroups for each element in TOP_LEVEL_MODES, in the same
@@ -316,6 +315,7 @@ const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
 // Root mode group
 const ModeGroup ROOT_MODE_GROUP = {
   nullptr /* parentGroup */,
+  sizeof(TOP_LEVEL_MODES) / sizeof(uint8_t),
   TOP_LEVEL_MODES /* modes */,
   TOP_LEVEL_CHILD_GROUPS /* childGroups */,
 };
