@@ -1,20 +1,21 @@
 #ifndef OLED_CLOCK_CONTROLLER_H
 #define OLED_CLOCK_CONTROLLER_H
 
+#include "config.h"
 #include <AceCommon.h> // incrementMod()
 #include <AceTime.h>
-#include "config.h"
+#include <AceUtilsModeGroup.h>
 #include "ClockInfo.h"
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
 #include "PersistentStore.h"
 #include "Presenter.h"
-#include "ModeGroup.h"
-#include "ModeNavigator.h"
 
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_common::incrementMod;
+using ace_utils::mode_group::ModeGroup;
+using ace_utils::mode_group::ModeNavigator;
 
 /**
  * Class responsible for rendering the RenderingInfo to the indicated display.
