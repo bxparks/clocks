@@ -1,18 +1,23 @@
 #ifndef MED_MINDER_CONTROLLER_H
 #define MED_MINDER_CONTROLLER_H
 
-#include <SSD1306AsciiWire.h>
+#include <AceCommon.h> // incrementMod
 #include <AceTime.h>
 #include <AceUtilsCrcEeprom.h>
+#include <AceUtilsModeGroup.h>
+#include <SSD1306AsciiWire.h>
 #include "config.h"
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
 #include "Presenter.h"
 #include "ClockInfo.h"
 
+using ace_common::incrementMod;
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_utils::crc_eeprom::CrcEeprom;
+using ace_utils::mode_group::ModeGroup;
+using ace_utils::mode_group::ModeNavigator;
 
 /**
  * Class responsible for handling user button presses, and determining
@@ -31,15 +36,20 @@ class Controller {
     static const int16_t kDstOffsetMinutes = 60;
 
     /** Constructor. */
-    Controller(SystemClock& clock, CrcEeprom& crcEeprom,
-          Presenter& presenter):
+    Controller(
+        SystemClock& clock,
+        CrcEeprom& crcEeprom,
+        ModeGroup const* rootModeGroup,
+        Presenter& presenter
+    ) :
         mClock(clock),
         mCrcEeprom(crcEeprom),
-        mPresenter(presenter)
+        mPresenter(presenter),
+        mNavigator(rootModeGroup)
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
         , mZoneManager(kZoneRegistrySize, kZoneRegistry)
       #endif
-        , mMode(MODE_UNKNOWN) {}
+    {}
 
     void setup() {
       // Retrieve current time from Clock.
@@ -66,8 +76,7 @@ class Controller {
       mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
           nowSeconds, mClockInfo.timeZone);
 
-      // Start with the medInfo view mode.
-      mMode = MODE_VIEW_MED;
+      mNavigator.setup();
     }
 
     void syncClock() {
@@ -91,97 +100,91 @@ class Controller {
     }
 
     void handleModeButtonPress()  {
-      switch (mMode) {
-        case MODE_VIEW_MED:
-          mMode = MODE_VIEW_DATE_TIME;
-          break;
-        case MODE_VIEW_DATE_TIME:
-          mMode = MODE_VIEW_TIME_ZONE;
-          break;
-        case MODE_VIEW_TIME_ZONE:
-          mMode = MODE_VIEW_ABOUT;
-          break;
-        case MODE_VIEW_ABOUT:
-          mMode = MODE_VIEW_MED;
-          break;
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
+      }
+      performLeavingModeAction();
+      mNavigator.changeMode();
+      performEnteringModeAction();
+    }
 
-        case MODE_CHANGE_MED_HOUR:
-          mMode = MODE_CHANGE_MED_MINUTE;
-          break;
-        case MODE_CHANGE_MED_MINUTE:
-          mMode = MODE_CHANGE_MED_HOUR;
-          break;
+    void performEnteringModeAction() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
+      }
 
-        case MODE_CHANGE_YEAR:
-          mMode = MODE_CHANGE_MONTH;
-          break;
-        case MODE_CHANGE_MONTH:
-          mMode = MODE_CHANGE_DAY;
-          break;
-        case MODE_CHANGE_DAY:
-          mMode = MODE_CHANGE_HOUR;
-          break;
-        case MODE_CHANGE_HOUR:
-          mMode = MODE_CHANGE_MINUTE;
-          break;
-        case MODE_CHANGE_MINUTE:
-          mMode = MODE_CHANGE_SECOND;
-          break;
-        case MODE_CHANGE_SECOND:
-          mMode = MODE_CHANGE_YEAR;
-          break;
-
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        // kTypeManual
-        case MODE_CHANGE_TIME_ZONE_OFFSET:
-          mMode = MODE_CHANGE_TIME_ZONE_DST;
-          break;
-        case MODE_CHANGE_TIME_ZONE_DST:
-          mMode = MODE_CHANGE_TIME_ZONE_OFFSET;
-          break;
-      #else
-        // kTypeBasic
+      #if TIME_ZONE_TYPE != TIME_ZONE_TYPE_MANUAL
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_TIME_ZONE_NAME:
-          mMode = MODE_CHANGE_YEAR;
+          mZoneRegistryIndex = mZoneManager.indexForZoneId(
+              mChangingClockInfo.timeZone.getZoneId());
           break;
+      }
       #endif
+    }
+
+    void performLeavingModeAction() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("performLeavingModeAction()"));
       }
     }
 
     void handleModeButtonLongPress() {
-      switch (mMode) {
-        case MODE_VIEW_MED:
-          mChangingClockInfo = mClockInfo;
-          mMode = MODE_CHANGE_MED_HOUR;
-          break;
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
+      }
+
+      performLeavingModeAction();
+      performLeavingModeGroupAction();
+      mNavigator.changeGroup();
+      performEnteringModeGroupAction();
+      performEnteringModeAction();
+    }
+
+    void performEnteringModeGroupAction() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
+      }
+
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_MED_HOUR:
         case MODE_CHANGE_MED_MINUTE:
-          saveMedInterval();
-          mMode = MODE_VIEW_MED;
-          break;
-
-        case MODE_VIEW_DATE_TIME:
-          mChangingClockInfo = mClockInfo;
-          mSecondFieldCleared = false;
-          mMode = MODE_CHANGE_YEAR;
-          break;
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
         case MODE_CHANGE_HOUR:
         case MODE_CHANGE_MINUTE:
         case MODE_CHANGE_SECOND:
-          saveChangingClockInfo();
-          mMode = MODE_VIEW_DATE_TIME;
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        case MODE_CHANGE_TIME_ZONE_OFFSET:
+        case MODE_CHANGE_TIME_ZONE_DST:
+      #else
+        case MODE_CHANGE_TIME_ZONE_NAME:
+      #endif
+          mChangingClockInfo = mClockInfo;
+          mSecondFieldCleared = false;
+          break;
+      }
+    }
+
+    void performLeavingModeGroupAction() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
+      }
+
+      switch (mNavigator.mode()) {
+        case MODE_CHANGE_MED_HOUR:
+        case MODE_CHANGE_MED_MINUTE:
+          saveMedInterval();
           break;
 
-        case MODE_VIEW_TIME_ZONE:
-          mChangingClockInfo = mClockInfo;
-        #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-          mMode = MODE_CHANGE_TIME_ZONE_OFFSET;
-        #else
-          mMode = MODE_CHANGE_TIME_ZONE_NAME;
-        #endif
+        case MODE_CHANGE_YEAR:
+        case MODE_CHANGE_MONTH:
+        case MODE_CHANGE_DAY:
+        case MODE_CHANGE_HOUR:
+        case MODE_CHANGE_MINUTE:
+        case MODE_CHANGE_SECOND:
+          saveDateTime();
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -190,16 +193,9 @@ class Controller {
       #else
         case MODE_CHANGE_TIME_ZONE_NAME:
       #endif
-          saveChangingClockInfo();
-          mMode = MODE_VIEW_TIME_ZONE;
+          saveClockInfo();
           break;
       }
-    }
-
-    void saveChangingClockInfo() {
-      mClockInfo = mChangingClockInfo;
-      mClock.setNow(mClockInfo.dateTime.toEpochSeconds());
-      preserveInfo();
     }
 
     void saveMedInterval() {
@@ -210,6 +206,15 @@ class Controller {
       }
     }
 
+    void saveDateTime() {
+      mClock.setNow(mChangingClockInfo.dateTime.toEpochSeconds());
+    }
+
+    void saveClockInfo() {
+      mClockInfo = mChangingClockInfo;
+      preserveInfo();
+    }
+
     void saveTimeZone() {
       mClockInfo.timeZone = mChangingClockInfo.timeZone;
       mClockInfo.dateTime =
@@ -218,12 +223,16 @@ class Controller {
     }
 
     void handleChangeButtonPress() {
-      switch (mMode) {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
+      }
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_MED_HOUR:
           mSuppressBlink = true;
           time_period_mutation::incrementHour(
               mChangingClockInfo.medInterval, 36);
           break;
+
         case MODE_CHANGE_MED_MINUTE:
           mSuppressBlink = true;
           time_period_mutation::incrementMinute(
@@ -239,6 +248,7 @@ class Controller {
           mChangingClockInfo.timeZone.setStdOffset(offset);
           break;
         }
+
         case MODE_CHANGE_TIME_ZONE_DST:
         {
           mSuppressBlink = true;
@@ -253,12 +263,9 @@ class Controller {
       #else
         case MODE_CHANGE_TIME_ZONE_NAME:
           mSuppressBlink = true;
-          mZoneIndex++;
-          if (mZoneIndex >= kZoneRegistrySize) {
-            mZoneIndex = 0;
-          }
+          incrementMod(mZoneRegistryIndex, kZoneRegistrySize);
           mChangingClockInfo.timeZone =
-              mZoneManager.createForZoneIndex(mZoneIndex);
+              mZoneManager.createForZoneIndex(mZoneRegistryIndex);
           mChangingClockInfo.dateTime =
               mChangingClockInfo.dateTime.convertToTimeZone(
                   mChangingClockInfo.timeZone);
@@ -269,29 +276,33 @@ class Controller {
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
           break;
+
         case MODE_CHANGE_MONTH:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
           break;
+
         case MODE_CHANGE_DAY:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
+
         case MODE_CHANGE_HOUR:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
+
         case MODE_CHANGE_MINUTE:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(
               mChangingClockInfo.dateTime);
           break;
+
         case MODE_CHANGE_SECOND:
           mSuppressBlink = true;
           mChangingClockInfo.dateTime.second(0);
           mSecondFieldCleared = true;
           break;
-
       }
 
       // Update the display right away to prevent jitters during RepeatPress.
@@ -303,7 +314,7 @@ class Controller {
     }
 
     void handleChangeButtonRelease() {
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -324,7 +335,7 @@ class Controller {
     }
 
     void handleChangeButtonLongPress() {
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_VIEW_MED:
           mClockInfo.medStartTime = mClockInfo.dateTime.toEpochSeconds();
           preserveInfo();
@@ -337,7 +348,7 @@ class Controller {
      * noticeable drift against the RTC which has a 1 second resolution.
      */
     void update() {
-      if (mMode == MODE_UNKNOWN) return;
+      if (mNavigator.mode() == MODE_UNKNOWN) return;
       if (mIsPreparingToSleep) return;
       updateDateTime();
       updateBlinkState();
@@ -361,7 +372,7 @@ class Controller {
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update mChangingClockInfo.dateTime with the current second.
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -377,11 +388,12 @@ class Controller {
 
     /** Update the internal rendering info. */
     void updateRenderingInfo() {
-      switch (mMode) {
+      switch (mNavigator.mode()) {
         case MODE_VIEW_DATE_TIME:
         case MODE_VIEW_TIME_ZONE:
         case MODE_VIEW_ABOUT:
-          mPresenter.setRenderingInfo(mMode, mSuppressBlink, mBlinkShowState,
+          mPresenter.setRenderingInfo(
+              mNavigator.mode(), mSuppressBlink, mBlinkShowState,
               mClockInfo);
           break;
 
@@ -397,11 +409,14 @@ class Controller {
       #else
         case MODE_CHANGE_TIME_ZONE_NAME:
       #endif
-          mPresenter.setRenderingInfo(mMode, mSuppressBlink, mBlinkShowState,
+          mPresenter.setRenderingInfo(
+              mNavigator.mode(), mSuppressBlink, mBlinkShowState,
               mChangingClockInfo);
           break;
 
         case MODE_VIEW_MED: {
+          // Overload the ChangingClockInfo.medInterval field to hold the the
+          // "time left" TimePeriod information.
           TimePeriod period(0);
           if (! mClockInfo.dateTime.isError()) {
             int32_t now = mClockInfo.dateTime.toEpochSeconds();
@@ -411,17 +426,19 @@ class Controller {
           }
           mChangingClockInfo = mClockInfo;
           mChangingClockInfo.medInterval = period;
-          mPresenter.setRenderingInfo(mMode, mSuppressBlink, mBlinkShowState,
+
+          mPresenter.setRenderingInfo(
+              mNavigator.mode(), mSuppressBlink, mBlinkShowState,
               mChangingClockInfo);
           break;
         }
 
         case MODE_CHANGE_MED_HOUR:
         case MODE_CHANGE_MED_MINUTE:
-          mPresenter.setRenderingInfo(mMode, mSuppressBlink, mBlinkShowState,
+          mPresenter.setRenderingInfo(
+              mNavigator.mode(), mSuppressBlink, mBlinkShowState,
               mChangingClockInfo);
           break;
-
       }
     }
 
@@ -491,20 +508,22 @@ class Controller {
     SystemClock& mClock;
     CrcEeprom& mCrcEeprom;
     Presenter& mPresenter;
+    ModeNavigator mNavigator;
   #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
     BasicZoneManager<kCacheSize> mZoneManager;
   #endif
 
-    uint8_t mMode; // current mode
     ClockInfo mClockInfo; // current clock
     ClockInfo mChangingClockInfo; // target clock (in change mode)
 
-    uint16_t mZoneIndex;
+    uint16_t mZoneRegistryIndex;
     bool mSecondFieldCleared;
-    bool mSuppressBlink; // true if blinking should be suppressed
 
+    // Handle blinking
+    bool mSuppressBlink; // true if blinking should be suppressed
     bool mBlinkShowState = true; // true means actually show
     uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
+
     bool mIsPreparingToSleep = false;
 };
 

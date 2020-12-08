@@ -36,8 +36,12 @@ class Presenter {
     /** Clear the display. */
     void clearDisplay() { mOled.clear(); }
 
-    void setRenderingInfo(uint8_t mode, bool suppressBlink, bool blinkShowState,
-        const ClockInfo& clockInfo) {
+    void setRenderingInfo(
+        uint8_t mode,
+        bool suppressBlink,
+        bool blinkShowState,
+        const ClockInfo& clockInfo
+    ) {
       mRenderingInfo.mode = mode;
       mRenderingInfo.suppressBlink = suppressBlink;
       mRenderingInfo.blinkShowState = blinkShowState;

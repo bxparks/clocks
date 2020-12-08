@@ -53,6 +53,7 @@
 #include <AceRoutine.h>
 #include <AceTime.h>
 #include <AceUtilsCrcEeprom.h>
+#include <AceUtilsModeGroup.h>
 
 #include "config.h"
 #if ENABLE_LOW_POWER == 1
@@ -66,6 +67,7 @@ using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using ace_utils::crc_eeprom::CrcEeprom;
+using ace_utils::mode_group::ModeGroup;
 
 //------------------------------------------------------------------
 // Configure CrcEeprom.
@@ -100,6 +102,120 @@ void setupClocks() {
   systemClock.setup();
 }
 
+//-----------------------------------------------------------------------------
+// Create mode groups that define the navigation path for the Mode button.
+// It forms a recursive tree structure that looks like this:
+//
+// - View med info
+//    - Change med interval hour
+//    - Change med interval minute
+// - View date time
+//    - Change hour
+//    - Change minute
+//    - Change second
+//    - Change day
+//    - Change month
+//    - Change year
+// - View TimeZone
+//    - Change zone offset
+//    - Change zone dst
+//    - Change zone name
+// - About
+//
+// Operation:
+//
+// * A Press of the Mode button cycles through the sibling modes.
+// * A LongPress of the Mode button goes down or up the hierarchy. Since the
+// hierarchy is only 2-levels deep, we can use LongPress to alternate going up
+// or down the mode tree. In the general case, we would need a different button
+// event (e.g. double click?) to distinguish between going up or going down the
+// tree.
+//
+// Previous version of this encoded the navigation tree within the Controller.h
+// class itself, in the various switch statements. However, I found it to be
+// too difficult to maintain when modes or their ordering changed. This
+// solution defines the mode hierarchy in a data-driven way, so should be
+// easier to maintain.
+//-----------------------------------------------------------------------------
+
+// The Arduino compiler becomes confused without this.
+extern const ModeGroup ROOT_MODE_GROUP;
+
+// List of MedTimer modes
+const uint8_t MED_INFO_MODES[] = {
+  MODE_CHANGE_MED_HOUR,
+  MODE_CHANGE_MED_MINUTE,
+};
+
+// ModeGroup for the DateTime modes.
+const ModeGroup MED_INFO_MODE_GROUP = {
+  &ROOT_MODE_GROUP /* parentGroup */,
+  sizeof(MED_INFO_MODES) / sizeof(uint8_t),
+  MED_INFO_MODES /* modes */,
+  nullptr /* childGroups */,
+};
+
+// List of DateTime modes.
+const uint8_t DATE_TIME_MODES[] = {
+  MODE_CHANGE_YEAR,
+  MODE_CHANGE_MONTH,
+  MODE_CHANGE_DAY,
+  MODE_CHANGE_HOUR,
+  MODE_CHANGE_MINUTE,
+  MODE_CHANGE_SECOND,
+};
+
+// ModeGroup for the DateTime modes.
+const ModeGroup DATE_TIME_MODE_GROUP = {
+  &ROOT_MODE_GROUP /* parentGroup */,
+  sizeof(DATE_TIME_MODES) / sizeof(uint8_t),
+  DATE_TIME_MODES /* modes */,
+  nullptr /* childGroups */,
+};
+
+// List of TimeZone modes.
+const uint8_t TIME_ZONE_MODES[] = {
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+  MODE_CHANGE_TIME_ZONE_OFFSET,
+  MODE_CHANGE_TIME_ZONE_DST,
+#else
+  MODE_CHANGE_TIME_ZONE_NAME,
+#endif
+};
+
+// ModeGroup for the TimeZone modes.
+const ModeGroup TIME_ZONE_MODE_GROUP = {
+  &ROOT_MODE_GROUP /* parentGroup */,
+  sizeof(TIME_ZONE_MODES) / sizeof(uint8_t),
+  TIME_ZONE_MODES /* modes */,
+  nullptr /* childGroups */,
+};
+
+// List of top level modes.
+const uint8_t TOP_LEVEL_MODES[] = {
+  MODE_VIEW_MED,
+  MODE_VIEW_DATE_TIME,
+  MODE_VIEW_TIME_ZONE,
+  MODE_VIEW_ABOUT,
+};
+
+// List of children ModeGroups for each element in TOP_LEVEL_MODES, in the same
+// order.
+const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
+  &MED_INFO_MODE_GROUP,
+  &DATE_TIME_MODE_GROUP,
+  &TIME_ZONE_MODE_GROUP,
+  nullptr /* About mode has no submodes */,
+};
+
+// Root mode group
+const ModeGroup ROOT_MODE_GROUP = {
+  nullptr /* parentGroup */,
+  sizeof(TOP_LEVEL_MODES) / sizeof(uint8_t),
+  TOP_LEVEL_MODES /* modes */,
+  TOP_LEVEL_CHILD_GROUPS /* childGroups */,
+};
+
 //------------------------------------------------------------------
 // Configure the OLED display.
 //------------------------------------------------------------------
@@ -119,7 +235,7 @@ void setupOled() {
 //------------------------------------------------------------------
 
 Presenter presenter(oled);
-Controller controller(systemClock, crcEeprom, presenter);
+Controller controller(systemClock, crcEeprom, &ROOT_MODE_GROUP, presenter);
 
 void setupController() {
   controller.setup();
