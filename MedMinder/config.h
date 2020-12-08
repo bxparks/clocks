@@ -28,6 +28,9 @@
 #define TIME_ZONE_TYPE_BASIC 1
 #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
+// Maximum Medication interval in hours
+#define MAX_MED_INTERVAL_HOURS 36
+
 //------------------------------------------------------------------
 // Configuration of target environment. The environment is defined in
 // $HOME/.auniter.ini and the AUNITER_XXX macro is set by auniter.sh.

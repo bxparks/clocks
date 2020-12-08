@@ -230,7 +230,7 @@ class Controller {
         case MODE_CHANGE_MED_HOUR:
           mSuppressBlink = true;
           time_period_mutation::incrementHour(
-              mChangingClockInfo.medInterval, 36);
+              mChangingClockInfo.medInterval, MAX_MED_INTERVAL_HOURS);
           break;
 
         case MODE_CHANGE_MED_MINUTE:
@@ -415,17 +415,10 @@ class Controller {
           break;
 
         case MODE_VIEW_MED: {
-          // Overload the ChangingClockInfo.medInterval field to hold the the
-          // "time left" TimePeriod information.
-          TimePeriod period(0);
-          if (! mClockInfo.dateTime.isError()) {
-            int32_t now = mClockInfo.dateTime.toEpochSeconds();
-            int32_t remainingSeconds = mClockInfo.medStartTime
-                + mClockInfo.medInterval.toSeconds() - now;
-            period = TimePeriod(remainingSeconds);
-          }
+          // Overload ChangingClockInfo.medInterval to hold the 'time
+          // remaining' TimePeriod information.
           mChangingClockInfo = mClockInfo;
-          mChangingClockInfo.medInterval = period;
+          mChangingClockInfo.medInterval = getRemainingTimePeriod();
 
           mPresenter.setRenderingInfo(
               mNavigator.mode(), mSuppressBlink, mBlinkShowState,
@@ -440,6 +433,26 @@ class Controller {
               mChangingClockInfo);
           break;
       }
+    }
+
+    /**
+     * Calculate time remaining. Return TimePeriod::forError() if
+     * unable to calculate.
+     */
+    TimePeriod getRemainingTimePeriod() {
+      if (mClockInfo.dateTime.isError()) {
+        return TimePeriod::forError();
+      }
+
+      int32_t now = mClockInfo.dateTime.toEpochSeconds();
+      int32_t remainingSeconds = mClockInfo.medStartTime
+          + mClockInfo.medInterval.toSeconds() - now;
+      if (remainingSeconds > MAX_MED_INTERVAL_HOURS * (int32_t)3600
+          || remainingSeconds < -MAX_MED_INTERVAL_HOURS * (int32_t)3600) {
+        return TimePeriod::forError();
+      }
+
+      return TimePeriod(remainingSeconds);
     }
 
     /** Update the blinkShowState. */

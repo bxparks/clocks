@@ -107,7 +107,11 @@ class Presenter {
       }
 
       mOled.println(F("Med due"));
-      mRenderingInfo.timePeriod.printTo(mOled);
+      if (mRenderingInfo.timePeriod.isError()) {
+        mOled.print(F("<Overdue>"));
+      } else {
+        mRenderingInfo.timePeriod.printTo(mOled);
+      }
       mOled.clearToEOL();
     }
 
