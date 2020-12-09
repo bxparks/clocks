@@ -471,13 +471,11 @@ class Controller {
     void restoreClockInfo(ClockInfo& clockInfo, const StoredInfo& storedInfo) {
     #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
       if (storedInfo.timeZoneData.type == TimeZoneData::kTypeManual) {
-        clockInfo.timeZone = TimeZone::forTimeOffset(
-            TimeOffset::forMinutes(storedInfo.timeZoneData.stdOffsetMinutes),
-            TimeOffset::forMinutes(storedInfo.timeZoneData.dstOffsetMinutes));
+        clockInfo.timeZone = TimeZone::forMinutes(
+            storedInfo.timeZoneData.stdOffsetMinutes,
+            storedInfo.timeZoneData.dstOffsetMinutes);
       } else {
-        clockInfo.timeZone = TimeZone::forTimeOffset(
-            TimeOffset::forMinutes(kDefaultOffsetMinutes),
-            TimeOffset());
+        clockInfo.timeZone = TimeZone::forMinutes(kDefaultOffsetMinutes);
       }
     #else
       if (storedInfo.timeZoneData.type == TimeZoneData::kTypeZoneId) {
