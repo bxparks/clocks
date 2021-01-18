@@ -11,15 +11,16 @@
 #define TIME_SOURCE_TYPE_NTP 2
 #define TIME_SOURCE_TYPE_BOTH 3
 #define TIME_SOURCE_TYPE_UNIX 4
+#define TIME_SOURCE_TYPE_STM32RTC 5
 
 // Determine the type of SystemClock.
 #define SYNC_TYPE_LOOP 0
 #define SYNC_TYPE_COROUTINE 1
 #define SYNC_TYPE SYNC_TYPE_LOOP
 
-// ENABLE_TIME_ZONE_TYPE_BASIC and ENABLE_TIME_ZONE_TYPE_EXTENDED determines
+// ENABLE_TIME_ZONE_TYPE_BASIC and ENABLE_TIME_ZONE_TYPE_EXTENDED determine
 // which ZoneProcessor to support. Small boards like the Pro Micro (30kB
-// flash/2kB RAM) cannot support both BasicZoneProcessor and
+// flash/2.5kB RAM) cannot support both BasicZoneProcessor and
 // ExtendedZoneProcessor at the same time.
 
 #if defined(UNIX_HOST_DUINO)
@@ -63,6 +64,11 @@
   #define ENABLE_TIME_ZONE_TYPE_BASIC 1
   #define ENABLE_TIME_ZONE_TYPE_EXTENDED 1
   #define ENABLE_EEPROM 1
+#elif defined(AUNITER_STM32)
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_STM32RTC
+  #define ENABLE_TIME_ZONE_TYPE_BASIC 1
+  #define ENABLE_TIME_ZONE_TYPE_EXTENDED 1
+  #define ENABLE_EEPROM 0
 #else
   #error Unknown AUNITER environment
 #endif

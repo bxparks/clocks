@@ -74,6 +74,9 @@ using namespace ace_utils::cli;
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   DS3231Clock dsClock;
   SYSTEM_CLOCK systemClock(&dsClock, &dsClock /*backup*/);
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32RTC
+  StmRtcClock stmRtcClock;
+  SYSTEM_CLOCK systemClock(&stmRtcClock, &stmRtcClock /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   NtpClock ntpClock;
   SYSTEM_CLOCK systemClock(&ntpClock, nullptr /*backup*/);
@@ -128,7 +131,7 @@ class DateCommand: public CommandHandler {
         nowDate.printTo(printer);
         printer.println();
       } else {
-        SHIFT_ARGC_ARGV(argc, argv);
+        shiftArgcArgv(argc, argv);
         ZonedDateTime newDate = ZonedDateTime::forDateString(argv[0]);
         if (newDate.isError()) {
           printer.println(F("Invalid date"));
@@ -173,9 +176,9 @@ class TimezoneCommand: public CommandHandler {
         return;
       }
 
-      SHIFT_ARGC_ARGV(argc, argv);
+      shiftArgcArgv(argc, argv);
       if (isArgEqual(argv[0], F("manual"))) {
-        SHIFT_ARGC_ARGV(argc, argv);
+        shiftArgcArgv(argc, argv);
         if (argc == 0) {
           printer.print(F("'timezone manual' requires 'offset'"));
           return;
@@ -191,7 +194,7 @@ class TimezoneCommand: public CommandHandler {
         printer.println();
       #if ENABLE_TIME_ZONE_TYPE_BASIC
       } else if (isArgEqual(argv[0], F("basic"))) {
-        SHIFT_ARGC_ARGV(argc, argv);
+        shiftArgcArgv(argc, argv);
         if (argc != 0 && isArgEqual(argv[0], F("list"))) {
           controller.printBasicZonesTo(printer);
         } else {
@@ -204,7 +207,7 @@ class TimezoneCommand: public CommandHandler {
       #endif
       #if ENABLE_TIME_ZONE_TYPE_EXTENDED
       } else if (isArgEqual(argv[0], F("extended"))) {
-        SHIFT_ARGC_ARGV(argc, argv);
+        shiftArgcArgv(argc, argv);
         if (argc != 0 && isArgEqual(argv[0], F("list"))) {
           controller.printExtendedZonesTo(printer);
         } else {
@@ -216,7 +219,7 @@ class TimezoneCommand: public CommandHandler {
         }
       #endif
       } else if (isArgEqual(argv[0], F("dst"))) {
-        SHIFT_ARGC_ARGV(argc, argv);
+        shiftArgcArgv(argc, argv);
         if (argc == 0) {
           printer.print(F("DST: "));
           printer.println(controller.isDst() ? F("on") : F("off"));
@@ -261,7 +264,7 @@ class SyncCommand: public CommandHandler {
         return;
       }
 
-      SHIFT_ARGC_ARGV(argc, argv);
+      shiftArgcArgv(argc, argv);
       if (isArgEqual(argv[0], F("status"))) {
         printer.print(F("Last synced: "));
         if (mSystemClock.isInit()) {
@@ -304,11 +307,11 @@ class WifiCommand: public CommandHandler {
       {}
 
     void run(Print& printer, int argc, const char* const* argv) const override {
-      SHIFT_ARGC_ARGV(argc, argv);
+      shiftArgcArgv(argc, argv);
       if (argc == 0) {
         printer.println(F("Must give either 'status' or 'config' command"));
       } else if (isArgEqual(argv[0], F("config"))) {
-        SHIFT_ARGC_ARGV(argc, argv);
+        shiftArgcArgv(argc, argv);
         if (argc == 0) {
           if (mController.isStoredInfoValid()) {
             // print ssid and password

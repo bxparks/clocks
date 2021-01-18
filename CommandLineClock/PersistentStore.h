@@ -11,7 +11,9 @@
 #include "StoredInfo.h"
 
 using namespace ace_time;
+#if ENABLE_EEPROM
 using ace_utils::crc_eeprom::CrcEeprom;
+#endif
 
 class PersistentStore {
   public:
