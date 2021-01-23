@@ -23,7 +23,7 @@
 // flash/2.5kB RAM) cannot support both BasicZoneProcessor and
 // ExtendedZoneProcessor at the same time.
 
-#if defined(UNIX_HOST_DUINO)
+#if defined(EPOXY_DUINO)
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_UNIX
   #define ENABLE_TIME_ZONE_TYPE_BASIC 1
   #define ENABLE_TIME_ZONE_TYPE_EXTENDED 1

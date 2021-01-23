@@ -406,7 +406,7 @@ CommandManager<BUF_SIZE, ARGV_SIZE> commandManager(
 //---------------------------------------------------------------------------
 
 void setup() {
-#if ! defined(UNIX_HOST_DUINO)
+#if ! defined(EPOXY_DUINO)
   // Wait for stability on some boards.
   // 1000ms needed for SERIAL_PORT_MONITOR.
   // 2000ms needed for Wire, I2C or SSD1306 (don't know which one).
@@ -425,14 +425,14 @@ void setup() {
   SERIAL_PORT_MONITOR.print(F("sizeof(StoredInfo): "));
   SERIAL_PORT_MONITOR.println(sizeof(StoredInfo));
 
-#if ! defined(UNIX_HOST_DUINO)
+#if ! defined(EPOXY_DUINO)
   Serial.println(F("Setting up Wire"));
   Wire.begin();
   Wire.setClock(400000L);
 #endif
 
   Serial.println(F("Setting up PersistentStore"));
-#if defined(UNIX_HOST_DUINO)
+#if defined(EPOXY_DUINO)
   persistentStore.setup("commandline.dat");
 #else
   persistentStore.setup();

@@ -48,17 +48,17 @@ to type the commands directly in the terminal program:
 $ auniter upmon nano:USB0
 ```
 
-### Linux using UnixHostDuino
+### Linux using EpoxyDuino
 
 This clock has the interesting property that it can run on a Linux box using the
-UnixHostDuino compatibility layer. This is very useful for testing and
+EpoxyDuino compatibility layer. This is very useful for testing and
 debugging.
 
-1) Install UnixHostDuino (https://github.com/bxparks/UnixHostDuino) as a sibling
+1) Install EpoxyDuino (https://github.com/bxparks/EpoxyDuino) as a sibling
 project to this:
 
 ```
-$ git clone https://github.com/bxparks/UnixHostDuino
+$ git clone https://github.com/bxparks/EpoxyDuino
 ```
 
 2a) Ubuntu 18.04: Install zlib (https://www.zlib.net/) package to resolve the
@@ -104,6 +104,6 @@ Commands:
 
 ## Persistent EEPROM Storage on Linux
 
-When running on Linux (using UnixHostDuino), the timezone information that would
+When running on Linux (using EpoxyDuino), the timezone information that would
 have been stored in the EEPROM on the device is stored in a file named
 `commandline.dat` in the current directory.
