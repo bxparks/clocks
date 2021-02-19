@@ -27,7 +27,7 @@
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_UNIX
   #define ENABLE_TIME_ZONE_TYPE_BASIC 1
   #define ENABLE_TIME_ZONE_TYPE_EXTENDED 1
-  #define ENABLE_EEPROM 0
+  #define ENABLE_EEPROM 1
 #elif ! defined(AUNITER)
   // Arduino IDE in interactive mode
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231

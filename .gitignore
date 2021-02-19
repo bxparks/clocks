@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# EpoxyDuino data files
+epoxypromdata
+epoxyfsdata

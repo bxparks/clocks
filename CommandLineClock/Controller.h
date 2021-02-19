@@ -59,11 +59,6 @@ class Controller {
       mTimeZone = mBasicZoneManager.createForZoneIndex(zoneIndex);
       validateAndSaveTimeZone();
     }
-
-    void setBasicTimeZoneForId(uint32_t zoneId) {
-      mTimeZone = mBasicZoneManager.createForZoneId(zoneId);
-      validateAndSaveTimeZone();
-    }
   #endif
 
   #if ENABLE_TIME_ZONE_TYPE_EXTENDED
@@ -72,11 +67,6 @@ class Controller {
       SERIAL_PORT_MONITOR.print(F("setExtendedTimeZoneForIndex(): "));
       SERIAL_PORT_MONITOR.println(zoneIndex);
       mTimeZone = mExtendedZoneManager.createForZoneIndex(zoneIndex);
-      validateAndSaveTimeZone();
-    }
-
-    void setExtendedTimeZoneForId(uint32_t zoneId) {
-      mTimeZone = mExtendedZoneManager.createForZoneId(zoneId);
       validateAndSaveTimeZone();
     }
   #endif
@@ -123,7 +113,7 @@ class Controller {
   #if ENABLE_TIME_ZONE_TYPE_BASIC
     /** Print list of supported zones. */
     void printBasicZonesTo(Print& printer) {
-      for (uint16_t i = 0; i < mBasicZoneManager.registrySize(); i++) {
+      for (uint16_t i = 0; i < mBasicZoneManager.zoneRegistrySize(); i++) {
         printer.print('[');
         printer.print(i);
         printer.print(']');
@@ -138,7 +128,7 @@ class Controller {
   #if ENABLE_TIME_ZONE_TYPE_EXTENDED
     /** Print list of supported zones. */
     void printExtendedZonesTo(Print& printer) {
-      for (uint16_t i = 0; i < mExtendedZoneManager.registrySize(); i++) {
+      for (uint16_t i = 0; i < mExtendedZoneManager.zoneRegistrySize(); i++) {
         printer.print('[');
         printer.print(i);
         printer.print(']');
@@ -172,38 +162,25 @@ class Controller {
     uint16_t preserveInfo() {
       SERIAL_PORT_MONITOR.println(F("preserveInfo()"));
       mIsStoredInfoValid = true;
-      mStoredInfo.timeZoneType = mTimeZone.getType();
-      mStoredInfo.stdMinutes = mTimeZone.getStdOffset().toMinutes();
-      mStoredInfo.dstMinutes = mTimeZone.getDstOffset().toMinutes();
-      mStoredInfo.zoneId = mTimeZone.getZoneId();
+      mStoredInfo.timeZoneData = mTimeZone.toTimeZoneData();
       return mPersistentStore.writeStoredInfo(mStoredInfo);
     }
 
     void restoreInfo(const StoredInfo& storedInfo) {
-      SERIAL_PORT_MONITOR.print(F("restoreInfo(): "));
-      SERIAL_PORT_MONITOR.println(storedInfo.timeZoneType);
-      switch (storedInfo.timeZoneType) {
-        case TimeZone::kTypeBasic:
-        case TimeZone::kTypeExtended:
-        case TimeZone::kTypeBasicManaged:
-        case TimeZone::kTypeExtendedManaged:
+      SERIAL_PORT_MONITOR.print(F("restoreInfo(): type="));
+      SERIAL_PORT_MONITOR.println(storedInfo.timeZoneData.type);
       #if ENABLE_TIME_ZONE_TYPE_BASIC
-          setBasicTimeZoneForId(storedInfo.zoneId);
+        mTimeZone = mBasicZoneManager.createForTimeZoneData(
+            storedInfo.timeZoneData);
       #elif ENABLE_TIME_ZONE_TYPE_EXTENDED
-          setExtendedTimeZoneForId(storedInfo.zoneId);
+        mTimeZone = mExtendedZoneManager.createForTimeZoneData(
+            storedInfo.timeZoneData);
       #else
-          setManualTimeZone(TimeOffset::forHours(-8), TimeOffset());
+        mTimeZone = mManualZoneManager.createForTimeZoneData(
+            storedInfo.timeZoneData);
       #endif
-          break;
-        case TimeZone::kTypeManual:
-          setManualTimeZone(
-              TimeOffset::forMinutes(storedInfo.stdMinutes),
-              TimeOffset::forMinutes(storedInfo.dstMinutes));
-          break;
-        default:
-          SERIAL_PORT_MONITOR.print(F("restoreInfo(): Setting UTC timezone"));
-          setManualTimeZone(TimeOffset(), TimeOffset());
-      }
+
+      validateAndSaveTimeZone();
     }
 
     PersistentStore& mPersistentStore;
@@ -215,6 +192,7 @@ class Controller {
   #if ENABLE_TIME_ZONE_TYPE_EXTENDED
     ExtendedZoneManager<1> mExtendedZoneManager;
   #endif
+    ManualZoneManager mManualZoneManager;
 
     TimeZone mTimeZone;
     StoredInfo mStoredInfo;

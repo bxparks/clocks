@@ -7,20 +7,8 @@
 /** Data that is saved to and retrieved from EEPROM. */
 struct StoredInfo {
 
-  /** Time zone of the displayed time */
-  uint8_t timeZoneType;
-
-  /** The STD offset for kTypeManual. */
-  int16_t stdMinutes;
-
-  /** The DST offset for kTypeManual. */
-  int16_t dstMinutes;
-
-  /**
-  * Stable zone ID for kTypeBasic, kTypeExtended, kTypeBasicManaged,
-   * kTypeExtendedManaged.
-   */
-  uint32_t zoneId;
+  /** TimeZone serialization. */
+  ace_time::TimeZoneData timeZoneData;
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   static const uint8_t kSsidMaxLength = 33; // 32 + NUL terminator

@@ -3,9 +3,9 @@
 
 LDFLAGS := -lz
 APP_NAME := CommandLineClock
-ARDUINO_LIBS := AceCommon AceTime AceRoutine AceUtils
+ARDUINO_LIBS := EpoxyPromEsp AceCommon AceCRC AceTime AceRoutine AceUtils
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 
 more_clean:
-	rm -f commandline.dat
+	rm -f epoxypromdata

@@ -432,11 +432,7 @@ void setup() {
 #endif
 
   Serial.println(F("Setting up PersistentStore"));
-#if defined(EPOXY_DUINO)
-  persistentStore.setup("commandline.dat");
-#else
   persistentStore.setup();
-#endif
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   Serial.println(F("Setting up DS3231Clock"));
