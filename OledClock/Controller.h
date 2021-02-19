@@ -240,7 +240,7 @@ class Controller {
         case MODE_CHANGE_TIME_ZONE_NAME: {
           mSuppressBlink = true;
           mZoneRegistryIndex++;
-          if (mZoneRegistryIndex >= mZoneManager.registrySize()) {
+          if (mZoneRegistryIndex >= mZoneManager.zoneRegistrySize()) {
             mZoneRegistryIndex = 0;
           }
           TimeZone tz = mZoneManager.createForZoneIndex(mZoneRegistryIndex);

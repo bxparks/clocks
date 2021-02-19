@@ -356,7 +356,7 @@ class Controller {
         {
           mSuppressBlink = true;
           mZoneRegistryIndex++;
-          if (mZoneRegistryIndex >= mZoneManager.registrySize()) {
+          if (mZoneRegistryIndex >= mZoneManager.zoneRegistrySize()) {
             mZoneRegistryIndex = 0;
           }
           TimeZone tz = mZoneManager.createForZoneIndex(mZoneRegistryIndex);
