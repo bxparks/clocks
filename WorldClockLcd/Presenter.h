@@ -601,10 +601,8 @@ class Presenter {
 
       TimeZone tz = mZoneManager.createForTimeZoneData(zone);
       switch (tz.getType()) {
-        case TimeZone::kTypeBasic:
-        case TimeZone::kTypeExtended:
-        case TimeZone::kTypeBasicManaged:
-        case TimeZone::kTypeExtendedManaged:
+        case BasicZoneProcessor::kTypeBasic:
+        case ExtendedZoneProcessor::kTypeExtended:
           if (shouldShowFor(changeTimeZoneNameMode)) {
             tz.printShortTo(mDisplay);
           }
@@ -662,12 +660,12 @@ class Presenter {
 
       // Use F() macros for these longer strings. Seems to save both
       // flash memory and RAM.
-      mDisplay.print(F("TZ:"));
+      mDisplay.print(F("TZDB:"));
       mDisplay.println(zonedb::kTzDatabaseVersion);
-      mDisplay.println(F("AT:" ACE_TIME_VERSION_STRING));
-      mDisplay.println(F("AB:" ACE_BUTTON_VERSION_STRING));
-      mDisplay.println(F("AR:" ACE_ROUTINE_VERSION_STRING));
-      mDisplay.println(F("AC:" ACE_COMMON_VERSION_STRING));
+      mDisplay.println(F("ATim:" ACE_TIME_VERSION_STRING));
+      mDisplay.println(F("ABut:" ACE_BUTTON_VERSION_STRING));
+      mDisplay.println(F("ARou:" ACE_ROUTINE_VERSION_STRING));
+      mDisplay.println(F("ACom:" ACE_COMMON_VERSION_STRING));
     }
 
     ZoneManager& mZoneManager;

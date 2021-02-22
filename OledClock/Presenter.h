@@ -321,12 +321,10 @@ class Presenter {
         case TimeZone::kTypeManual:
           typeString = F("manual");
           break;
-        case TimeZone::kTypeBasic:
-        case TimeZone::kTypeBasicManaged:
+        case BasicZoneProcessor::kTypeBasic:
           typeString = F("basic");
           break;
-        case TimeZone::kTypeExtended:
-        case TimeZone::kTypeExtendedManaged:
+        case ExtendedZoneProcessor::kTypeExtended:
           typeString = F("extd");
           break;
         default:
@@ -356,10 +354,8 @@ class Presenter {
           break;
 
       #else
-        case TimeZone::kTypeBasic:
-        case TimeZone::kTypeExtended:
-        case TimeZone::kTypeBasicManaged:
-        case TimeZone::kTypeExtendedManaged:
+        case BasicZoneProcessor::kTypeBasic:
+        case ExtendedZoneProcessor::kTypeExtended:
           // Print name of timezone
           if (shouldShowFor(MODE_CHANGE_TIME_ZONE_NAME)) {
             tz.printShortTo(mDisplay);
