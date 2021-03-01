@@ -37,6 +37,8 @@
 #define TIME_ZONE_TYPE_MANUAL 0
 #define TIME_ZONE_TYPE_BASIC 1
 #define TIME_ZONE_TYPE_EXTENDED 2
+#define TIME_ZONE_TYPE_BASICDB 3
+#define TIME_ZONE_TYPE_EXTENDEDDB 4
 #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
 // If Basic or Extended, number of time zones to display.
@@ -124,12 +126,39 @@
   #define CHANGE_BUTTON_PIN D3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
-#elif defined(AUNITER_D1MINI) || defined(AUNITER_WORLD_CLOCK_LCD)
+#elif defined(AUNITER_WORLD_CLOCK_LCD)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #undef BUTTON_TYPE
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BITS 10
+
+  // Display parameters
+  #undef DISPLAY_TYPE
+  #define DISPLAY_TYPE DISPLAY_TYPE_LCD
+  #define LCD_SPI_DATA_COMMAND_PIN D4
+  #define LCD_BACKLIGHT_PIN D3
+  #define LCD_INITIAL_CONTRAST 20
+  #define LCD_INITIAL_BIAS 7
+  #define OLED_REMAP true
+#elif defined(AUNITER_D1MINI)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Use BasicDbZoneManager for testing.
+  #undef TIME_ZONE_TYPE
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDEDDB
 
   // Button parameters
   #undef BUTTON_TYPE

@@ -27,6 +27,10 @@
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASICDB \
+    || TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDEDDB
+  #include <AceTimePro.h> // BasicDbZoneManager, ExtendedDbZoneManager
+#endif
 #include <AceUtilsModeGroup.h>
 #include <SPI.h>
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
@@ -43,6 +47,22 @@ using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_utils::mode_group::ModeGroup;
+
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASICDB \
+    || TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDEDDB
+  #if defined(EPOXY_DUINO)
+    #include <EpoxyFS.h>
+    #define FILE_SYSTEM fs::EpoxyFS
+  #elif defined(ESP8266)
+    #include <LittleFS.h>
+    #define FILE_SYSTEM LittleFS
+  #elif defined(ESP32)
+    #include <LITTLEFS.h>
+    #define FILE_SYSTEM LITTLEFS
+  #else
+    #error Unsupported platform
+  #endif
+#endif
 
 //-----------------------------------------------------------------------------
 // Configure time zones and ZoneManager.
@@ -90,7 +110,46 @@ static const uint16_t CACHE_SIZE = NUM_TIME_ZONES + 1;
 static ExtendedZoneManager<CACHE_SIZE> zoneManager(
     ZONE_REGISTRY_SIZE, ZONE_REGISTRY);
 
+#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASICDB
+
+// Only 4 are displayed at any given time, need 5 for transitions.
+static const uint16_t CACHE_SIZE = NUM_TIME_ZONES + 1;
+static BasicDbZoneManager<CACHE_SIZE> zoneManager;
+static const char kZoneDbFileName[] = "zonedb_thinz.bin";
+
+#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDEDDB
+
+// Only 4 are displayed at any given time, need 5 for transitions.
+static const uint16_t CACHE_SIZE = NUM_TIME_ZONES + 1;
+static ExtendedDbZoneManager<CACHE_SIZE> zoneManager;
+static const char kZoneDbFileName[] = "zonedbx_thinz.bin";
+
 #endif
+
+void setupZoneManager() {
+  #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASICDB \
+      || TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDEDDB
+    bool status = FILE_SYSTEM.begin();
+    if (ENABLE_SERIAL_DEBUG) {
+      if (status) {
+        SERIAL_PORT_MONITOR.println(F("File system initialized."));
+      } else {
+        SERIAL_PORT_MONITOR.println(F("File system failed."));
+      }
+    }
+
+    File file = FILE_SYSTEM.open(kZoneDbFileName, "r");
+    status = zoneManager.load(file);
+    file.close();
+    if (ENABLE_SERIAL_DEBUG) {
+      if (status) {
+        SERIAL_PORT_MONITOR.println(F("Zone Manager initialized."));
+      } else {
+        SERIAL_PORT_MONITOR.println(F("Zone Manager failed."));
+      }
+    }
+  #endif
+}
 
 //-----------------------------------------------------------------------------
 // Create initial set of display timezones. Normally, these will be replaced by
@@ -241,7 +300,6 @@ const uint8_t DATE_TIME_MODES[] = {
   MODE_CHANGE_YEAR,
 };
 
-// The Arduino compiler becomes confused without this.
 // ModeGroup for the DateTime modes.
 const ModeGroup DATE_TIME_MODE_GROUP = {
   &ROOT_MODE_GROUP /* parentGroup */,
@@ -494,24 +552,25 @@ void setup() {
   TXLED0; // LED off
 #endif
 
-if (ENABLE_SERIAL_DEBUG == 1 || ENABLE_FPS_DEBUG == 1) {
-  SERIAL_PORT_MONITOR.begin(115200);
-  while (!SERIAL_PORT_MONITOR); // Leonardo/Micro
-}
+  if (ENABLE_SERIAL_DEBUG == 1 || ENABLE_FPS_DEBUG == 1) {
+    SERIAL_PORT_MONITOR.begin(115200);
+    while (!SERIAL_PORT_MONITOR); // Leonardo/Micro
+  }
 
-if (ENABLE_SERIAL_DEBUG == 1) {
-  SERIAL_PORT_MONITOR.println(F("setup(): begin"));
-  SERIAL_PORT_MONITOR.print(F("sizeof(ClockInfo): "));
-  SERIAL_PORT_MONITOR.println(sizeof(ClockInfo));
-  SERIAL_PORT_MONITOR.print(F("sizeof(StoredInfo): "));
-  SERIAL_PORT_MONITOR.println(sizeof(StoredInfo));
-  SERIAL_PORT_MONITOR.print(F("sizeof(RenderingInfo): "));
-  SERIAL_PORT_MONITOR.println(sizeof(RenderingInfo));
-}
+  if (ENABLE_SERIAL_DEBUG == 1) {
+    SERIAL_PORT_MONITOR.println(F("setup(): begin"));
+    SERIAL_PORT_MONITOR.print(F("sizeof(ClockInfo): "));
+    SERIAL_PORT_MONITOR.println(sizeof(ClockInfo));
+    SERIAL_PORT_MONITOR.print(F("sizeof(StoredInfo): "));
+    SERIAL_PORT_MONITOR.println(sizeof(StoredInfo));
+    SERIAL_PORT_MONITOR.print(F("sizeof(RenderingInfo): "));
+    SERIAL_PORT_MONITOR.println(sizeof(RenderingInfo));
+  }
 
   Wire.begin();
   Wire.setClock(400000L);
 
+  setupZoneManager();
   setupAceButton();
   setupClocks();
   setupDisplay();

@@ -7,6 +7,10 @@
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASICDB \
+    || TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDEDDB
+  #include <AceTimePro.h> // BasicDbZoneProcessor, ExtendedDbZoneProcessor
+#endif
 #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
   #include <Adafruit_PCD8544.h>
 #else
@@ -556,6 +560,10 @@ class Presenter {
         mDisplay.print(F("basic"));
       #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
         mDisplay.print(F("extended"));
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASICDB
+        mDisplay.print(F("basicdb"));
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDEDDB
+        mDisplay.print(F("extendeddb"));
       #else
         mDisplay.print(F("unknown"));
       #endif
@@ -603,6 +611,11 @@ class Presenter {
       switch (tz.getType()) {
         case BasicZoneProcessor::kTypeBasic:
         case ExtendedZoneProcessor::kTypeExtended:
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASICDB \
+          || TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDEDDB
+        case BasicDbZoneProcessor::kTypeBasicDb:
+        case ExtendedDbZoneProcessor::kTypeExtendedDb:
+      #endif
           if (shouldShowFor(changeTimeZoneNameMode)) {
             tz.printShortTo(mDisplay);
           }
