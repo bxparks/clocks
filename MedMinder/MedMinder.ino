@@ -74,10 +74,9 @@ using ace_utils::mode_group::ModeGroup;
 //------------------------------------------------------------------
 
 // Needed by ESP32 and ESP8266 chips. Has no effect on other chips.
-// Should be bigger than (sizeof(crc32) + sizeof(StoredInfo)).
-const int EEPROM_SIZE = sizeof(StoredInfo) + 4;
+const int EEPROM_SIZE = CrcEeprom::toSavedSize(sizeof(StoredInfo));
 
-CrcEeprom crcEeprom;
+CrcEeprom crcEeprom(CrcEeprom::toContextId('m', 'e', 'd', 'm'));
 
 //------------------------------------------------------------------
 // Configure the SystemClock.

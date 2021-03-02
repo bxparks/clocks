@@ -15,47 +15,46 @@ using ace_utils::crc_eeprom::CrcEeprom;
 
 class PersistentStore {
   public:
+  #if ENABLE_EEPROM
+    PersistentStore()
+      : mCrcEeprom(CrcEeprom::toContextId('c', 'c', 'l', 'k'))
+    {}
+  #endif
+
     void setup() {
     #if ENABLE_EEPROM
-      // kEepromSize used by ESP8266 and ESP32, ignored by others
-      mCrcEeprom.begin(kEepromSize);
+      mCrcEeprom.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
     #endif
     }
 
-  #if ENABLE_EEPROM
     bool readStoredInfo(StoredInfo& storedInfo) const {
+    #if ENABLE_EEPROM
       bool isValid = mCrcEeprom.readWithCrc(kStoredInfoEepromAddress,
           &storedInfo, sizeof(StoredInfo));
-    #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-      storedInfo.ssid[StoredInfo::kSsidMaxLength - 1] = '\0';
-      storedInfo.password[StoredInfo::kPasswordMaxLength - 1] = '\0';
-    #endif
+      #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
+        storedInfo.ssid[StoredInfo::kSsidMaxLength - 1] = '\0';
+        storedInfo.password[StoredInfo::kPasswordMaxLength - 1] = '\0';
+      #endif
       return isValid;
-    }
-  #else
-    bool readStoredInfo(StoredInfo& /*storedInfo*/) const {
+    #else
+      (void) storedInfo; // disable compiler warning
       return false;
+    #endif
     }
-  #endif
 
-  #if ENABLE_EEPROM
     uint16_t writeStoredInfo(const StoredInfo& storedInfo) const {
+    #if ENABLE_EEPROM
       return mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, &storedInfo,
           sizeof(StoredInfo));
-    }
-  #else
-    uint16_t writeStoredInfo(const StoredInfo& /*storedInfo*/) const {
+    #else
+      (void) storedInfo; // disable compiler warning
       return 0;
+    #endif
     }
-  #endif
 
   private:
   #if ENABLE_EEPROM
     static const uint16_t kStoredInfoEepromAddress = 0;
-
-    // Must be greater than or equal to (sizeof(StoredInfo) + 4). Use +8 to
-    // guarantee 4-byte alignment in case of padding after StoredInfo.
-    static const uint8_t kEepromSize = sizeof(StoredInfo) + 8;
 
     CrcEeprom mCrcEeprom;
   #endif

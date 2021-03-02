@@ -11,43 +11,46 @@
 using namespace ace_time;
 using ace_utils::crc_eeprom::CrcEeprom;
 
+/** A thin layer around a CrcEeprom object. */
 class PersistentStore {
   public:
+  #if ! defined(ARDUINO_ARCH_SAMD)
+    PersistentStore()
+      : mCrcEeprom(CrcEeprom::toContextId('w', 'l', 'c', 'd'))
+    {}
+  #endif
+
     void setup() {
     #if ! defined(ARDUINO_ARCH_SAMD)
-      // Needed for ESP32
-      mCrcEeprom.begin(kEepromSize);
+      mCrcEeprom.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
     #endif
     }
 
-  #if defined(ARDUINO_ARCH_SAMD)
-    bool readStoredInfo(StoredInfo& /*storedInfo*/) const {
-      return false;
-    }
-  #else
     bool readStoredInfo(StoredInfo& storedInfo) const {
+    #if defined(ARDUINO_ARCH_SAMD)
+      (void) storedInfo; // disable compiler warning
+      return false;
+    #else
       return mCrcEeprom.readWithCrc(kStoredInfoEepromAddress,
           &storedInfo, sizeof(StoredInfo));
+    #endif
     }
-  #endif
 
-  #if defined(ARDUINO_ARCH_SAMD)
-    uint16_t writeStoredInfo(const StoredInfo& /*storedInfo*/) const {
-      return 0;
-    }
-  #else
     uint16_t writeStoredInfo(const StoredInfo& storedInfo) const {
-      return mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, &storedInfo,
+    #if defined(ARDUINO_ARCH_SAMD)
+      (void) storedInfo; // disable compiler warning
+      return 0;
+    #else
+      return mCrcEeprom.writeWithCrc(
+          kStoredInfoEepromAddress,
+          &storedInfo,
           sizeof(StoredInfo));
+    #endif
     }
-  #endif
 
   private:
   #if ! defined(ARDUINO_ARCH_SAMD)
     static const uint16_t kStoredInfoEepromAddress = 0;
-
-    // Must be >= (sizeof(StoredInfo) + 4).
-    static const uint8_t kEepromSize = sizeof(StoredInfo) + 4;
 
     CrcEeprom mCrcEeprom;
   #endif
