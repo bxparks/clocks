@@ -7,8 +7,6 @@
 
 #define ENABLE_SERIAL 0
 
-#define EEPROM_SIZE 32
-
 // Options that determine the source of time.
 #define TIME_SOURCE_TYPE_NONE 0
 #define TIME_SOURCE_TYPE_DS3231 1

@@ -15,7 +15,7 @@ Supported boards are:
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
-#include <ace_time/hw/CrcEeprom.h>
+#include <AceUtilsCrcEeprom.h>
 #include <SSD1306AsciiWire.h>
 #include "config.h"
 #include "LedDisplay.h"
@@ -26,12 +26,15 @@ using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::provider;
+using ace_utils::crc_eeprom::CrcEeprom;
 
 //------------------------------------------------------------------
 // Configure CrcEeprom.
 //------------------------------------------------------------------
 
-hw::CrcEeprom crcEeprom;
+const int EEPROM_SIZE = CrcEeprom::toSavedSize(sizeof(StoredInfo));
+
+CrcEeprom crcEeprom(CrcEeprom::toContextId('l', 'c', 'l', 'k'));
 
 //------------------------------------------------------------------
 // Configure various TimeKeepers and TimeProviders.
