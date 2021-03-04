@@ -42,6 +42,7 @@
 #define TIME_SOURCE_TYPE_DS3231 1
 #define TIME_SOURCE_TYPE_NTP 2
 #define TIME_SOURCE_TYPE_BOTH 3 
+#define TIME_SOURCE_TYPE_STMRTC 4
 
 // Button options: either digital ButtonConfig or analog LadderButtonConfig.
 // AVR: 8-bit analog pin
@@ -110,6 +111,15 @@
   #define CHANGE_BUTTON_PIN 10
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP true
+#elif defined(AUNITER_STM32)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
+  #define MODE_BUTTON_PIN A0
+  #define CHANGE_BUTTON_PIN A1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_STMRTC
+  #define OLED_REMAP false
 #elif defined(AUNITER_ESP8266)
   // Defined by auniter.ini
   //#define WIFI_SSID
