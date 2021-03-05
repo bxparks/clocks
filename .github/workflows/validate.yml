@@ -19,7 +19,12 @@ jobs:
         git clone https://github.com/bxparks/AceTime
         git clone https://github.com/bxparks/AceUtils
         git clone https://github.com/bxparks/EpoxyDuino
+        git clone https://github.com/greiman/SSD1306Ascii
 
-    - name: Compile CommandLineClock
+    - name: Compile
       run: |
         make -C CommandLineClock
+        make -C MedMinder
+        make -C OledClock
+        make -C WorldClock
+        make -C WorldClockLcd

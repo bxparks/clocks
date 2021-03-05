@@ -51,8 +51,7 @@
 #define BUTTON_TYPE_ANALOG 1
 #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
 
-// If using Arduino IDE, AUNITER is not defined.
-#ifndef AUNITER
+#if ! defined(AUNITER) // Arduino IDE in interactive mode
   // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
   #define WIFI_SSID "your wifi ssid here"
   #define WIFI_PASSWORD "your wifi password here"
@@ -62,6 +61,18 @@
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
+
+#elif defined(EPOXY_DUINO)
+  // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
+  #define WIFI_SSID "your wifi ssid here"
+  #define WIFI_PASSWORD "your wifi password here"
+
+  #define ENABLE_EEPROM 1
+  #define MODE_BUTTON_PIN 2
+  #define CHANGE_BUTTON_PIN 3
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define OLED_REMAP false
+
 #elif defined(AUNITER_NANO)
   // Defined by auniter.ini
   //#define WIFI_SSID

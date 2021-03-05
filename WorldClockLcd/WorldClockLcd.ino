@@ -390,7 +390,7 @@ const ModeGroup ROOT_MODE_GROUP = {
 // Create persistent store.
 //-----------------------------------------------------------------------------
 
-#if defined(ESP32) || defined(ESP8266)
+#if defined(ESP32) || defined(ESP8266) || defined(EPOXY_DUINO)
   #include <EEPROM.h>
   EspEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
   PersistentStore persistentStore(eepromAdapter);

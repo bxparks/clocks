@@ -23,14 +23,13 @@
 // flash/2.5kB RAM) cannot support both BasicZoneProcessor and
 // ExtendedZoneProcessor at the same time.
 
-#if defined(EPOXY_DUINO)
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_UNIX
+#if ! defined(AUNITER) // Arduino IDE in interactive mode
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define ENABLE_TIME_ZONE_TYPE_BASIC 1
   #define ENABLE_TIME_ZONE_TYPE_EXTENDED 1
   #define ENABLE_EEPROM 1
-#elif ! defined(AUNITER)
-  // Arduino IDE in interactive mode
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+#elif defined(EPOXY_DUINO)
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_UNIX
   #define ENABLE_TIME_ZONE_TYPE_BASIC 1
   #define ENABLE_TIME_ZONE_TYPE_EXTENDED 1
   #define ENABLE_EEPROM 1

@@ -36,8 +36,7 @@
 // $HOME/.auniter.ini and the AUNITER_XXX macro is set by auniter.sh.
 //------------------------------------------------------------------
 
-// If using Arduino IDE, AUNITER is not defined.
-#if ! defined(AUNITER)
+#if ! defined(AUNITER) // Arduino IDE in interactive mode
   // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
   #define WIFI_SSID "your wifi ssid here"
   #define WIFI_PASSWORD "your wifi password here"
@@ -47,6 +46,18 @@
   #define OLED_REMAP false
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
+
+#elif defined(EPOXY_DUINO)
+  // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
+  #define WIFI_SSID "your wifi ssid here"
+  #define WIFI_PASSWORD "your wifi password here"
+
+  #define ENABLE_LOW_POWER 0
+  #define TIME_PROVIDER TIME_PROVIDER_DS3231
+  #define OLED_REMAP false
+  #define MODE_BUTTON_PIN 8
+  #define CHANGE_BUTTON_PIN 9
+
 #elif defined(AUNITER_NANO)
   // Defined by auniter.ini
   //#define WIFI_SSID

@@ -43,7 +43,7 @@ using ace_utils::crc_eeprom::CrcEeprom;
 // Configure CrcEeprom.
 //----------------------------------------------------------------------------
 
-#if defined(ESP32) || defined(ESP8266)
+#if defined(ESP32) || defined(ESP8266) || defined(EPOXY_DUINO)
   #include <EEPROM.h>
   EspEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
 #elif defined(ARDUINO_ARCH_AVR)
