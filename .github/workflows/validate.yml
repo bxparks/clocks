@@ -13,6 +13,7 @@ jobs:
     - name: Setup
       run: |
         cd ..
+        git clone https://github.com/bxparks/AceButton
         git clone https://github.com/bxparks/AceCRC
         git clone https://github.com/bxparks/AceCommon
         git clone https://github.com/bxparks/AceRoutine
