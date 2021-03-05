@@ -43,6 +43,7 @@
 #define TIME_SOURCE_TYPE_NTP 2
 #define TIME_SOURCE_TYPE_BOTH 3 
 #define TIME_SOURCE_TYPE_STMRTC 4
+#define TIME_SOURCE_TYPE_STM32F1RTC 5
 
 // Button options: either digital ButtonConfig or analog LadderButtonConfig.
 // AVR: 8-bit analog pin

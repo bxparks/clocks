@@ -120,6 +120,9 @@ static ExtendedZoneManager<CACHE_SIZE> zoneManager(
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
   StmRtcClock stmClock;
   SystemClockCoroutine systemClock(&stmClock, nullptr);
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  Stm32F1Clock stm32F1Clock;
+  SystemClockCoroutine systemClock(&stm32F1Clock, nullptr);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
   DS3231Clock dsClock;
   NtpClock ntpClock;
@@ -136,7 +139,9 @@ void setupClocks() {
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
-  stmClock.setup();
+  stmClock.setup(LSE_CLOCK);
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  stm32F1Clock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
   dsClock.setup();
   ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
