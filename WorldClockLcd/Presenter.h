@@ -96,6 +96,7 @@ class Presenter {
   #else
       mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
   #endif
+
       mRenderingInfo.mode = mode;
       mRenderingInfo.suppressBlink = suppressBlink;
       mRenderingInfo.blinkShowState = blinkShowState;
@@ -133,6 +134,9 @@ class Presenter {
     Presenter(const Presenter&) = delete;
     Presenter& operator=(const Presenter&) = delete;
 
+  // These methods abtracts away the differences between a PCD8544 LCD and
+  // and SSD1306 OLED displays
+  private:
     void clearDisplay() {
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       mDisplay.clearDisplay();
@@ -197,6 +201,7 @@ class Presenter {
     #endif
     }
 
+  private:
     /**
      * True if the display should actually show the data. If the clock is in
      * "blinking" mode, then this will return false in accordance with the

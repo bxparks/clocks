@@ -17,17 +17,6 @@ struct ClockInfo {
   /** 12/24 mode */
   uint8_t hourMode;
 
-  /** The desired timezones of the clock. */
-  ace_time::TimeZoneData zones[NUM_TIME_ZONES];
-
-  /**
-   * Current time. It might be possible to track just the epochSeconds instead
-   * of converting it to a ZonedDateTime at each iteration. But I think it then
-   * becomes far more difficult to allow the user to change the various
-   * date/time fields (e.g. month, day, year, hour, etc).
-   */
-  ace_time::ZonedDateTime dateTime;
-
 #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
 
   /** Backlight level, [0, 9] -> [0, 1023] */
@@ -48,6 +37,17 @@ struct ClockInfo {
   uint8_t contrastLevel;
 
 #endif
+
+  /** The desired timezones of the clock. */
+  ace_time::TimeZoneData zones[NUM_TIME_ZONES];
+
+  /**
+   * Current time. It might be possible to track just the epochSeconds instead
+   * of converting it to a ZonedDateTime at each iteration. But I think it then
+   * becomes far more difficult to allow the user to change the various
+   * date/time fields (e.g. month, day, year, hour, etc).
+   */
+  ace_time::ZonedDateTime dateTime;
 };
 
 #endif

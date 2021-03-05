@@ -39,10 +39,10 @@ class Controller {
      * @param persistentStore stores objects into the EEPROM with CRC
      * @param clock source of the current time
      * @param presenter renders the date and time info to the screen
-     * @param zones array of TimeZoneData with NUM_TIME_ZONES elements
-     * @param rootModeGroup poniter to the top level ModeGroup object
      * @param zoneManager optional zoneManager for TIME_ZONE_TYPE_BASIC or
      *        TIME_ZONE_TYPE_EXTENDED
+     * @param displayZones array of TimeZoneData with NUM_TIME_ZONES elements
+     * @param rootModeGroup poniter to the top level ModeGroup object
      */
     Controller(
         PersistentStore& persistentStore,
@@ -64,17 +64,14 @@ class Controller {
      * @param factoryReset set to true to perform a reset to factory defaults
      */
     void setup(bool factoryReset) {
-      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-        pinMode(LCD_BACKLIGHT_PIN, OUTPUT);
-      #endif
-
-      #if FORCE_INITIALIZE
+      if (FORCE_INITIALIZE == 1) {
         factoryReset = true;
-      #endif
+      }
       restoreClockInfo(factoryReset);
       mNavigator.setup();
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        pinMode(LCD_BACKLIGHT_PIN, OUTPUT);
         updateBacklight();
         updateLcdContrast();
         updateBias();
@@ -91,7 +88,6 @@ class Controller {
      */
     void update() {
       if (mNavigator.mode() == MODE_UNKNOWN) return;
-      if (mIsPreparingToSleep) return;
       updateDateTime();
       updateBlinkState();
       updateRenderingInfo();
@@ -710,6 +706,7 @@ class Controller {
     static const uint8_t kContrastValues[];
   #endif
 
+  private:
     PersistentStore& mPersistentStore;
     Clock& mClock;
     Presenter& mPresenter;
@@ -735,8 +732,6 @@ class Controller {
     bool mSuppressBlink = false; // true if blinking should be suppressed
     bool mBlinkShowState = true; // true means actually show
     uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
-
-    bool mIsPreparingToSleep = false;
 };
 
 #endif

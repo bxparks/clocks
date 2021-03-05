@@ -14,9 +14,6 @@ struct StoredInfo {
   /** Either kTwelve or kTwentyFour. */
   uint8_t hourMode;
 
-  /** TimeZone serialization. */
-  ace_time::TimeZoneData zones[NUM_TIME_ZONES];
-
 #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
 
   /** Backlight level, [0, 9] */
@@ -37,6 +34,10 @@ struct StoredInfo {
   uint8_t contrastLevel;
 
 #endif
+
+  /** TimeZone serialization. */
+  ace_time::TimeZoneData zones[NUM_TIME_ZONES];
+
 };
 
 #endif
