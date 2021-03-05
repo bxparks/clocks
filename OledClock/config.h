@@ -57,6 +57,7 @@
   #define WIFI_SSID "your wifi ssid here"
   #define WIFI_PASSWORD "your wifi password here"
 
+  #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -66,6 +67,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -74,6 +76,8 @@
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
+
+  #define ENABLE_EEPROM 1
 
   // Pro Micro has just enough memory for Basic TimeZone w/ 4 timezones.
   // In certain configurations, it does not have enough memory, in which case
@@ -89,6 +93,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -98,6 +103,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -107,6 +113,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 0
   #define MODE_BUTTON_PIN 11
   #define CHANGE_BUTTON_PIN 10
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -116,6 +123,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN A0
   #define CHANGE_BUTTON_PIN A1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_STMRTC
@@ -125,6 +133,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN D4
   #define CHANGE_BUTTON_PIN D3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -134,6 +143,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
@@ -157,6 +167,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 4
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_NTP

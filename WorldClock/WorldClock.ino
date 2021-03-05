@@ -34,17 +34,32 @@
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
-using ace_utils::crc_eeprom::CrcEeprom;
 using ace_utils::mode_group::ModeGroup;
+using ace_utils::crc_eeprom::AvrEepromAdapter;
+using ace_utils::crc_eeprom::EspEepromAdapter;
+using ace_utils::crc_eeprom::CrcEeprom;
 
 //----------------------------------------------------------------------------
 // Configure CrcEeprom.
 //----------------------------------------------------------------------------
 
+#if defined(ESP32) || defined(ESP8266)
+  #include <EEPROM.h>
+  EspEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
+#elif defined(ARDUINO_ARCH_AVR)
+  #include <EEPROM.h>
+  AvrEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
+#elif defined(ARDUINO_ARCH_STM32)
+  #include <AceUtilsStm32BufferedEeprom.h>
+  EspEepromAdapter<BufferedEEPROMClass> eepromAdapter(BufferedEEPROM);
+#else
+  #error EEPROM unsupported
+#endif
+
 // Needed by ESP8266 and ESP32 chips. Has no effect on other chips.
 const int EEPROM_SIZE = CrcEeprom::toSavedSize(sizeof(StoredInfo));
 
-CrcEeprom crcEeprom(CrcEeprom::toContextId('w', 'c', 'l', 'k'));
+CrcEeprom crcEeprom(eepromAdapter, CrcEeprom::toContextId('w', 'c', 'l', 'k'));
 
 //----------------------------------------------------------------------------
 // Configure various Clocks.

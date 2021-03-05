@@ -65,6 +65,7 @@
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
+  #define ENABLE_EEPROM 1
 #elif defined(AUNITER_NANO)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -74,6 +75,7 @@
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
+  #define ENABLE_EEPROM 1
 #elif defined(AUNITER_MICRO)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -88,6 +90,7 @@
   #define CHANGE_BUTTON_PIN 9
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP true
+  #define ENABLE_EEPROM 1
 #elif defined(AUNITER_MINI_MINDER)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -97,6 +100,7 @@
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
+  #define ENABLE_EEPROM 1
 #elif defined(AUNITER_MEGA)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -106,6 +110,7 @@
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
+  #define ENABLE_EEPROM 1
 #elif defined(AUNITER_SAMD)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -115,6 +120,7 @@
   #define CHANGE_BUTTON_PIN 10
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP true
+  #define ENABLE_EEPROM 0
 #elif defined(AUNITER_ESP8266)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -124,12 +130,14 @@
   #define CHANGE_BUTTON_PIN D3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define OLED_REMAP false
+  #define ENABLE_EEPROM 1
 #elif defined(AUNITER_WORLD_CLOCK_LCD)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define ENABLE_EEPROM 1
 
   // Button parameters
   #undef BUTTON_TYPE
@@ -152,6 +160,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Use BasicDbZoneManager for testing.
@@ -179,6 +188,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN 4
   #define CHANGE_BUTTON_PIN 3
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_NTP

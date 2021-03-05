@@ -41,12 +41,19 @@
 #endif
 #include "PersistentStore.h"
 #include "Controller.h"
+#include <AceUtilsCrcEeprom.h>
 
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_utils::mode_group::ModeGroup;
+using ace_utils::crc_eeprom::AvrEepromAdapter;
+using ace_utils::crc_eeprom::EspEepromAdapter;
+
+//-----------------------------------------------------------------------------
+// Configure file system if needed.
+//-----------------------------------------------------------------------------
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASICDB \
     || TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDEDDB
@@ -383,7 +390,21 @@ const ModeGroup ROOT_MODE_GROUP = {
 // Create persistent store.
 //-----------------------------------------------------------------------------
 
-PersistentStore persistentStore;
+#if defined(ESP32) || defined(ESP8266)
+  #include <EEPROM.h>
+  EspEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
+  PersistentStore persistentStore(eepromAdapter);
+#elif defined(ARDUINO_ARCH_AVR)
+  #include <EEPROM.h>
+  AvrEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
+  PersistentStore persistentStore(eepromAdapter);
+#elif defined(ARDUINO_ARCH_STM32)
+  #include <AceUtilsStm32BufferedEeprom.h>
+  EspEepromAdapter<BufferedEEPROMClass> eepromAdapter(BufferedEEPROM);
+  PersistentStore persistentStore(eepromAdapter);
+#else
+  PersistentStore persistentStore;
+#endif
 
 void setupPersistentStore() {
   persistentStore.setup();

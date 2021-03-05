@@ -393,12 +393,7 @@ class Controller {
     void preserveClockInfo() {
       StoredInfo storedInfo;
       storedInfoFromClockInfo(storedInfo);
-
-      mCrcEeprom.writeWithCrc(
-          kStoredInfoEepromAddress,
-          &storedInfo,
-          sizeof(StoredInfo)
-      );
+      mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, storedInfo);
     }
 
     /** Restore from EEPROM. If that fails, set initial states. */
@@ -412,11 +407,7 @@ class Controller {
         }
         isValid = false;
       } else {
-        isValid = mCrcEeprom.readWithCrc(
-            kStoredInfoEepromAddress,
-            &storedInfo,
-            sizeof(StoredInfo)
-        );
+        isValid = mCrcEeprom.readWithCrc(kStoredInfoEepromAddress, storedInfo);
         if (ENABLE_SERIAL_DEBUG == 1) {
           if (! isValid) {
             SERIAL_PORT_MONITOR.println(F(

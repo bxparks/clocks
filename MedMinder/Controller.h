@@ -57,8 +57,8 @@ class Controller {
 
       // Restore state from EEPROM if valid.
       StoredInfo storedInfo;
-      bool isValid = mCrcEeprom.readWithCrc(kStoredInfoEepromAddress,
-          &storedInfo, sizeof(StoredInfo));
+      bool isValid = mCrcEeprom.readWithCrc(
+          kStoredInfoEepromAddress, storedInfo);
       if (isValid) {
         if (ENABLE_SERIAL_DEBUG == 1) {
           SERIAL_PORT_MONITOR.println(F("setup(): valid StoredInfo"));
@@ -362,8 +362,7 @@ class Controller {
       storedInfo.timeZoneData = mClockInfo.timeZone.toTimeZoneData();
       storedInfo.medStartTime = mClockInfo.medStartTime;
       storedInfo.medInterval = mClockInfo.medInterval;
-      mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, &storedInfo,
-          sizeof(StoredInfo));
+      mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, storedInfo);
     }
 
     void updateDateTime() {
