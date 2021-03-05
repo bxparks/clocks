@@ -197,7 +197,8 @@ const uint8_t MODE_UNKNOWN = 0;
 
 const uint8_t MODE_DATE_TIME = 1;
 const uint8_t MODE_TIME_ZONE = 2;
-const uint8_t MODE_ABOUT = 3;
+const uint8_t MODE_SETTINGS = 3; // misc settings
+const uint8_t MODE_ABOUT = 4;
 
 const uint8_t MODE_CHANGE_YEAR = 10;
 const uint8_t MODE_CHANGE_MONTH = 11;
@@ -212,5 +213,14 @@ const uint8_t MODE_CHANGE_TIME_ZONE_DST = 21;
 #else
 const uint8_t MODE_CHANGE_TIME_ZONE_NAME = 20;
 #endif
+
+#if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+const uint8_t MODE_CHANGE_SETTINGS_BACKLIGHT = 30;
+const uint8_t MODE_CHANGE_SETTINGS_CONTRAST = 31;
+const uint8_t MODE_CHANGE_SETTINGS_BIAS = 32;
+#else
+const uint8_t MODE_CHANGE_SETTINGS_CONTRAST = 30;
+#endif
+
 
 #endif

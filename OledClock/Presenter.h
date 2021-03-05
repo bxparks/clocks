@@ -79,6 +79,14 @@ class Presenter {
 
     void setRenderingInfo(uint8_t mode, bool suppressBlink, bool blinkShowState,
         const ClockInfo& clockInfo) {
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      mRenderingInfo.backlightLevel = clockInfo.backlightLevel;
+      mRenderingInfo.contrast = clockInfo.contrast;
+      mRenderingInfo.bias = clockInfo.bias;
+  #else
+      mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
+  #endif
+
       mRenderingInfo.mode = mode;
       mRenderingInfo.suppressBlink = suppressBlink;
       mRenderingInfo.blinkShowState = blinkShowState;
@@ -86,6 +94,29 @@ class Presenter {
       mRenderingInfo.timeZoneData = clockInfo.timeZoneData;
       mRenderingInfo.dateTime = clockInfo.dateTime;
     }
+
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+    /** Set the LCD brightness value. */
+    void setBrightness(uint16_t value) {
+      analogWrite(LCD_BACKLIGHT_PIN, value);
+    }
+
+    /** Set the LCD contrast value. */
+    void setContrast(uint8_t value) {
+      mDisplay.setContrast(value);
+    }
+
+    /** Set the LCD bias. */
+    void setBias(uint8_t value) {
+      mDisplay.setBias(value);
+    }
+
+  #else
+    /** Set the OLED contrast value. */
+    void setContrast(uint8_t value) {
+      mDisplay.setContrast(value);
+    }
+  #endif
 
   private:
     // Disable copy-constructor and assignment operator
@@ -183,6 +214,13 @@ class Presenter {
           || (!mRenderingInfo.suppressBlink
               && (mRenderingInfo.blinkShowState
                   != mPrevRenderingInfo.blinkShowState))
+        #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+          || mRenderingInfo.backlightLevel != mPrevRenderingInfo.backlightLevel
+          || mRenderingInfo.contrast != mPrevRenderingInfo.contrast
+          || mRenderingInfo.bias != mPrevRenderingInfo.bias
+        #else
+          || mRenderingInfo.contrastLevel != mPrevRenderingInfo.contrastLevel
+        #endif
           || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode
           || mRenderingInfo.timeZoneData != mPrevRenderingInfo.timeZoneData
           || mRenderingInfo.dateTime != mPrevRenderingInfo.dateTime;
@@ -214,6 +252,17 @@ class Presenter {
         case MODE_CHANGE_TIME_ZONE_NAME:
       #endif
           displayTimeZoneMode();
+          break;
+
+        case MODE_SETTINGS:
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        case MODE_CHANGE_SETTINGS_BACKLIGHT:
+        case MODE_CHANGE_SETTINGS_CONTRAST:
+        case MODE_CHANGE_SETTINGS_BIAS:
+      #else
+        case MODE_CHANGE_SETTINGS_CONTRAST:
+      #endif
+          displaySettingsMode();
           break;
 
         case MODE_ABOUT:
@@ -377,6 +426,42 @@ class Presenter {
           mDisplay.println();
           break;
       }
+    }
+
+    void displaySettingsMode() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("displaySettingsMode()"));
+      }
+
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      mDisplay.print(F("Backlight:"));
+      if (shouldShowFor(MODE_CHANGE_SETTINGS_BACKLIGHT)) {
+        mDisplay.println(mRenderingInfo.backlightLevel);
+      } else {
+        mDisplay.println(' ');
+      }
+
+      mDisplay.print(F("Contrast:"));
+      if (shouldShowFor(MODE_CHANGE_SETTINGS_CONTRAST)) {
+        mDisplay.println(mRenderingInfo.contrast);
+      } else {
+        mDisplay.println(' ');
+      }
+
+      mDisplay.print(F("Bias:"));
+      if (shouldShowFor(MODE_CHANGE_SETTINGS_BIAS)) {
+        mDisplay.println(mRenderingInfo.bias);
+      } else {
+        mDisplay.println(' ');
+      }
+    #else
+      mDisplay.print(F("Contrast:"));
+      if (shouldShowFor(MODE_CHANGE_SETTINGS_CONTRAST)) {
+        mDisplay.println(mRenderingInfo.contrastLevel);
+      } else {
+        mDisplay.println(' ');
+      }
+    #endif
     }
 
     void displayAboutMode() {

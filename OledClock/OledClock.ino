@@ -139,7 +139,7 @@ void setupClocks() {
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
-  stmClock.setup(LSE_CLOCK);
+  stmClock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
   stm32F1Clock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
@@ -264,10 +264,30 @@ const ModeGroup TIME_ZONE_MODE_GROUP = {
   nullptr /* childGroups */,
 };
 
+// List of Settings modes.
+const uint8_t SETTINGS_MODES[] = {
+#if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+  MODE_CHANGE_SETTINGS_BACKLIGHT,
+  MODE_CHANGE_SETTINGS_CONTRAST,
+  MODE_CHANGE_SETTINGS_BIAS,
+#else
+  MODE_CHANGE_SETTINGS_CONTRAST,
+#endif
+};
+
+// ModeGroup for the Settings modes.
+const ModeGroup SETTINGS_MODE_GROUP = {
+  &ROOT_MODE_GROUP /* parentGroup */,
+  sizeof(SETTINGS_MODES) / sizeof(uint8_t),
+  SETTINGS_MODES /* modes */,
+  nullptr /* childGroups */,
+};
+
 // List of top level modes.
 const uint8_t TOP_LEVEL_MODES[] = {
   MODE_DATE_TIME,
   MODE_TIME_ZONE,
+  MODE_SETTINGS,
   MODE_ABOUT,
 };
 
@@ -276,6 +296,7 @@ const uint8_t TOP_LEVEL_MODES[] = {
 const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
   &DATE_TIME_MODE_GROUP,
   &TIME_ZONE_MODE_GROUP,
+  &SETTINGS_MODE_GROUP,
   nullptr /* About mode has no submodes */,
 };
 

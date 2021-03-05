@@ -38,6 +38,10 @@ class Controller {
      * @param persistentStore stores objects into the EEPROM with CRC
      * @param clock source of the current time
      * @param presenter renders the date and time info to the screen
+     * @param zoneManager optional zoneManager for TIME_ZONE_TYPE_BASIC or
+     *        TIME_ZONE_TYPE_EXTENDED
+     * @param displayZones array of TimeZoneData with NUM_TIME_ZONES elements
+     * @param rootModeGroup poniter to the top level ModeGroup object
      */
     Controller(
         PersistentStore& persistentStore,
@@ -61,6 +65,16 @@ class Controller {
       }
       restoreClockInfo(factoryReset);
       mNavigator.setup();
+
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        pinMode(LCD_BACKLIGHT_PIN, OUTPUT);
+        updateBacklight();
+        updateLcdContrast();
+        updateBias();
+      #else
+        updateContrast();
+      #endif
+
       updateDateTime();
     }
 
@@ -167,6 +181,16 @@ class Controller {
       #endif
           saveClockInfo();
           break;
+
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        case MODE_CHANGE_SETTINGS_BACKLIGHT:
+        case MODE_CHANGE_SETTINGS_CONTRAST:
+        case MODE_CHANGE_SETTINGS_BIAS:
+      #else
+        case MODE_CHANGE_SETTINGS_CONTRAST:
+      #endif
+          preserveClockInfo(mClockInfo);
+          break;
       }
     }
 
@@ -249,14 +273,97 @@ class Controller {
               mChangingClockInfo.dateTime.convertToTimeZone(tz);
           break;
         }
-
       #endif
+
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        case MODE_CHANGE_SETTINGS_BACKLIGHT:
+        {
+          mSuppressBlink = true;
+          incrementMod(mClockInfo.backlightLevel, (uint8_t) 10);
+          updateBacklight();
+          break;
+        }
+        case MODE_CHANGE_SETTINGS_CONTRAST:
+        {
+          mSuppressBlink = true;
+          incrementMod(mClockInfo.contrast, (uint8_t) 128);
+          updateLcdContrast();
+          break;
+        }
+        case MODE_CHANGE_SETTINGS_BIAS:
+        {
+          mSuppressBlink = true;
+          incrementMod(mClockInfo.bias, (uint8_t) 8);
+          updateBias();
+          break;
+        }
+      #else
+        case MODE_CHANGE_SETTINGS_CONTRAST:
+        {
+          mSuppressBlink = true;
+          incrementMod(mClockInfo.contrastLevel, (uint8_t) 10);
+          updateContrast();
+          break;
+        }
+      #endif
+
       }
 
       // Update the display right away to prevent jitters in the display when
       // the button is triggering RepeatPressed events.
       update();
     }
+
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+    void updateBacklight() {
+      uint16_t value = getBacklightValue(mClockInfo.backlightLevel);
+      mPresenter.setBrightness(value);
+
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.print(F("updateBacklight(): "));
+        SERIAL_PORT_MONITOR.println(value);
+      }
+    }
+
+    /**
+     * Return the pwm value for the given level. Since the backlight is driven
+     * LOW (low values of PWM means brighter light), subtract from 1024.
+     * @param level brightness level in the range of [0, 9]
+     */
+    static uint16_t getBacklightValue(uint8_t level) {
+      if (level > 9) level = 9;
+      return 1023 - kBacklightValues[level];
+    }
+
+    void updateLcdContrast() {
+      mPresenter.setContrast(mClockInfo.contrast);
+
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.print(F("updateLcdContrast(): "));
+        SERIAL_PORT_MONITOR.println(mClockInfo.contrast);
+      }
+    }
+
+    void updateBias() {
+      mPresenter.setBias(mClockInfo.bias);
+
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.print(F("updateBias(): "));
+        SERIAL_PORT_MONITOR.println(mClockInfo.bias);
+      }
+    }
+
+  #else
+    void updateContrast() {
+      uint8_t contrastValue = getContrastValue(mClockInfo.contrastLevel);
+      mPresenter.setContrast(contrastValue);
+    }
+
+    static uint8_t getContrastValue(uint8_t level) {
+      if (level > 9) level = 9;
+      return kContrastValues[level];
+    }
+  #endif
 
     void handleChangeButtonRepeatPress() {
       // Ignore 12/24 changes from RepeatPressed events.
@@ -322,15 +429,9 @@ class Controller {
     }
 
     void updateRenderingInfo() {
-      switch (mNavigator.mode()) {
-        case MODE_DATE_TIME:
-        case MODE_TIME_ZONE:
-        case MODE_ABOUT:
-          mPresenter.setRenderingInfo(
-              mNavigator.mode(), mSuppressBlink, mBlinkShowState, mClockInfo
-          );
-          break;
+      ClockInfo* clockInfo;
 
+      switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
         case MODE_CHANGE_MONTH:
         case MODE_CHANGE_DAY:
@@ -343,12 +444,19 @@ class Controller {
       #else
         case MODE_CHANGE_TIME_ZONE_NAME:
       #endif
-          mPresenter.setRenderingInfo(
-            mNavigator.mode(), mSuppressBlink, mBlinkShowState,
-            mChangingClockInfo
-          );
+          clockInfo = &mChangingClockInfo;
           break;
+
+        // For all other modes render the normal mClockInfo instead. This
+        // includes the "change settings" modes, because those are applied
+        // directly to the current mClockInfo, not the mChangingClockInfo.
+        default:
+          clockInfo = &mClockInfo;
       }
+
+      mPresenter.setRenderingInfo(
+          mNavigator.mode(), mSuppressBlink, mBlinkShowState, *clockInfo
+      );
     }
 
     /** Save the current UTC dateTime to the RTC. */
@@ -380,6 +488,13 @@ class Controller {
         ClockInfo& clockInfo, const StoredInfo& storedInfo) {
       clockInfo.hourMode = storedInfo.hourMode;
       clockInfo.timeZoneData = storedInfo.timeZoneData;
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        clockInfo.backlightLevel = storedInfo.backlightLevel;
+        clockInfo.contrast = storedInfo.contrast;
+        clockInfo.bias = storedInfo.bias;
+      #else
+        clockInfo.contrastLevel = storedInfo.contrastLevel;
+      #endif
     }
 
     /** Convert ClockInfo to StoredInfo. */
@@ -387,6 +502,13 @@ class Controller {
         StoredInfo& storedInfo, const ClockInfo& clockInfo) {
       storedInfo.hourMode = clockInfo.hourMode;
       storedInfo.timeZoneData = clockInfo.timeZoneData;
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        storedInfo.backlightLevel = clockInfo.backlightLevel;
+        storedInfo.contrast = clockInfo.contrast;
+        storedInfo.bias = clockInfo.bias;
+      #else
+        storedInfo.contrastLevel = clockInfo.contrastLevel;
+      #endif
     }
 
     /** Attempt to restore from EEPROM, otherwise use factory defaults. */
@@ -422,8 +544,24 @@ class Controller {
     void setupClockInfo() {
       mClockInfo.hourMode = StoredInfo::kTwentyFour;
       mClockInfo.timeZoneData = mInitialTimeZoneData;
+
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      mClockInfo.backlightLevel = 0;
+      mClockInfo.contrast = LCD_INITIAL_CONTRAST;
+      mClockInfo.bias = LCD_INITIAL_BIAS;
+    #else
+      mClockInfo.contrastLevel = 5;
+    #endif
     }
 
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+    static const uint16_t kBacklightValues[];
+    static const uint8_t kContrastValues[];
+  #else
+    static const uint8_t kContrastValues[];
+  #endif
+
+  private:
     PersistentStore& mPersistentStore;
     Clock& mClock;
     Presenter& mPresenter;

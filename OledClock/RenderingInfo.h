@@ -13,6 +13,14 @@ struct RenderingInfo {
   bool suppressBlink; // true if blinking should be suppressed
   bool blinkShowState; // true if blinking info should be shown
 
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+    uint8_t backlightLevel; // LCD backlight level [0, 9]
+    uint8_t contrast; // LCD contrast [0, 127]
+    uint8_t bias; // LCD backlight level [0, 7]
+  #else
+    uint8_t contrastLevel; // OLED contrast level [0, 9] -> [0, 255]
+  #endif
+
   uint8_t hourMode; // ClockInfo::kTwelve or kTwentyFour
   ace_time::TimeZoneData timeZoneData;
   ace_time::ZonedDateTime dateTime;

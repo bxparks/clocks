@@ -14,6 +14,28 @@ struct StoredInfo {
   /** Either kTwelve or kTwentyFour. */
   uint8_t hourMode;
 
+  // Keeping uint8_t grouped together helps reduce storage on 32-bit processors
+#if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+
+  /** Backlight level, [0, 9] */
+  uint8_t backlightLevel;
+
+  /** Contrast, [0, 127] */
+  uint8_t contrast;
+
+  /** Bias level, [0, 7] */
+  uint8_t bias;
+
+#else
+
+  /**
+   * Contrast level for OLED dislay, [0, 9] -> [0, 255]. Essentially brightness
+   * because the background is black.
+   */
+  uint8_t contrastLevel;
+
+#endif
+
   /** TimeZone serialization. */
   ace_time::TimeZoneData timeZoneData;
 };
