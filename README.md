@@ -1,5 +1,7 @@
 # Clocks
 
+[![Validate Compile](https://github.com/bxparks/clocks/actions/workflows/validate.yml/badge.svg)](https://github.com/bxparks/clocks/actions/workflows/validate.yml)
+
 These are various Arduino-compatible clock devices that I have built using my
 AceTime library (https://github.com/bxparks/AceTime).
 
@@ -13,9 +15,13 @@ AceTime library (https://github.com/bxparks/AceTime).
     * Useful for debugging various software libraries (AceButton, AceTime)
       and various hardware configurations (OLED display, LCD display, buttons,
       DS3231, etc).
-* [WorldClock](OledClock)
+* [WorldClock](WorldClock)
     * A clock with 3 SSD1306 OLED displays, supporting 3 concurrent timezones.
-* [WorldClockLcd](OledClock)
+* [WorldClockLcd](WorldClockLcd)
     * A clock with 1 PCD8544 LCD display, supporting 4 concurrent timezones.
 * [MedMinder](MedMinder)
     * A medication reminder device.
+
+All of these will compile under Linux and probably MacOS using EpoxyDuino
+(https://github.com/bxparks/EpoxyDuino). So I was able to add them to the
+Continuous Integration pipeline under GitHub Actions.
