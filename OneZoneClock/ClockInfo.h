@@ -1,23 +1,22 @@
-#ifndef OLED_CLOCK_STORED_INFO_H
-#define OLED_CLOCK_STORED_INFO_H
+#ifndef ONE_ZONE_CLOCK_CLOCK_INFO_H
+#define ONE_ZONE_CLOCK_CLOCK_INFO_H
 
 #include <AceTime.h>
 
-/** Data that is saved to and retrieved from EEPROM. */
-struct StoredInfo {
+/** Information about the clock, mostly independent of rendering. */
+struct ClockInfo {
   /** 12:00:00 AM to 12:00:00 PM */
   static uint8_t const kTwelve = 0;
 
   /** 00:00:00 - 23:59:59 */
   static uint8_t const kTwentyFour = 1;
 
-  /** Either kTwelve or kTwentyFour. */
+  /** 12/24 mode */
   uint8_t hourMode;
 
-  // Keeping uint8_t grouped together helps reduce storage on 32-bit processors
 #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
 
-  /** Backlight level, [0, 9] */
+  /** Backlight level, [0, 9] -> [0, 1023] */
   uint8_t backlightLevel;
 
   /** Contrast, [0, 127] */
@@ -29,15 +28,18 @@ struct StoredInfo {
 #else
 
   /**
-   * Contrast level for OLED dislay, [0, 9] -> [0, 255]. Essentially brightness
+   * Contrast level for OLED dislay, [0, 9] -> [25, 255]. Essentially brightness
    * because the background is black.
    */
   uint8_t contrastLevel;
 
 #endif
 
-  /** TimeZone serialization. */
+  /** The desired timezone of the clock. */
   ace_time::TimeZoneData timeZoneData;
+
+  /** Current time. */
+  ace_time::ZonedDateTime dateTime;
 };
 
 #endif

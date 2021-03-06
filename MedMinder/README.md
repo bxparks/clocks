@@ -17,4 +17,4 @@ The following libraries are required:
 
 ## User Guide
 
-(TBD, but it's very similar to OledClock)
+The buttons operate Very similarly to [OneZoneClock](../OneZoneClock).

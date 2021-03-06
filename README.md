@@ -8,17 +8,52 @@ AceTime library (https://github.com/bxparks/AceTime).
 * [CommandLineClock](CommandLineClock)
     * A clock that can be accessed through the serial port.
     * Useful for quick debugging.
-* [OledClock](OledClock)
-    * A clock with a single SSD1306 OLED display, supporting a single timezone.
-    * Now supports a PCD8544 LCD display (Nokia 5110), so the name is a bit
-      misleading.
+    * Supported platforms:
+        * Arduino Nano
+        * SparkFun Micro
+        * SAMD21
+        * STM32 Blue Pill
+        * ESP8266
+        * ESP32
+        * Teensy 3.2
+        * EpoxyDuino
+* [OneZoneClock](OneZoneClock)
+    * A clock with a single display showing a single timezone selected from
+      a menu of timezones.
+    * Supports the following displays:
+        * SSD1306 OLED
+        * PCD8544 LCD (Nokia 5110).
     * Useful for debugging various software libraries (AceButton, AceTime)
       and various hardware configurations (OLED display, LCD display, buttons,
       DS3231, etc).
+    * Supported platforms:
+        * Arduino Nano
+        * SparkFun Micro
+        * SAMD21
+        * STM32 Blue Pill
+        * ESP8266
+        * ESP32
+        * Teensy 3.2
 * [WorldClock](WorldClock)
-    * A clock with 3 SSD1306 OLED displays, supporting 3 concurrent timezones.
+    * A clock with the following hardware and features:
+        * SparkFun Pro Micro 3.3V, 8 MHz
+        * 3 SSD1306 SPI OLED displays
+        * shows 3 concurrent timezones
 * [WorldClockLcd](WorldClockLcd)
-    * A clock with 1 PCD8544 LCD display, supporting 4 concurrent timezones.
+    * A clock with a single display that can show multiple timezones from
+      a menu of timezones. By default, configured to show
+      4 concurrent timezones.
+    * Supports the following displays:
+        * PCD8544 LCD (Nokia 5110)
+        * SSD1306 OLED
+    * Supported platforms:
+        * Arduino Nano
+        * SparkFun Micro
+        * SAMD21
+        * STM32 Blue Pill
+        * ESP8266
+        * ESP32
+        * Teensy 3.2
 * [MedMinder](MedMinder)
     * A medication reminder device.
 

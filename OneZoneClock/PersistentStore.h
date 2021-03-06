@@ -1,5 +1,5 @@
-#ifndef OLED_CLOCK_PERSISTENT_STORE_H
-#define OLED_CLOCK_PERSISTENT_STORE_H
+#ifndef ONE_ZONE_CLOCK_PERSISTENT_STORE_H
+#define ONE_ZONE_CLOCK_PERSISTENT_STORE_H
 
 #include "config.h"
 #include "StoredInfo.h"

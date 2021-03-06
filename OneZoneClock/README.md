@@ -1,4 +1,4 @@
-# OledClock
+# OneZoneClock
 
 This is spartan digital clock that supports multiple time zones using the
 AceTime library. It is intentinoally kept basic so that it can be used for
@@ -106,7 +106,7 @@ S1, S2 = momentary buttons
 
 ## Photo
 
-![OledClock](pics/OledClock.jpg)
+![OneZoneClock](pics/OneZoneClock.jpg)
 
 ## Configuation and Compiling
 
@@ -154,7 +154,7 @@ The following libraries are required:
 ## User Guide
 
 Once the program is uploaded and running, here is how to set and operate the
-OledClock. The 2 buttons are called:
+OneZoneClock. The 2 buttons are called:
 
 * `Mode`
 * `Change`
@@ -201,7 +201,7 @@ date, time and time zone fields.
 1. Press-and-Hold the `Mode` button to stop the blinking.
     * This will exit the blinking Edit mode.
 
-![OledClock](pics/OledClock-mode-date-time.jpg)
+![OneZoneClock](pics/OneZoneClock-mode-date-time.jpg)
 
 ### Setting the Time Zone (Basic and Extended TimeZone Type)
 
@@ -242,7 +242,7 @@ that you are using.
   the blinking.
     * This will exit the blinking Edit mode.
 
-![OledClock](pics/OledClock-mode-time-zone.jpg)
+![OneZoneClock](pics/OneZoneClock-mode-time-zone.jpg)
 
 ### Setting the UTC Offset (Manual TimeZone Type)
 
@@ -274,7 +274,7 @@ set using the buttons on the clock:
 1. When the desired on/off settings is reached, Press-and-Hold the `Mode` button
   to exit the Edit mode.
 
-![OledClock](pics/OledClock-mode-time-zone-manual.jpg)
+![OneZoneClock](pics/OneZoneClock-mode-time-zone-manual.jpg)
 
 ### Version
 
@@ -286,7 +286,7 @@ There are 2 version numbers shown:
 These fields cannot be editted, so Press-and-Hold on the `Mode` button will
 do nothing.
 
-![OledClock](pics/OledClock-mode-version.jpg)
+![OneZoneClock](pics/OneZoneClock-mode-version.jpg)
 
 ### Persistance
 

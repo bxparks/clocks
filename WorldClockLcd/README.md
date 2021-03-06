@@ -2,11 +2,11 @@
 
 This is a clock application designed for a small box that uses a Nokia 5110
 style PCD8544 LCD display. It supports 4 timezones using the AceTime library. It
-was derived from the OledClock application, so it also contains code to support
-a similar hardware using an SSD1306 OLED display on I2C. The important feature
-that distinguishes this app from the older [WorldClock](../WorldClock) app is
-that this supports only a single LCD (or OLED) display, while the WorldClock app
-assumes 3 OLED displays (using SPI).
+was derived from the OneZoneClock application, so it also contains code to
+support a similar hardware using an SSD1306 OLED display on I2C. The important
+feature that distinguishes this app from the older [WorldClock](../WorldClock)
+app is that this supports only a single LCD (or OLED) display, while the
+WorldClock app assumes 3 OLED displays (using SPI).
 
 The hardware:
 

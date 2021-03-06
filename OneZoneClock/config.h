@@ -1,5 +1,5 @@
-#ifndef OLED_CLOCK_CONFIG_H
-#define OLED_CLOCK_CONFIG_H
+#ifndef ONE_ZONE_CLOCK_CONFIG_H
+#define ONE_ZONE_CLOCK_CONFIG_H
 
 #include <stdint.h>
 
