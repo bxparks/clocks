@@ -6,9 +6,9 @@ testing purposes. I use it to test both software (e.g. AceTime, AceButton
 libraries), and hardware configurations (Pro Micro, D1 Mini, etc).
 
 Originally, this program supported only the SSD1306 OLED display, but was
-extended to support a PCD8544 LCD display while creating the `WorldClockLcd`
-program. Substantial parts of the `WorldClockLcd` code have been backported into
-this program for flexibility and consistency.
+extended to support a PCD8544 LCD display while creating the `MultiZoneClock`
+program. Most of the `MultiZoneClock` code has been backported into OneZoneClock
+for consistency.
 
 The hardware is assumed to have something like the following
 

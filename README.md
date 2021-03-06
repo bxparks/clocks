@@ -39,10 +39,10 @@ AceTime library (https://github.com/bxparks/AceTime).
         * SparkFun Pro Micro 3.3V, 8 MHz
         * 3 SSD1306 SPI OLED displays
         * shows 3 concurrent timezones
-* [WorldClockLcd](WorldClockLcd)
+* [MultiZoneClock](MultiZoneClock)
     * A clock with a single display that can show multiple timezones from
-      a menu of timezones. By default, configured to show
-      4 concurrent timezones.
+      a menu of timezones. The "WorldClockLcd" example is configured to show 4
+      concurrent timezones.
     * Supports the following displays:
         * PCD8544 LCD (Nokia 5110)
         * SSD1306 OLED

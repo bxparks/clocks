@@ -1,5 +1,5 @@
-#ifndef WORLD_CLOCK_LCD_CONFIG_H
-#define WORLD_CLOCK_LCD_CONFIG_H
+#ifndef MULTI_ZONE_CLOCK_CONFIG_H
+#define MULTI_ZONE_CLOCK_CONFIG_H
 
 #include <stdint.h>
 

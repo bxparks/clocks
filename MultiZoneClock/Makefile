@@ -1,7 +1,7 @@
 # See https://github.com/bxparks/EpoxyDuino for documentation about this
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 
-APP_NAME := WorldClockLcd
+APP_NAME := MultiZoneClock
 ARDUINO_LIBS := EpoxyFS EpoxyPromEsp AceCommon AceButton AceCRC \
 	AceTime AceTimePro AceRoutine AceUtils SSD1306Ascii
 MORE_CLEAN := more_clean

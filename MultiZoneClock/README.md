@@ -1,23 +1,37 @@
-# WorldClockLcd
+# MultiZoneClock
 
-This is a clock application designed for a small box that uses a Nokia 5110
-style PCD8544 LCD display. It supports 4 timezones using the AceTime library. It
-was derived from the OneZoneClock application, so it also contains code to
-support a similar hardware using an SSD1306 OLED display on I2C. The important
-feature that distinguishes this app from the older [WorldClock](../WorldClock)
-app is that this supports only a single LCD (or OLED) display, while the
-WorldClock app assumes 3 OLED displays (using SPI).
+This is a clock application originally designed for a small box that uses a
+Nokia 5110 style PCD8544 LCD display. It supports 4 timezones using the AceTime
+library. It has since been expanded to support other platforms and display
+types.
 
-The hardware:
+It was derived from the [OneZoneClock](../OneZoneClock) application, so it
+contains code to support a similar hardware using an SSD1306 OLED display on
+I2C. The feature that distinguishes this app from the older
+[WorldClock](../WorldClock) app is that this supports only a single LCD (or
+OLED) display, while the WorldClock app assumes 3 OLED displays (using SPI).
+
+This was originally designed to use a WeMos D1Mni (ESP8266) which has only a
+limited number of pins. Instead of using 2 digital pins to read 2 buttons, the
+`config.h` provides an option to use an analog pin to read the 2 buttons using a
+resistor ladder (see [AceButton](https://github.com/bxparks/AceButton).
+
+## WorldClockLcd Hardware
+
+This code was used to create the "WorldClockLcd" hardware.
+
+### Parts
 
 * (1) D1Mini (ESP8266)
 * (1) PCD8544 LCD display 84x48 pixels (SPI)
 * (1) DS3231 RTC chip (I2C)
 * (2) buttons on the A0 analog pin using a resistor ladder
 
-## Schematic
+### Schematic
 
-Here is the rough schematic of this example:
+Here is the rough schematic of a MultiZoneClock using a WeMos D1Mini (ESP8266)
+and a PCD8544 LCD display.
+
 ```
               3V3
               / \
@@ -61,11 +75,25 @@ The TimeZone can be selected by the user using the buttons. The menu of TimeZone
 choices is defined at compile-time, and is limited only by the available memory
 of the microcontroller.
 
-## Photo
+### Photo
 
 (Photo: TBD)
 
-## Configuation and Compiling
+## Software Installation
+
+### Dependencies
+
+The following libraries are required:
+
+* AceTime (https://github.com/bxparks/AceTime)
+* AceButton (https://github.com/bxparks/AceButton)
+* AceRoutine (https://github.com/bxparks/AceRoutine)
+* AceCommon (https://github.com/bxparks/AceCommon)
+* AceUtils (https://github.com/bxparks/AceUtils)
+* AceCRC (https://github.com/bxparks/AceCRC)
+* SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
+
+### Configuation and Compiling
 
 You probably need to set various parameters in `config.h` match the hardware
 that you assembled. The 2 important parameters are:
@@ -100,18 +128,6 @@ ignore those. The various `AUNITER_xxx` symbols are defined by the
 [AUniter](https://github.com/bxparks/AUniter) script, which is the tool that I
 normally use for compiling and uploading. You do *not* need to use AUniter, you
 can use just the normal Arduino IDE.
-
-## Installations
-
-The following libraries are required:
-
-* AceTime (https://github.com/bxparks/AceTime)
-* AceButton (https://github.com/bxparks/AceButton)
-* AceRoutine (https://github.com/bxparks/AceRoutine)
-* AceCommon (https://github.com/bxparks/AceCommon)
-* AceUtils (https://github.com/bxparks/AceUtils)
-* AceCRC (https://github.com/bxparks/AceCRC)
-* SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
 
 ## User Guide
 

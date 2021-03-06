@@ -1,5 +1,5 @@
-#ifndef WORLD_CLOCK_LCD_PRESERNTER_H
-#define WORLD_CLOCK_LCD_PRESERNTER_H
+#ifndef MULTI_ZONE_CLOCK_PRESERNTER_H
+#define MULTI_ZONE_CLOCK_PRESERNTER_H
 
 #include "config.h"
 #include <Print.h>

@@ -26,6 +26,6 @@ jobs:
       run: |
         make -C CommandLineClock
         make -C MedMinder
+        make -C MultiZoneclock
         make -C OneZoneClock
         make -C WorldClock
-        make -C WorldClockLcd

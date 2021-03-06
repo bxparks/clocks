@@ -1,5 +1,5 @@
-#ifndef WORLD_CLOCK_LCD_CONTROLLER_H
-#define WORLD_CLOCK_LCD_CONTROLLER_H
+#ifndef MULTI_ZONE_CLOCK_CONTROLLER_H
+#define MULTI_ZONE_CLOCK_CONTROLLER_H
 
 #include "config.h"
 #include <AceCommon.h> // incrementMod
