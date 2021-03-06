@@ -390,6 +390,13 @@ class Controller {
       #else
         case MODE_CHANGE_TIME_ZONE_NAME:
       #endif
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        case MODE_CHANGE_SETTINGS_BACKLIGHT:
+        case MODE_CHANGE_SETTINGS_CONTRAST:
+        case MODE_CHANGE_SETTINGS_BIAS:
+      #else
+        case MODE_CHANGE_SETTINGS_CONTRAST:
+      #endif
           mSuppressBlink = false;
           break;
       }
