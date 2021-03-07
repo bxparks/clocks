@@ -34,8 +34,6 @@ struct ClockInfo {
    */
   uint8_t contrastLevel;
 
-#endif
-
   /** Invert display off */
   static uint8_t const kInvertDisplayOff = 0;
 
@@ -47,6 +45,8 @@ struct ClockInfo {
 
   /** Invert display mode. Only for OLED. */
   uint8_t invertDisplay;
+
+#endif
 
   /** The desired timezone of the clock. */
   ace_time::TimeZoneData timeZoneData;

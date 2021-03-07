@@ -66,15 +66,10 @@ class Controller {
       restoreClockInfo(factoryReset);
       mNavigator.setup();
 
+      // TODO: Move to Presenter?
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
         pinMode(LCD_BACKLIGHT_PIN, OUTPUT);
-        updateBacklight();
-        updateLcdContrast();
-        updateBias();
-      #else
-        updateContrast();
       #endif
-        invertDisplay();
 
       updateDateTime();
     }
@@ -189,8 +184,8 @@ class Controller {
         case MODE_CHANGE_SETTINGS_BIAS:
       #else
         case MODE_CHANGE_SETTINGS_CONTRAST:
-      #endif
         case MODE_CHANGE_INVERT_DISPLAY:
+      #endif
           preserveClockInfo(mClockInfo);
           break;
       }
@@ -209,7 +204,27 @@ class Controller {
 
         case MODE_CHANGE_YEAR:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
+          #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+            zoned_date_time_mutation::incrementYear(
+                mChangingClockInfo.dateTime);
+          #else
+            {
+              auto& dateTime = mChangingClockInfo.dateTime;
+              int16_t year = dateTime.year();
+              year++;
+              // Keep the year within the bounds of zonedb or zonedbx files.
+              #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+              if (year >= zonedb::kZoneContext.untilYear) {
+                year = zonedb::kZoneContext.startYear;
+              }
+              #else
+              if (year >= zonedbx::kZoneContext.untilYear) {
+                year = zonedbx::kZoneContext.startYear;
+              }
+              #endif
+              dateTime.year(year);
+            }
+          #endif
           break;
         case MODE_CHANGE_MONTH:
           mSuppressBlink = true;
@@ -278,110 +293,38 @@ class Controller {
       #endif
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-        case MODE_CHANGE_SETTINGS_BACKLIGHT:
-        {
+        case MODE_CHANGE_SETTINGS_BACKLIGHT: {
           mSuppressBlink = true;
           incrementMod(mClockInfo.backlightLevel, (uint8_t) 10);
-          updateBacklight();
           break;
         }
-        case MODE_CHANGE_SETTINGS_CONTRAST:
-        {
+        case MODE_CHANGE_SETTINGS_CONTRAST: {
           mSuppressBlink = true;
           incrementMod(mClockInfo.contrast, (uint8_t) 128);
-          updateLcdContrast();
           break;
         }
-        case MODE_CHANGE_SETTINGS_BIAS:
-        {
+        case MODE_CHANGE_SETTINGS_BIAS: {
           mSuppressBlink = true;
           incrementMod(mClockInfo.bias, (uint8_t) 8);
-          updateBias();
           break;
         }
       #else
-        case MODE_CHANGE_SETTINGS_CONTRAST:
-        {
+        case MODE_CHANGE_SETTINGS_CONTRAST: {
           mSuppressBlink = true;
           incrementMod(mClockInfo.contrastLevel, (uint8_t) 10);
-          updateContrast();
+          break;
+        }
+        case MODE_CHANGE_INVERT_DISPLAY: {
+          mSuppressBlink = true;
+          incrementMod(mClockInfo.invertDisplay, (uint8_t) 3);
           break;
         }
       #endif
-
-        case MODE_CHANGE_INVERT_DISPLAY:
-        {
-          mSuppressBlink = true;
-          incrementMod(mClockInfo.invertDisplay, (uint8_t) 3);
-          invertDisplay();
-          break;
-        }
-
       }
 
       // Update the display right away to prevent jitters in the display when
       // the button is triggering RepeatPressed events.
       update();
-    }
-
-  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-    void updateBacklight() {
-      uint16_t value = getBacklightValue(mClockInfo.backlightLevel);
-      mPresenter.setBrightness(value);
-
-      if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.print(F("updateBacklight(): "));
-        SERIAL_PORT_MONITOR.println(value);
-      }
-    }
-
-    /**
-     * Return the pwm value for the given level. Since the backlight is driven
-     * LOW (low values of PWM means brighter light), subtract from 1024.
-     * @param level brightness level in the range of [0, 9]
-     */
-    static uint16_t getBacklightValue(uint8_t level) {
-      if (level > 9) level = 9;
-      return 1023 - kBacklightValues[level];
-    }
-
-    void updateLcdContrast() {
-      mPresenter.setContrast(mClockInfo.contrast);
-
-      if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.print(F("updateLcdContrast(): "));
-        SERIAL_PORT_MONITOR.println(mClockInfo.contrast);
-      }
-    }
-
-    void updateBias() {
-      mPresenter.setBias(mClockInfo.bias);
-
-      if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.print(F("updateBias(): "));
-        SERIAL_PORT_MONITOR.println(mClockInfo.bias);
-      }
-    }
-
-  #else
-    void updateContrast() {
-      uint8_t contrastValue = getContrastValue(mClockInfo.contrastLevel);
-      mPresenter.setContrast(contrastValue);
-    }
-
-    static uint8_t getContrastValue(uint8_t level) {
-      if (level > 9) level = 9;
-      return kContrastValues[level];
-    }
-  #endif
-
-    void invertDisplay() {
-      mPresenter.invertDisplay(mClockInfo.invertDisplay);
-
-      if (ENABLE_SERIAL_DEBUG == 1) {
-        SERIAL_PORT_MONITOR.print(F("invertDisplay(): "));
-        SERIAL_PORT_MONITOR.println(mClockInfo.invertDisplay);
-      }
     }
 
     void handleChangeButtonRepeatPress() {
@@ -415,8 +358,8 @@ class Controller {
         case MODE_CHANGE_SETTINGS_BIAS:
       #else
         case MODE_CHANGE_SETTINGS_CONTRAST:
-      #endif
         case MODE_CHANGE_INVERT_DISPLAY:
+      #endif
           mSuppressBlink = false;
           break;
       }
@@ -521,8 +464,8 @@ class Controller {
         clockInfo.bias = storedInfo.bias;
       #else
         clockInfo.contrastLevel = storedInfo.contrastLevel;
-      #endif
         clockInfo.invertDisplay = storedInfo.invertDisplay;
+      #endif
     }
 
     /** Convert ClockInfo to StoredInfo. */
@@ -536,8 +479,8 @@ class Controller {
         storedInfo.bias = clockInfo.bias;
       #else
         storedInfo.contrastLevel = clockInfo.contrastLevel;
-      #endif
         storedInfo.invertDisplay = clockInfo.invertDisplay;
+      #endif
     }
 
     /** Attempt to restore from EEPROM, otherwise use factory defaults. */
@@ -580,17 +523,9 @@ class Controller {
       mClockInfo.bias = LCD_INITIAL_BIAS;
     #else
       mClockInfo.contrastLevel = 5;
-    #endif
-
       mClockInfo.invertDisplay = ClockInfo::kInvertDisplayOff;
+    #endif
     }
-
-  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-    static const uint16_t kBacklightValues[];
-    static const uint8_t kContrastValues[];
-  #else
-    static const uint8_t kContrastValues[];
-  #endif
 
   private:
     PersistentStore& mPersistentStore;
