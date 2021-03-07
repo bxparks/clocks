@@ -9,11 +9,10 @@
  * what needs to be displayed.
  */ 
 struct RenderingInfo {
-  uint8_t hourMode; // ClockInfo::kTwelve or kTwentyFour
-
   uint8_t mode = MODE_UNKNOWN; // display mode, see MODE_xxx in config.h
-  bool suppressBlink; // true if blinking should be suppressed
   bool blinkShowState; // true if blinking info should be shown
+
+  uint8_t hourMode; // ClockInfo::kTwelve or kTwentyFour
 
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     uint8_t backlightLevel; // LCD backlight level [0, 9] -> PWM value
@@ -27,5 +26,25 @@ struct RenderingInfo {
   ace_time::TimeZoneData timeZoneData;
   ace_time::ZonedDateTime dateTime;
 };
+
+inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
+  return a.mode == b.mode
+      && a.blinkShowState == b.blinkShowState
+      && a.hourMode == b.hourMode
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      && a.backlightLevel == b.backlightLevel
+      && a.contrast == b.contrast
+      && a.bias == b.bias
+    #else
+      && a.contrastLevel == b.contrastLevel
+      && a.invertDisplay == b.invertDisplay
+    #endif
+      && a.timeZoneData == b.timeZoneData
+      && a.dateTime == b.dateTime;
+}
+
+inline bool operator!=(const RenderingInfo& a, const RenderingInfo& b) {
+  return ! (a == b);
+}
 
 #endif

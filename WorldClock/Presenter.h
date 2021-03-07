@@ -39,12 +39,11 @@ class Presenter {
     }
 
     void update(uint8_t mode, acetime_t now, bool blinkShowState,
-        bool suppressBlink, const ClockInfo& clockInfo) {
+        const ClockInfo& clockInfo) {
       mPrevRenderingInfo = mRenderingInfo;
 
       mRenderingInfo.mode = mode;
       mRenderingInfo.now = now;
-      mRenderingInfo.suppressBlink = suppressBlink;
       mRenderingInfo.blinkShowState = blinkShowState;
 
       mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
@@ -306,9 +305,7 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(uint8_t mode) const {
-      return mode != mRenderingInfo.mode
-          || mRenderingInfo.suppressBlink
-          || mRenderingInfo.blinkShowState;
+      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
     }
 
     /** The display needs to be cleared before rendering. */
@@ -318,18 +315,7 @@ class Presenter {
 
     /** The display needs to be updated because something changed. */
     bool needsUpdate() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode
-          || mRenderingInfo.now != mPrevRenderingInfo.now
-          || mRenderingInfo.suppressBlink != mPrevRenderingInfo.suppressBlink
-          || (!mRenderingInfo.suppressBlink
-              && (mRenderingInfo.blinkShowState
-                  != mPrevRenderingInfo.blinkShowState))
-          || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode
-          || mRenderingInfo.blinkingColon != mPrevRenderingInfo.blinkingColon
-          || mRenderingInfo.contrastLevel != mPrevRenderingInfo.contrastLevel
-          || mRenderingInfo.invertDisplay != mPrevRenderingInfo.invertDisplay
-          || mRenderingInfo.name != mPrevRenderingInfo.name
-          || mRenderingInfo.timeZone != mPrevRenderingInfo.timeZone;
+      return mRenderingInfo != mPrevRenderingInfo;
     }
 
     /** Update the display settings, e.g. brightness, backlight, etc. */

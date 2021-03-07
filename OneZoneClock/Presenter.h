@@ -77,10 +77,9 @@ class Presenter {
       mPrevRenderingInfo = mRenderingInfo;
     }
 
-    void setRenderingInfo(uint8_t mode, bool suppressBlink, bool blinkShowState,
+    void setRenderingInfo(uint8_t mode, bool blinkShowState,
         const ClockInfo& clockInfo) {
       mRenderingInfo.mode = mode;
-      mRenderingInfo.suppressBlink = suppressBlink;
       mRenderingInfo.blinkShowState = blinkShowState;
       mRenderingInfo.hourMode = clockInfo.hourMode;
       mRenderingInfo.timeZoneData = clockInfo.timeZoneData;
@@ -169,40 +168,23 @@ class Presenter {
     }
 
   private:
+    /** The display needs to be updated because something changed. */
+    bool needsUpdate() const {
+      return mRenderingInfo != mPrevRenderingInfo;
+    }
+
     /**
      * True if the display should actually show the data. If the clock is in
      * "blinking" mode, then this will return false in accordance with the
      * mBlinkShowState.
      */
     bool shouldShowFor(uint8_t mode) const {
-      return mode != mRenderingInfo.mode
-          || mRenderingInfo.suppressBlink
-          || mRenderingInfo.blinkShowState;
+      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
     }
 
     /** The display needs to be cleared before rendering. */
     bool needsClear() const {
       return mRenderingInfo.mode != mPrevRenderingInfo.mode;
-    }
-
-    /** The display needs to be updated because something changed. */
-    bool needsUpdate() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode
-          || mRenderingInfo.suppressBlink != mPrevRenderingInfo.suppressBlink
-          || (!mRenderingInfo.suppressBlink
-              && (mRenderingInfo.blinkShowState
-                  != mPrevRenderingInfo.blinkShowState))
-        #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-          || mRenderingInfo.backlightLevel != mPrevRenderingInfo.backlightLevel
-          || mRenderingInfo.contrast != mPrevRenderingInfo.contrast
-          || mRenderingInfo.bias != mPrevRenderingInfo.bias
-        #else
-          || mRenderingInfo.contrastLevel != mPrevRenderingInfo.contrastLevel
-          || mRenderingInfo.invertDisplay != mPrevRenderingInfo.invertDisplay
-        #endif
-          || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode
-          || mRenderingInfo.timeZoneData != mPrevRenderingInfo.timeZoneData
-          || mRenderingInfo.dateTime != mPrevRenderingInfo.dateTime;
     }
 
     /** Update the display settings, e.g. brightness, backlight, etc. */

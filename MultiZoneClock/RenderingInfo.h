@@ -9,11 +9,10 @@
  * what needs to be displayed.
  */ 
 struct RenderingInfo {
-  uint8_t hourMode; // ClockInfo::kTwelve or kTwentyFour
-
   uint8_t mode; // display mode, see MODE_xxx in config.h
-  bool suppressBlink; // true if blinking should be suppressed
   bool blinkShowState; // true if blinking info should be shown
+
+  uint8_t hourMode; // ClockInfo::kTwelve or kTwentyFour
 
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     uint8_t backlightLevel; // LCD backlight level [0, 9]
@@ -27,5 +26,29 @@ struct RenderingInfo {
   ace_time::TimeZoneData zones[NUM_TIME_ZONES];
   ace_time::ZonedDateTime dateTime;
 };
+
+inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
+  return a.mode == b.mode
+      && a.blinkShowState == b.blinkShowState
+      && a.hourMode == b.hourMode
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      && a.backlightLevel == b.backlightLevel
+      && a.contrast == b.contrast
+      && a.bias == b.bias
+    #else
+      && a.contrastLevel == b.contrastLevel
+      && a.invertDisplay == b.invertDisplay
+    #endif
+      // Hack: If NUM_TIME_ZONES is changed, change the indexes below!
+      && a.zones[0] == b.zones[0]
+      && a.zones[1] == b.zones[1]
+      && a.zones[2] == b.zones[2]
+      && a.zones[3] == b.zones[3]
+      && a.dateTime == b.dateTime;
+}
+
+inline bool operator!=(const RenderingInfo& a, const RenderingInfo& b) {
+  return ! (a == b);
+}
 
 #endif

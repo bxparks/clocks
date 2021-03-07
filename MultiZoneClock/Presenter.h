@@ -87,10 +87,9 @@ class Presenter {
      * The Controller uses this method to pass mode and time information to the
      * Presenter.
      */
-    void setRenderingInfo(uint8_t mode, bool suppressBlink, bool blinkShowState,
+    void setRenderingInfo(uint8_t mode, bool blinkShowState,
         const ClockInfo& clockInfo) {
       mRenderingInfo.mode = mode;
-      mRenderingInfo.suppressBlink = suppressBlink;
       mRenderingInfo.blinkShowState = blinkShowState;
       mRenderingInfo.hourMode = clockInfo.hourMode;
       memcpy(mRenderingInfo.zones, clockInfo.zones,
@@ -186,9 +185,7 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(uint8_t mode) const {
-      return mode != mRenderingInfo.mode
-          || mRenderingInfo.suppressBlink
-          || mRenderingInfo.blinkShowState;
+      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
     }
 
     /** The display needs to be cleared before rendering. */
@@ -198,25 +195,7 @@ class Presenter {
 
     /** The display needs to be updated because something changed. */
     bool needsUpdate() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode
-          || mRenderingInfo.suppressBlink != mPrevRenderingInfo.suppressBlink
-          || (!mRenderingInfo.suppressBlink
-              && (mRenderingInfo.blinkShowState
-                  != mPrevRenderingInfo.blinkShowState))
-        #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-          || mRenderingInfo.backlightLevel != mPrevRenderingInfo.backlightLevel
-          || mRenderingInfo.contrast != mPrevRenderingInfo.contrast
-          || mRenderingInfo.bias != mPrevRenderingInfo.bias
-        #else
-          || mRenderingInfo.contrastLevel != mPrevRenderingInfo.contrastLevel
-          || mRenderingInfo.invertDisplay != mPrevRenderingInfo.invertDisplay
-        #endif
-          || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode
-          || mRenderingInfo.zones[0] != mPrevRenderingInfo.zones[0]
-          || mRenderingInfo.zones[1] != mPrevRenderingInfo.zones[1]
-          || mRenderingInfo.zones[2] != mPrevRenderingInfo.zones[2]
-          || mRenderingInfo.zones[3] != mPrevRenderingInfo.zones[3]
-          || mRenderingInfo.dateTime != mPrevRenderingInfo.dateTime;
+      return mRenderingInfo != mPrevRenderingInfo;
     }
 
     /** Update the display settings, e.g. brightness, backlight, etc. */

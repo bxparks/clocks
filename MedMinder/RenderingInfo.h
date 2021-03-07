@@ -12,11 +12,22 @@ using namespace ace_time;
  */ 
 struct RenderingInfo {
   uint8_t mode = 0;
-  bool suppressBlink = false; // true if blinking should be suppressed
   bool blinkShowState = true; // true if should be rendered
   TimeZone timeZone; // currentTimeZone or changingTimeZone
   ZonedDateTime dateTime; // currentDateTime or changingDateTime
   TimePeriod timePeriod; // med interval or med remaining
 };
+
+inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
+  return a.mode == b.mode
+      && a.blinkShowState == b.blinkShowState
+      && a.timeZone == b.timeZone
+      && a.dateTime == b.dateTime
+      && a.timePeriod == b.timePeriod;
+}
+
+inline bool operator!=(const RenderingInfo& a, const RenderingInfo& b) {
+  return ! (a == b);
+}
 
 #endif

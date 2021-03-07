@@ -14,7 +14,6 @@ using namespace ace_time;
  */ 
 struct RenderingInfo {
   uint8_t mode = MODE_UNKNOWN; // display mode
-  bool suppressBlink = false; // true if blinking should be suppressed
   bool blinkShowState = true; // true if blinking info should be shown
   uint8_t hourMode;
   bool blinkingColon;
@@ -24,5 +23,21 @@ struct RenderingInfo {
   acetime_t now; // seconds from AceTime epoch
   TimeZone timeZone;
 };
+
+inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
+  return a.mode == b.mode
+      && a.blinkShowState == b.blinkShowState
+      && a.hourMode == b.hourMode
+      && a.blinkingColon == b.blinkingColon
+      && a.contrastLevel == b.contrastLevel
+      && a.invertDisplay == b.invertDisplay
+      && a.name == b.name
+      && a.now == b.now
+      && a.timeZone == b.timeZone;
+}
+
+inline bool operator!=(const RenderingInfo& a, const RenderingInfo& b) {
+  return ! (a == b);
+}
 
 #endif

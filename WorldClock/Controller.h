@@ -309,17 +309,14 @@ class Controller {
       switch (mNavigator.mode()) {
         case MODE_DATE_TIME:
         case MODE_SETTINGS:
-        case MODE_ABOUT: {
+        case MODE_ABOUT:
+        {
+          bool blinkShowState = mBlinkShowState || mSuppressBlink;
+          uint8_t mode = mNavigator.mode();
           acetime_t now = mClock.getNow();
-          mPresenter0.update(
-              mNavigator.mode(), now, mBlinkShowState, mSuppressBlink,
-              mClockInfo0);
-          mPresenter1.update(
-              mNavigator.mode(), now, mBlinkShowState, mSuppressBlink,
-              mClockInfo1);
-          mPresenter2.update(
-              mNavigator.mode(), now, mBlinkShowState, mSuppressBlink,
-              mClockInfo2);
+          mPresenter0.update(mode, now, blinkShowState, mClockInfo0);
+          mPresenter1.update(mode, now, blinkShowState, mClockInfo1);
+          mPresenter2.update(mode, now, blinkShowState, mClockInfo2);
           break;
         }
 
@@ -335,13 +332,11 @@ class Controller {
         case MODE_CHANGE_INVERT_DISPLAY:
         {
           acetime_t now = mChangingDateTime.toEpochSeconds();
-          mPresenter0.update(
-              mNavigator.mode(), now, mBlinkShowState, mSuppressBlink,
-              mClockInfo0);
-          mPresenter1.update(
-              mNavigator.mode(), now, mBlinkShowState, true, mClockInfo1);
-          mPresenter2.update(
-              mNavigator.mode(), now, mBlinkShowState, true, mClockInfo2);
+          bool blinkShowState = mBlinkShowState || mSuppressBlink;
+          uint8_t mode = mNavigator.mode();
+          mPresenter0.update(mode, now, blinkShowState, mClockInfo0);
+          mPresenter1.update(mode, now, true, mClockInfo1);
+          mPresenter2.update(mode, now, true, mClockInfo2);
           break;
         }
 
@@ -362,11 +357,11 @@ class Controller {
     void updateChangingDst(uint8_t clockId) {
       acetime_t now = mChangingDateTime.toEpochSeconds();
       mPresenter0.update(
-          mNavigator.mode(), now, mBlinkShowState, clockId!=0, mClockInfo0);
+          mNavigator.mode(), now, mBlinkShowState || clockId!=0, mClockInfo0);
       mPresenter1.update(
-          mNavigator.mode(), now, mBlinkShowState, clockId!=1, mClockInfo1);
+          mNavigator.mode(), now, mBlinkShowState || clockId!=1, mClockInfo1);
       mPresenter2.update(
-          mNavigator.mode(), now, mBlinkShowState, clockId!=2, mClockInfo2);
+          mNavigator.mode(), now, mBlinkShowState || clockId!=2, mClockInfo2);
     }
 
     /** Save the current UTC ZonedDateTime to the RTC. */

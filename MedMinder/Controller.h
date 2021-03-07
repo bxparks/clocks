@@ -392,7 +392,7 @@ class Controller {
         case MODE_VIEW_TIME_ZONE:
         case MODE_VIEW_ABOUT:
           mPresenter.setRenderingInfo(
-              mNavigator.mode(), mSuppressBlink, mBlinkShowState,
+              mNavigator.mode(), mSuppressBlink || mBlinkShowState,
               mClockInfo);
           break;
 
@@ -409,7 +409,7 @@ class Controller {
         case MODE_CHANGE_TIME_ZONE_NAME:
       #endif
           mPresenter.setRenderingInfo(
-              mNavigator.mode(), mSuppressBlink, mBlinkShowState,
+              mNavigator.mode(), mSuppressBlink || mBlinkShowState,
               mChangingClockInfo);
           break;
 
@@ -420,7 +420,7 @@ class Controller {
           mChangingClockInfo.medInterval = getRemainingTimePeriod();
 
           mPresenter.setRenderingInfo(
-              mNavigator.mode(), mSuppressBlink, mBlinkShowState,
+              mNavigator.mode(), mSuppressBlink || mBlinkShowState,
               mChangingClockInfo);
           break;
         }
@@ -428,7 +428,7 @@ class Controller {
         case MODE_CHANGE_MED_HOUR:
         case MODE_CHANGE_MED_MINUTE:
           mPresenter.setRenderingInfo(
-              mNavigator.mode(), mSuppressBlink, mBlinkShowState,
+              mNavigator.mode(), mSuppressBlink || mBlinkShowState,
               mChangingClockInfo);
           break;
       }

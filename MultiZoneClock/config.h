@@ -100,7 +100,7 @@
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
-  #define OLED_REMAP true
+  #define OLED_REMAP false
   #define ENABLE_EEPROM 1
 #elif defined(AUNITER_MINI_MINDER)
   // Defined by auniter.ini

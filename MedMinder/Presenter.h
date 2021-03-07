@@ -33,17 +33,12 @@ class Presenter {
       mPrevRenderingInfo = mRenderingInfo;
     }
 
-    /** Clear the display. */
-    void clearDisplay() { mOled.clear(); }
-
     void setRenderingInfo(
         uint8_t mode,
-        bool suppressBlink,
         bool blinkShowState,
         const ClockInfo& clockInfo
     ) {
       mRenderingInfo.mode = mode;
-      mRenderingInfo.suppressBlink = suppressBlink;
       mRenderingInfo.blinkShowState = blinkShowState;
       mRenderingInfo.timeZone = clockInfo.timeZone;
       mRenderingInfo.dateTime = clockInfo.dateTime;
@@ -59,6 +54,8 @@ class Presenter {
     }
 
   private:
+    void clearDisplay() { mOled.clear(); }
+
     void displayData() const {
       mOled.home();
 
@@ -275,9 +272,7 @@ class Presenter {
      * accordance with the mBlinkShowState.
      */
     bool shouldShowFor(uint8_t mode) const {
-      return mode != mRenderingInfo.mode
-          || mRenderingInfo.suppressBlink
-          || mRenderingInfo.blinkShowState;
+      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
     }
 
     /** The display needs to be cleared before rendering. */
@@ -287,13 +282,7 @@ class Presenter {
 
     /** The display needs to be updated because something changed. */
     bool needsUpdate() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode
-          || mRenderingInfo.suppressBlink != mPrevRenderingInfo.suppressBlink
-          || (!mRenderingInfo.suppressBlink
-              && (mRenderingInfo.blinkShowState
-                  != mPrevRenderingInfo.blinkShowState))
-          || mRenderingInfo.dateTime != mPrevRenderingInfo.dateTime
-          || mRenderingInfo.timePeriod != mPrevRenderingInfo.timePeriod;
+      return mRenderingInfo != mPrevRenderingInfo;
     }
 
     SSD1306Ascii& mOled;

@@ -540,8 +540,9 @@ class Controller {
           clockInfo = &mClockInfo;
       }
 
+      bool blinkShowState = mSuppressBlink || mBlinkShowState;
       mPresenter.setRenderingInfo(
-          mNavigator.mode(), mSuppressBlink, mBlinkShowState, *clockInfo
+          mNavigator.mode(), blinkShowState, *clockInfo
       );
     }
 
