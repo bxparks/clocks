@@ -27,14 +27,13 @@ struct StoredInfo {
    */
   uint8_t contrastLevel;
 
-#endif
-
   /** Invert display mode. Only for OLED. */
   uint8_t invertDisplay;
 
+#endif
+
   /** TimeZone serialization. */
   ace_time::TimeZoneData zones[NUM_TIME_ZONES];
-
 };
 
 #endif

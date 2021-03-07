@@ -9,6 +9,8 @@
  * what needs to be displayed.
  */ 
 struct RenderingInfo {
+  uint8_t hourMode; // ClockInfo::kTwelve or kTwentyFour
+
   uint8_t mode; // display mode, see MODE_xxx in config.h
   bool suppressBlink; // true if blinking should be suppressed
   bool blinkShowState; // true if blinking info should be shown
@@ -19,10 +21,8 @@ struct RenderingInfo {
     uint8_t bias; // LCD backlight level [0, 7]
   #else
     uint8_t contrastLevel; // OLED contrast level [0, 9] -> [0, 255]
-  #endif
-
-  uint8_t hourMode; // ClockInfo::kTwelve or kTwentyFour
   uint8_t invertDisplay; // 0: off, 1: on; should never be 2
+  #endif
 
   ace_time::TimeZoneData zones[NUM_TIME_ZONES];
   ace_time::ZonedDateTime dateTime;

@@ -1,5 +1,5 @@
-#ifndef MULTI_ZONE_CLOCK_PRESERNTER_H
-#define MULTI_ZONE_CLOCK_PRESERNTER_H
+#ifndef MULTI_ZONE_CLOCK_PRESENTER_H
+#define MULTI_ZONE_CLOCK_PRESENTER_H
 
 #include "config.h"
 #include <Print.h>
@@ -19,7 +19,6 @@
 #include "StoredInfo.h"
 #include "ClockInfo.h"
 #include "RenderingInfo.h"
-#include "Presenter.h"
 
 using namespace ace_time;
 using ace_common::printPad2To;
@@ -77,6 +76,7 @@ class Presenter {
         clearDisplay();
       }
       if (needsUpdate()) {
+        updateDisplaySettings();
         displayData();
       }
 
@@ -89,15 +89,6 @@ class Presenter {
      */
     void setRenderingInfo(uint8_t mode, bool suppressBlink, bool blinkShowState,
         const ClockInfo& clockInfo) {
-  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-      mRenderingInfo.backlightLevel = clockInfo.backlightLevel;
-      mRenderingInfo.contrast = clockInfo.contrast;
-      mRenderingInfo.bias = clockInfo.bias;
-  #else
-      mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
-  #endif
-      mRenderingInfo.invertDisplay = clockInfo.invertDisplay;
-
       mRenderingInfo.mode = mode;
       mRenderingInfo.suppressBlink = suppressBlink;
       mRenderingInfo.blinkShowState = blinkShowState;
@@ -105,34 +96,15 @@ class Presenter {
       memcpy(mRenderingInfo.zones, clockInfo.zones,
           sizeof(TimeZoneData) * NUM_TIME_ZONES);
       mRenderingInfo.dateTime = clockInfo.dateTime;
-    }
 
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-    /** Set the LCD brightness value. */
-    void setBrightness(uint16_t value) {
-      analogWrite(LCD_BACKLIGHT_PIN, value);
-    }
-
-    /** Set the LCD contrast value. */
-    void setContrast(uint8_t value) {
-      mDisplay.setContrast(value);
-    }
-
-    /** Set the LCD bias. */
-    void setBias(uint8_t value) {
-      mDisplay.setBias(value);
-    }
-
+      mRenderingInfo.backlightLevel = clockInfo.backlightLevel;
+      mRenderingInfo.contrast = clockInfo.contrast;
+      mRenderingInfo.bias = clockInfo.bias;
   #else
-    /** Set the OLED contrast value. */
-    void setContrast(uint8_t value) {
-      mDisplay.setContrast(value);
-    }
+      mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
+      mRenderingInfo.invertDisplay = clockInfo.invertDisplay;
   #endif
-
-    /** Set the inversion mode. */
-    void invertDisplay(uint8_t value) {
-      mDisplay.invertDisplay(value);
     }
 
   private:
@@ -237,8 +209,8 @@ class Presenter {
           || mRenderingInfo.bias != mPrevRenderingInfo.bias
         #else
           || mRenderingInfo.contrastLevel != mPrevRenderingInfo.contrastLevel
-        #endif
           || mRenderingInfo.invertDisplay != mPrevRenderingInfo.invertDisplay
+        #endif
           || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode
           || mRenderingInfo.zones[0] != mPrevRenderingInfo.zones[0]
           || mRenderingInfo.zones[1] != mPrevRenderingInfo.zones[1]
@@ -246,6 +218,61 @@ class Presenter {
           || mRenderingInfo.zones[3] != mPrevRenderingInfo.zones[3]
           || mRenderingInfo.dateTime != mPrevRenderingInfo.dateTime;
     }
+
+    /** Update the display settings, e.g. brightness, backlight, etc. */
+    void updateDisplaySettings() {
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+          mPrevRenderingInfo.backlightLevel != mRenderingInfo.backlightLevel) {
+        uint16_t value = toLcdBacklightValue(mRenderingInfo.backlightLevel);
+        analogWrite(LCD_BACKLIGHT_PIN, value);
+      }
+      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+          mPrevRenderingInfo.contrast != mRenderingInfo.contrast) {
+        mDisplay.setContrast(mRenderingInfo.contrast);
+      }
+      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+          mPrevRenderingInfo.bias != mRenderingInfo.bias) {
+        mDisplay.setBias(mRenderingInfo.bias);
+      }
+    #else
+      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+          mPrevRenderingInfo.contrastLevel != mRenderingInfo.contrastLevel) {
+        uint8_t value = toOledContrastValue(mRenderingInfo.contrastLevel);
+        mDisplay.setContrast(value);
+      }
+      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+          mPrevRenderingInfo.invertDisplay != mRenderingInfo.invertDisplay) {
+        mDisplay.invertDisplay(mRenderingInfo.invertDisplay);
+      }
+    #endif
+    }
+
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+    /**
+     * Return the PWM value for the given LCD backlight brightness level. Since
+     * the backlight is driven LOW (low values of PWM means brighter light),
+     * subtract from 1024.
+     *
+     * TODO: This works for chips using 10-bit PWM, e.g. ESP8266. Needs to
+     * support 8-bit and 12-bit PWM chips.
+     *
+     * @param level brightness level in the range of [0, 9]
+     */
+    static uint16_t toLcdBacklightValue(uint8_t level) {
+      if (level > 9) level = 9;
+      return 1023 - kLcdBacklightValues[level];
+    }
+
+  #else
+
+    /** Convert [0, 9] contrast level for OLED to a [0, 255] value. */
+    static uint8_t toOledContrastValue(uint8_t level) {
+      if (level > 9) level = 9;
+      return kOledContrastValues[level];
+    }
+
+  #endif
 
     void displayData() {
       home();
@@ -291,8 +318,8 @@ class Presenter {
         case MODE_CHANGE_SETTINGS_BIAS:
       #else
         case MODE_CHANGE_SETTINGS_CONTRAST:
-      #endif
         case MODE_CHANGE_INVERT_DISPLAY:
+      #endif
           displaySettingsMode();
           break;
 
@@ -669,6 +696,7 @@ class Presenter {
       } else {
         mDisplay.println(' ');
       }
+
     #else
       mDisplay.print(F("Contrast:"));
       if (shouldShowFor(MODE_CHANGE_SETTINGS_CONTRAST)) {
@@ -676,7 +704,6 @@ class Presenter {
       } else {
         mDisplay.println(' ');
       }
-    #endif
 
       mDisplay.print(F("Invert:"));
       if (shouldShowFor(MODE_CHANGE_INVERT_DISPLAY)) {
@@ -684,6 +711,7 @@ class Presenter {
       } else {
         mDisplay.println(' ');
       }
+    #endif
     }
 
     void displayAboutMode() {
@@ -700,6 +728,13 @@ class Presenter {
       mDisplay.println(F("ARou:" ACE_ROUTINE_VERSION_STRING));
       mDisplay.println(F("ACom:" ACE_COMMON_VERSION_STRING));
     }
+
+  private:
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+    static const uint16_t kLcdBacklightValues[];
+  #else
+    static const uint8_t kOledContrastValues[];
+  #endif
 
     ZoneManager& mZoneManager;
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
