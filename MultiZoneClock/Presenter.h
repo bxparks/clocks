@@ -96,6 +96,7 @@ class Presenter {
   #else
       mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
   #endif
+      mRenderingInfo.invertDisplay = clockInfo.invertDisplay;
 
       mRenderingInfo.mode = mode;
       mRenderingInfo.suppressBlink = suppressBlink;
@@ -128,6 +129,11 @@ class Presenter {
       mDisplay.setContrast(value);
     }
   #endif
+
+    /** Set the inversion mode. */
+    void invertDisplay(uint8_t value) {
+      mDisplay.invertDisplay(value);
+    }
 
   private:
     // Disable copy-constructor and assignment operator
@@ -232,6 +238,7 @@ class Presenter {
         #else
           || mRenderingInfo.contrastLevel != mPrevRenderingInfo.contrastLevel
         #endif
+          || mRenderingInfo.invertDisplay != mPrevRenderingInfo.invertDisplay
           || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode
           || mRenderingInfo.zones[0] != mPrevRenderingInfo.zones[0]
           || mRenderingInfo.zones[1] != mPrevRenderingInfo.zones[1]
@@ -285,6 +292,7 @@ class Presenter {
       #else
         case MODE_CHANGE_SETTINGS_CONTRAST:
       #endif
+        case MODE_CHANGE_INVERT_DISPLAY:
           displaySettingsMode();
           break;
 
@@ -358,7 +366,7 @@ class Presenter {
     void displayTime(const ZonedDateTime& dateTime) {
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
         uint8_t hour = dateTime.hour();
-        if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
+        if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
           hour = convert24To12(hour);
           printPad2To(mDisplay, hour, ' ');
         } else {
@@ -383,7 +391,7 @@ class Presenter {
       // With monospaced fonts, this extra space does not seem necessary.
       //mDisplay.print(' ');
 
-      if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
+      if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
         mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
       clearToEOL();
@@ -393,7 +401,7 @@ class Presenter {
       setSize(2);
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
         uint8_t hour = dateTime.hour();
-        if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
+        if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
           hour = convert24To12(hour);
           printPad2To(mDisplay, hour, ' ');
         } else {
@@ -414,7 +422,7 @@ class Presenter {
       //mDisplay.print(' ');
 
       // AM/PM
-      if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
+      if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
         setSize(1);
         mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
         clearToEOL();
@@ -432,7 +440,7 @@ class Presenter {
     void displayTimeWithAbbrev(const ZonedDateTime& dateTime) {
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
         uint8_t hour = dateTime.hour();
-        if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
+        if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
           hour = convert24To12(hour);
           printPad2To(mDisplay, hour, ' ');
         } else {
@@ -449,7 +457,7 @@ class Presenter {
       }
 
       // AM/PM
-      if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
+      if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
         // With monospaced fonts, this extra space does not seem necessary.
         //mDisplay.print(' ');
         mDisplay.print((dateTime.hour() < 12) ? "A" : "P");
@@ -669,6 +677,13 @@ class Presenter {
         mDisplay.println(' ');
       }
     #endif
+
+      mDisplay.print(F("Invert:"));
+      if (shouldShowFor(MODE_CHANGE_INVERT_DISPLAY)) {
+        mDisplay.println(mRenderingInfo.invertDisplay);
+      } else {
+        mDisplay.println(' ');
+      }
     }
 
     void displayAboutMode() {

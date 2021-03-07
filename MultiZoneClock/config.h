@@ -96,7 +96,7 @@
   // In certain configurations, it does not have enough memory, in which case
   // the Manual timezones must be used.
   #undef TIME_ZONE_TYPE
-  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_MANUAL
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -247,8 +247,10 @@ const uint8_t MODE_CHANGE_TIME_ZONE3_NAME = 23;
 const uint8_t MODE_CHANGE_SETTINGS_BACKLIGHT = 30;
 const uint8_t MODE_CHANGE_SETTINGS_CONTRAST = 31;
 const uint8_t MODE_CHANGE_SETTINGS_BIAS = 32;
+const uint8_t MODE_CHANGE_INVERT_DISPLAY = 33;
 #else
 const uint8_t MODE_CHANGE_SETTINGS_CONTRAST = 30;
+const uint8_t MODE_CHANGE_INVERT_DISPLAY = 31;
 #endif
 
 #endif

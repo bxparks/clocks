@@ -78,6 +78,7 @@ class Controller {
       #else
         updateContrast();
       #endif
+        invertDisplay();
 
       updateDateTime();
     }
@@ -244,6 +245,7 @@ class Controller {
       #else
         case MODE_CHANGE_SETTINGS_CONTRAST:
       #endif
+        case MODE_CHANGE_INVERT_DISPLAY:
           preserveClockInfo(mClockInfo);
           break;
       }
@@ -399,6 +401,14 @@ class Controller {
         }
       #endif
 
+        case MODE_CHANGE_INVERT_DISPLAY:
+        {
+          mSuppressBlink = true;
+          incrementMod(mClockInfo.invertDisplay, (uint8_t) 3);
+          invertDisplay();
+          break;
+        }
+
       }
 
       // Update the display right away to prevent jitters in the display when
@@ -457,6 +467,15 @@ class Controller {
     }
   #endif
 
+    void invertDisplay() {
+      mPresenter.invertDisplay(mClockInfo.invertDisplay);
+
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.print(F("invertDisplay(): "));
+        SERIAL_PORT_MONITOR.println(mClockInfo.invertDisplay);
+      }
+    }
+
     void handleChangeButtonRepeatPress() {
       // Ignore 12/24 changes from RepeatPressed events. 1) It doesn't make
       // sense to repeatedly change the 12/24 mode when the button is held
@@ -497,6 +516,7 @@ class Controller {
       #else
         case MODE_CHANGE_SETTINGS_CONTRAST:
       #endif
+        case MODE_CHANGE_INVERT_DISPLAY:
           mSuppressBlink = false;
           break;
       }
@@ -639,6 +659,7 @@ class Controller {
       #else
         clockInfo.contrastLevel = storedInfo.contrastLevel;
       #endif
+        clockInfo.invertDisplay = storedInfo.invertDisplay;
     }
 
     /** Convert ClockInfo to StoredInfo. */
@@ -654,6 +675,7 @@ class Controller {
       #else
         storedInfo.contrastLevel = clockInfo.contrastLevel;
       #endif
+        storedInfo.invertDisplay = clockInfo.invertDisplay;
     }
 
     /** Attempt to restore from EEPROM, otherwise use factory defaults. */
@@ -686,7 +708,7 @@ class Controller {
 
     /** Set up the initial ClockInfo states using mDisplayZones[0]. */
     void setupClockInfo() {
-      mClockInfo.hourMode = StoredInfo::kTwentyFour;
+      mClockInfo.hourMode = ClockInfo::kTwentyFour;
       memcpy(mClockInfo.zones, mDisplayZones,
           sizeof(TimeZoneData) * NUM_TIME_ZONES);
 
@@ -697,6 +719,8 @@ class Controller {
     #else
       mClockInfo.contrastLevel = 5;
     #endif
+
+      mClockInfo.invertDisplay = ClockInfo::kInvertDisplayOff;
     }
 
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD

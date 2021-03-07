@@ -38,6 +38,18 @@ struct ClockInfo {
 
 #endif
 
+  /** Invert display off */
+  static uint8_t const kInvertDisplayOff = 0;
+
+  /** Invert display on. */
+  static uint8_t const kInvertDisplayOn = 1;
+
+  /** Invert display auto. */
+  static uint8_t const kInvertDisplayAuto = 2;
+
+  /** Invert display mode. Only for OLED. */
+  uint8_t invertDisplay;
+
   /** The desired timezones of the clock. */
   ace_time::TimeZoneData zones[NUM_TIME_ZONES];
 
