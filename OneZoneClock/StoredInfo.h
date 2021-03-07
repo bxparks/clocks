@@ -5,13 +5,7 @@
 
 /** Data that is saved to and retrieved from EEPROM. */
 struct StoredInfo {
-  /** 12:00:00 AM to 12:00:00 PM */
-  static uint8_t const kTwelve = 0;
-
-  /** 00:00:00 - 23:59:59 */
-  static uint8_t const kTwentyFour = 1;
-
-  /** Either kTwelve or kTwentyFour. */
+  /** Either ClockInfo::kTwelve or ClockInfo::kTwentyFour. */
   uint8_t hourMode;
 
   // Keeping uint8_t grouped together helps reduce storage on 32-bit processors
@@ -35,6 +29,9 @@ struct StoredInfo {
   uint8_t contrastLevel;
 
 #endif
+
+  /** Invert display mode. Only for OLED. */
+  uint8_t invertDisplay;
 
   /** TimeZone serialization. */
   ace_time::TimeZoneData timeZoneData;

@@ -22,6 +22,8 @@ struct RenderingInfo {
   #endif
 
   uint8_t hourMode; // ClockInfo::kTwelve or kTwentyFour
+  uint8_t invertDisplay; // 0: off, 1: on; should never be 2
+
   ace_time::TimeZoneData timeZoneData;
   ace_time::ZonedDateTime dateTime;
 };

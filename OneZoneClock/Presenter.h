@@ -86,6 +86,7 @@ class Presenter {
   #else
       mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
   #endif
+      mRenderingInfo.invertDisplay = clockInfo.invertDisplay;
 
       mRenderingInfo.mode = mode;
       mRenderingInfo.suppressBlink = suppressBlink;
@@ -117,6 +118,11 @@ class Presenter {
       mDisplay.setContrast(value);
     }
   #endif
+
+    /** Set the inversion mode. */
+    void invertDisplay(uint8_t value) {
+      mDisplay.invertDisplay(value);
+    }
 
   private:
     // Disable copy-constructor and assignment operator
@@ -221,6 +227,7 @@ class Presenter {
         #else
           || mRenderingInfo.contrastLevel != mPrevRenderingInfo.contrastLevel
         #endif
+          || mRenderingInfo.invertDisplay != mPrevRenderingInfo.invertDisplay
           || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode
           || mRenderingInfo.timeZoneData != mPrevRenderingInfo.timeZoneData
           || mRenderingInfo.dateTime != mPrevRenderingInfo.dateTime;
@@ -262,6 +269,7 @@ class Presenter {
       #else
         case MODE_CHANGE_SETTINGS_CONTRAST:
       #endif
+        case MODE_CHANGE_INVERT_DISPLAY:
           displaySettingsMode();
           break;
 
@@ -314,7 +322,7 @@ class Presenter {
     void displayTime(const ZonedDateTime& dateTime) {
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
         uint8_t hour = dateTime.hour();
-        if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
+        if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
           if (hour == 0) {
             hour = 12;
           } else if (hour > 12) {
@@ -340,7 +348,7 @@ class Presenter {
         mDisplay.print("  ");
       }
       mDisplay.print(' ');
-      if (mRenderingInfo.hourMode == StoredInfo::kTwelve) {
+      if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
         mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
       clearToEOL();
@@ -462,6 +470,13 @@ class Presenter {
         mDisplay.println(' ');
       }
     #endif
+
+      mDisplay.print(F("Invert:"));
+      if (shouldShowFor(MODE_CHANGE_INVERT_DISPLAY)) {
+        mDisplay.println(mRenderingInfo.invertDisplay);
+      } else {
+        mDisplay.println(' ');
+      }
     }
 
     void displayAboutMode() {

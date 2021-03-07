@@ -14,6 +14,7 @@ struct ClockInfo {
   /** 12/24 mode */
   uint8_t hourMode;
 
+  // Keeping uint8_t grouped together helps reduce storage on 32-bit processors
 #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
 
   /** Backlight level, [0, 9] -> [0, 1023] */
@@ -34,6 +35,18 @@ struct ClockInfo {
   uint8_t contrastLevel;
 
 #endif
+
+  /** Invert display off */
+  static uint8_t const kInvertDisplayOff = 0;
+
+  /** Invert display on. */
+  static uint8_t const kInvertDisplayOn = 1;
+
+  /** Invert display auto. */
+  static uint8_t const kInvertDisplayAuto = 2;
+
+  /** Invert display mode. Only for OLED. */
+  uint8_t invertDisplay;
 
   /** The desired timezone of the clock. */
   ace_time::TimeZoneData timeZoneData;

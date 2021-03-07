@@ -273,6 +273,7 @@ const uint8_t SETTINGS_MODES[] = {
 #else
   MODE_CHANGE_SETTINGS_CONTRAST,
 #endif
+  MODE_CHANGE_INVERT_DISPLAY,
 };
 
 // ModeGroup for the Settings modes.
