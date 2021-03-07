@@ -48,6 +48,8 @@ class Presenter {
       mRenderingInfo.blinkShowState = blinkShowState;
 
       mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
+      mRenderingInfo.invertDisplay = clockInfo.invertDisplay;
+
       mRenderingInfo.name = clockInfo.name;
       mRenderingInfo.hourMode = clockInfo.hourMode;
       mRenderingInfo.blinkingColon = clockInfo.blinkingColon;
@@ -77,6 +79,7 @@ class Presenter {
         case MODE_CHANGE_HOUR_MODE:
         case MODE_CHANGE_BLINKING_COLON:
         case MODE_CHANGE_CONTRAST:
+        case MODE_CHANGE_INVERT_DISPLAY:
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
         case MODE_CHANGE_TIME_ZONE_DST1:
@@ -235,7 +238,7 @@ class Presenter {
     }
 
     void displayClockInfo() const {
-      mOled.print(F("12/24: "));
+      mOled.print(F("12/24:"));
       if (shouldShowFor(MODE_CHANGE_HOUR_MODE)) {
         mOled.print(mRenderingInfo.hourMode == ClockInfo::kTwelve
             ? "12" : "24");
@@ -244,7 +247,7 @@ class Presenter {
       }
       mOled.println();
 
-      mOled.print(F("Blink: "));
+      mOled.print(F("Blink:"));
       if (shouldShowFor(MODE_CHANGE_BLINKING_COLON)) {
         mOled.print(mRenderingInfo.blinkingColon ? "on " : "off");
       } else {
@@ -252,13 +255,20 @@ class Presenter {
       }
       mOled.println();
 
-      mOled.print(F("Contrast: "));
+      mOled.print(F("Contrast:"));
       if (shouldShowFor(MODE_CHANGE_CONTRAST)) {
         mOled.print(mRenderingInfo.contrastLevel);
       } else {
         mOled.print(' ');
       }
       mOled.println();
+
+      mOled.print(F("Invert:"));
+      if (shouldShowFor(MODE_CHANGE_INVERT_DISPLAY)) {
+        mOled.println(mRenderingInfo.invertDisplay);
+      } else {
+        mOled.println(' ');
+      }
 
       // Extract time zone info.
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -276,7 +286,7 @@ class Presenter {
       printPad2To(mOled, minute, '0');
       mOled.println();
 
-      mOled.print("DST: ");
+      mOled.print("DST:");
       if (shouldShowFor(MODE_CHANGE_TIME_ZONE_DST0)
           && shouldShowFor(MODE_CHANGE_TIME_ZONE_DST1)
           && shouldShowFor(MODE_CHANGE_TIME_ZONE_DST2)) {
@@ -317,6 +327,7 @@ class Presenter {
           || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode
           || mRenderingInfo.blinkingColon != mPrevRenderingInfo.blinkingColon
           || mRenderingInfo.contrastLevel != mPrevRenderingInfo.contrastLevel
+          || mRenderingInfo.invertDisplay != mPrevRenderingInfo.invertDisplay
           || mRenderingInfo.name != mPrevRenderingInfo.name
           || mRenderingInfo.timeZone != mPrevRenderingInfo.timeZone;
     }
@@ -327,6 +338,11 @@ class Presenter {
           mPrevRenderingInfo.contrastLevel != mRenderingInfo.contrastLevel) {
         uint8_t value = toContrastValue(mRenderingInfo.contrastLevel);
         mOled.setContrast(value);
+      }
+
+      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+          mPrevRenderingInfo.invertDisplay != mRenderingInfo.invertDisplay) {
+        mOled.invertDisplay(mRenderingInfo.invertDisplay);
       }
     }
 

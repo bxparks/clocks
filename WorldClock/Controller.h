@@ -153,6 +153,7 @@ class Controller {
         case MODE_CHANGE_HOUR_MODE:
         case MODE_CHANGE_BLINKING_COLON:
         case MODE_CHANGE_CONTRAST:
+        case MODE_CHANGE_INVERT_DISPLAY:
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
         case MODE_CHANGE_TIME_ZONE_DST1:
@@ -215,6 +216,13 @@ class Controller {
           incrementMod(mClockInfo2.contrastLevel, (uint8_t) 10);
           break;
 
+        case MODE_CHANGE_INVERT_DISPLAY:
+          mSuppressBlink = true;
+          incrementMod(mClockInfo0.invertDisplay, (uint8_t) 2);
+          incrementMod(mClockInfo1.invertDisplay, (uint8_t) 2);
+          incrementMod(mClockInfo2.invertDisplay, (uint8_t) 2);
+          break;
+
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
           mSuppressBlink = true;
@@ -253,6 +261,7 @@ class Controller {
         case MODE_CHANGE_HOUR_MODE:
         case MODE_CHANGE_BLINKING_COLON:
         case MODE_CHANGE_CONTRAST:
+        case MODE_CHANGE_INVERT_DISPLAY:
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
         case MODE_CHANGE_TIME_ZONE_DST1:
@@ -321,8 +330,10 @@ class Controller {
         case MODE_CHANGE_MINUTE:
         case MODE_CHANGE_SECOND:
         case MODE_CHANGE_HOUR_MODE:
-        case MODE_CHANGE_BLINKING_COLON: {
+        case MODE_CHANGE_BLINKING_COLON:
         case MODE_CHANGE_CONTRAST:
+        case MODE_CHANGE_INVERT_DISPLAY:
+        {
           acetime_t now = mChangingDateTime.toEpochSeconds();
           mPresenter0.update(
               mNavigator.mode(), now, mBlinkShowState, mSuppressBlink,
@@ -419,6 +430,10 @@ class Controller {
       mClockInfo0.contrastLevel = 5;
       mClockInfo1.contrastLevel = 5;
       mClockInfo2.contrastLevel = 5;
+
+      mClockInfo0.invertDisplay = 0;
+      mClockInfo1.invertDisplay = 0;
+      mClockInfo2.invertDisplay = 0;
     }
 
     /** Set the various mClockInfo{N} from the given storedInfo. */
@@ -434,6 +449,10 @@ class Controller {
       mClockInfo0.contrastLevel = storedInfo.contrastLevel;
       mClockInfo1.contrastLevel = storedInfo.contrastLevel;
       mClockInfo2.contrastLevel = storedInfo.contrastLevel;
+
+      mClockInfo0.invertDisplay = storedInfo.invertDisplay;
+      mClockInfo1.invertDisplay = storedInfo.invertDisplay;
+      mClockInfo2.invertDisplay = storedInfo.invertDisplay;
 
     #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
       mClockInfo0.timeZone.setDst(storedInfo.isDst0);
@@ -453,6 +472,7 @@ class Controller {
       storedInfo.hourMode = mClockInfo0.hourMode;
       storedInfo.blinkingColon = mClockInfo0.blinkingColon;
       storedInfo.contrastLevel = mClockInfo0.contrastLevel;
+      storedInfo.invertDisplay = mClockInfo0.invertDisplay;
 
     #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
       storedInfo.isDst0 = mClockInfo0.timeZone.isDst();

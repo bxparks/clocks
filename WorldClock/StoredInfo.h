@@ -23,6 +23,9 @@ struct StoredInfo {
 
   /** Oled contrast level [0-9]. */
   uint8_t contrastLevel;
+
+  /** Invert display mode, [0-2]. */
+  uint8_t invertDisplay;
 };
 
 #endif

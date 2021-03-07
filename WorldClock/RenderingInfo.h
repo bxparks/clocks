@@ -19,6 +19,7 @@ struct RenderingInfo {
   uint8_t hourMode;
   bool blinkingColon;
   uint8_t contrastLevel;
+  uint8_t invertDisplay; // 0: off, 1: on
   const char* name;
   acetime_t now; // seconds from AceTime epoch
   TimeZone timeZone;

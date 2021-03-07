@@ -17,6 +17,15 @@ struct ClockInfo {
   /** 00:00:00 - 23:59:59 */
   static uint8_t const kTwentyFour = 1;
 
+  /** Invert display off */
+  static uint8_t const kInvertDisplayOff = 0;
+
+  /** Invert display on. */
+  static uint8_t const kInvertDisplayOn = 1;
+
+  /** Invert display auto. */
+  static uint8_t const kInvertDisplayAuto = 2;
+
   /** Construct from ZoneProcessor. */
   ClockInfo(const ace_time::TimeZone& tz, const char* theName) :
       timeZone(tz),
@@ -34,6 +43,9 @@ struct ClockInfo {
    * because the background is black.
    */
   uint8_t contrastLevel = 5;
+
+  /** Invert display mode. */
+  uint8_t invertDisplay;
 
   /** The desired time zone of the clock. */
   ace_time::TimeZone timeZone;
