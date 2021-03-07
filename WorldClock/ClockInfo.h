@@ -3,7 +3,10 @@
 
 #include <AceTime.h>
 
-/** Data that describes the clock of a single time zone. */
+/**
+ * Data that describes the clock of a single time zone. The uint8_t and bool
+ * fields are grouped together to save memory on 32-bit processors.
+ */
 struct ClockInfo {
   /** Size of the clock name buffer, including '\0'. */
   static uint8_t const kNameSize = 5;
@@ -26,17 +29,17 @@ struct ClockInfo {
   /** Blink the colon in HH:MM. */
   bool blinkingColon = false;
 
-  /** The desired time zone of the clock. */
-  ace_time::TimeZone timeZone;
-
-  /** Name of this clock, e.g. City or Time Zone ID */
-  const char* name;
-
   /**
    * Contrast level for OLED dislay, [0, 9] -> [25, 255]. Essentially brightness
    * because the background is black.
    */
   uint8_t contrastLevel = 5;
+
+  /** The desired time zone of the clock. */
+  ace_time::TimeZone timeZone;
+
+  /** Name of this clock, e.g. City or Time Zone ID */
+  const char* name;
 };
 
 #endif

@@ -65,7 +65,6 @@ class Controller {
       }
       restoreClockInfo(factoryReset);
       mNavigator.setup();
-      updateContrast();
       updateDateTime();
     }
 
@@ -214,7 +213,6 @@ class Controller {
           incrementMod(mClockInfo0.contrastLevel, (uint8_t) 10);
           incrementMod(mClockInfo1.contrastLevel, (uint8_t) 10);
           incrementMod(mClockInfo2.contrastLevel, (uint8_t) 10);
-          updateContrast();
           break;
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -238,23 +236,6 @@ class Controller {
       // Update the display right away to prevent jitters in the display when
       // the button is triggering RepeatPressed events.
       update();
-    }
-
-    /**
-     * Set the brightness of the OLEDs to their states. We assume the
-     * contrastLevel of all displays are identical, but that can be changed if
-     * we really wanted independent control.
-     */
-    void updateContrast() {
-      uint8_t contrastValue = getContrastValue(mClockInfo0.contrastLevel);
-      mPresenter0.setContrast(contrastValue);
-      mPresenter1.setContrast(contrastValue);
-      mPresenter2.setContrast(contrastValue);
-    }
-
-    static uint8_t getContrastValue(uint8_t level) {
-      if (level > 9) level = 9;
-      return kContrastValues[level];
     }
 
     void handleChangeButtonRepeatPress() {
@@ -484,8 +465,6 @@ class Controller {
     // Disable copy-constructor and assignment operator
     Controller(const Controller&) = delete;
     Controller& operator=(const Controller&) = delete;
-
-    static const uint8_t kContrastValues[];
 
     Clock& mClock;
     CrcEeprom& mCrcEeprom;

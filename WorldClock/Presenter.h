@@ -33,6 +33,7 @@ class Presenter {
         clearDisplay();
       }
       if (needsUpdate()) {
+        updateDisplaySettings();
         displayData();
       }
     }
@@ -51,11 +52,6 @@ class Presenter {
       mRenderingInfo.hourMode = clockInfo.hourMode;
       mRenderingInfo.blinkingColon = clockInfo.blinkingColon;
       mRenderingInfo.timeZone = clockInfo.timeZone;
-    }
-
-    /** Set the OLED contrast value. */
-    void setContrast(uint8_t value) {
-      mOled.setContrast(value);
     }
 
   private:
@@ -325,12 +321,28 @@ class Presenter {
           || mRenderingInfo.timeZone != mPrevRenderingInfo.timeZone;
     }
 
+    /** Update the display settings, e.g. brightness, backlight, etc. */
+    void updateDisplaySettings() {
+      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+          mPrevRenderingInfo.contrastLevel != mRenderingInfo.contrastLevel) {
+        uint8_t value = toContrastValue(mRenderingInfo.contrastLevel);
+        mOled.setContrast(value);
+      }
+    }
+
+    static uint8_t toContrastValue(uint8_t level) {
+      if (level > kNumContrastValues - 1) level = kNumContrastValues - 1;
+      return kContrastValues[level];
+    }
+
   private:
+    static const uint8_t kNumContrastValues = 10;
+    static const uint8_t kContrastValues[];
+
     SSD1306Ascii& mOled;
 
     RenderingInfo mRenderingInfo;
     RenderingInfo mPrevRenderingInfo;
-
 };
 
 #endif
