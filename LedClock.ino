@@ -25,8 +25,10 @@ using namespace ace_segment;
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
-using namespace ace_time::provider;
+using namespace ace_time::clock;
 using ace_utils::crc_eeprom::CrcEeprom;
+using ace_utils::crc_eeprom::AvrEepromAdapter;
+using ace_utils::crc_eeprom::EspEepromAdapter;
 
 //------------------------------------------------------------------
 // Configure CrcEeprom.
@@ -34,30 +36,117 @@ using ace_utils::crc_eeprom::CrcEeprom;
 
 const int EEPROM_SIZE = CrcEeprom::toSavedSize(sizeof(StoredInfo));
 
-CrcEeprom crcEeprom(CrcEeprom::toContextId('l', 'c', 'l', 'k'));
+#if defined(ESP32) || defined(ESP8266) || defined(EPOXY_DUINO)
+  #include <EEPROM.h>
+  EspEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
+#elif defined(ARDUINO_ARCH_AVR)
+  #include <EEPROM.h>
+  AvrEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
+#elif defined(ARDUINO_ARCH_STM32)
+  #include <AceUtilsStm32BufferedEeprom.h>
+  EspEepromAdapter<BufferedEEPROMClass> eepromAdapter(BufferedEEPROM);
+#else
+  #error No EEPROM
+#endif
+CrcEeprom crcEeprom(eepromAdapter, CrcEeprom::toContextId('l', 'c', 'l', 'k'));
+
+//-----------------------------------------------------------------------------
+// Configure time zones and ZoneManager.
+//-----------------------------------------------------------------------------
+
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+
+static ManualZoneManager zoneManager;
+
+#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+
+static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
+  &zonedb::kZoneAmerica_Los_Angeles,
+  &zonedb::kZoneAmerica_Denver,
+  &zonedb::kZoneAmerica_Chicago,
+  &zonedb::kZoneAmerica_New_York,
+};
+
+static const uint16_t ZONE_REGISTRY_SIZE =
+    sizeof(ZONE_REGISTRY) / sizeof(basic::ZoneInfo*);
+
+// Only 1 displayed at any given time, need 2 for conversions.
+static const uint16_t CACHE_SIZE = 1 + 1;
+static BasicZoneManager<CACHE_SIZE> zoneManager(
+    ZONE_REGISTRY_SIZE, ZONE_REGISTRY);
+
+#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+
+static const extended::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
+  &zonedbx::kZoneAmerica_Los_Angeles,
+  &zonedbx::kZoneAmerica_Denver,
+  &zonedbx::kZoneAmerica_Chicago,
+  &zonedbx::kZoneAmerica_New_York,
+};
+
+static const uint16_t ZONE_REGISTRY_SIZE =
+    sizeof(ZONE_REGISTRY) / sizeof(extended::ZoneInfo*);
+
+// Only 1 displayed at any given time, need 2 for conversions.
+static const uint16_t CACHE_SIZE = 1 + 1;
+static ExtendedZoneManager<CACHE_SIZE> zoneManager(
+    ZONE_REGISTRY_SIZE, ZONE_REGISTRY);
+
+#endif
+
+//-----------------------------------------------------------------------------
+// Create initial display timezone. Normally, these will be replaced by
+// the information retrieved from the EEPROM by the Controller.
+//-----------------------------------------------------------------------------
+
+#if TIME_ZONE_TYPE == TIME_ZONE_MANUAL
+
+  const TimeZoneData DISPLAY_ZONE = {-8*60, 0} /*-08:00*/;
+
+#else
+
+  // zoneIds are identical in zonedb:: and zonedbx::
+  const TimeZoneData DISPLAY_ZONE = {zonedb::kZoneIdAmerica_Los_Angeles};
+
+#endif
 
 //------------------------------------------------------------------
-// Configure various TimeKeepers and TimeProviders.
+// Configure various Clocks
 //------------------------------------------------------------------
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  DS3231TimeKeeper dsTimeKeeper;
-  SystemTimeKeeper systemTimeKeeper(&dsTimeKeeper, &dsTimeKeeper);
+  DS3231Clock dsClock;
+  SystemClockCoroutine systemClock(&dsClock, &dsClock);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  NtpTimeProvider ntpTimeProvider;
-  SystemTimeKeeper systemTimeKeeper(&ntpTimeProvider, nullptr);
+  NtpClock ntpClock;
+  SystemClockCoroutine systemClock(&ntpClock, nullptr);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  DS3231TimeKeeper dsTimeKeeper;
-  NtpTimeProvider ntpTimeProvider;
-  SystemTimeKeeper systemTimeKeeper(&ntpTimeProvider, &dsTimeKeeper);
+  DS3231Clock dsClock;
+  NtpClock ntpClock;
+  SystemClockCoroutine systemClock(&ntpClock, &dsClock);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
-  SystemTimeKeeper systemTimeKeeper(nullptr /*sync*/, nullptr /*backup*/);
+  SystemClockCoroutine systemClock(nullptr /*sync*/, nullptr /*backup*/);
 #else
   #error Unknown time keeper option
 #endif
 
-SystemTimeSyncCoroutine systemTimeSync(systemTimeKeeper);
-SystemTimeHeartbeatCoroutine systemTimeHeartbeat(systemTimeKeeper);
+void setupClocks() {
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+  dsClock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
+  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
+  stmClock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  stm32F1Clock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
+  dsClock.setup();
+  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
+#endif
+
+  systemClock.setup();
+  systemClock.setupCoroutine(F("clock"));
+}
 
 //------------------------------------------------------------------
 // Configure LED display using AceSegment.
@@ -87,7 +176,7 @@ void setupLed() {
   // set up Timer 2
   uint8_t timerCompareValue =
       (long) F_CPU / 1024 / ledDisplay->getFieldsPerSecond() - 1;
-  #if ENABLE_SERIAL == 1
+  #if ENABLE_SERIAL_DEBUG == 1
     Serial.print(F("Timer 2, Compare A: "));
     Serial.println(timerCompareValue);
   #endif
@@ -109,7 +198,8 @@ void setupLed() {
 //------------------------------------------------------------------
 
 Presenter presenter(ledDisplay);
-Controller controller(systemTimeKeeper, crcEeprom, presenter);
+Controller controller(systemClock, crcEeprom, presenter, zoneManager,
+    DISPLAY_ZONE);
 
 //------------------------------------------------------------------
 // Render the Clock periodically.
@@ -181,14 +271,6 @@ void setupAceButton() {
   changeButtonConfig.setRepeatPressInterval(150);
 }
 
-COROUTINE(checkButton) {
-  COROUTINE_LOOP() {
-    modeButton.check();
-    changeButton.check();
-    COROUTINE_DELAY(10); // check button 100/sec
-  }
-}
-
 //------------------------------------------------------------------
 // Main setup and loop
 //------------------------------------------------------------------
@@ -205,7 +287,7 @@ void setup() {
   TXLED0; // LED off
 #endif
 
-#if ENABLE_SERIAL == 1
+#if ENABLE_SERIAL_DEBUG == 1
   Serial.begin(115200); // ESP8266 default of 74880 not supported on Linux
   while (!Serial); // Wait until Serial is ready - Leonardo/Micro
   Serial.println(F("setup(): begin"));
@@ -213,32 +295,23 @@ void setup() {
 
   Wire.begin();
   Wire.setClock(400000L);
+
   crcEeprom.begin(EEPROM_SIZE);
-
   setupAceButton();
-
+  setupClocks();
   setupLed();
-
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  dsTimeKeeper.setup();
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  ntpTimeProvider.setup(AUNITER_SSID, AUNITER_PASSWORD);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  dsTimeKeeper.setup();
-  ntpTimeProvider.setup(AUNITER_SSID, AUNITER_PASSWORD);
-#endif
-  systemTimeKeeper.setup();
   controller.setup();
 
-  systemTimeSync.setupCoroutine(F("systemTimeSync"));
-  systemTimeHeartbeat.setupCoroutine(F("systemTimeHeartbeat"));
   CoroutineScheduler::setup();
 
-#if ENABLE_SERIAL == 1
+#if ENABLE_SERIAL_DEBUG == 1
   Serial.println(F("setup(): end"));
 #endif
 }
 
 void loop() {
   CoroutineScheduler::loop();
+
+  modeButton.check();
+  changeButton.check();
 }

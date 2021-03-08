@@ -11,7 +11,7 @@
 
 using namespace ace_segment;
 using namespace ace_time;
-using ace_time::common::DateStrings;
+using ace_time::DateStrings;
 
 class Presenter {
   public:
@@ -29,28 +29,13 @@ class Presenter {
       mPrevRenderingInfo = mRenderingInfo;
     }
 
-    void setMode(uint8_t mode) {
+    void setRenderingInfo(uint8_t mode, bool blinkShowState,
+        const ClockInfo& clockInfo) {
       mRenderingInfo.mode = mode;
-    }
-
-    void setDateTime(const ace_time::ZonedDateTime& dateTime) {
-      mRenderingInfo.dateTime = dateTime;
-    }
-
-    void setTimeZone(const ace_time::ManualZoneSpecifier& zoneSpecifier) {
-      mRenderingInfo.zoneSpecifier = zoneSpecifier;
-    }
-
-    void setHourMode(uint8_t hourMode) {
-      mRenderingInfo.hourMode = hourMode;
-    }
-
-    void setSuppressBlink(bool suppressBlink) {
-      mRenderingInfo.suppressBlink = suppressBlink;
-    }
-
-    void setBlinkShowState(bool blinkShowState) {
       mRenderingInfo.blinkShowState = blinkShowState;
+      mRenderingInfo.hourMode = clockInfo.hourMode;
+      mRenderingInfo.timeZoneData = clockInfo.timeZoneData;
+      mRenderingInfo.dateTime = clockInfo.dateTime;
     }
 
   private:
@@ -60,9 +45,7 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(uint8_t mode) const {
-      return mode != mRenderingInfo.mode
-          || mRenderingInfo.suppressBlink
-          || mRenderingInfo.blinkShowState;
+      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
     }
 
     /** The display needs to be cleared before rendering. */
@@ -72,14 +55,7 @@ class Presenter {
 
     /** The display needs to be updated because something changed. */
     bool needsUpdate() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode
-          || mRenderingInfo.suppressBlink != mPrevRenderingInfo.suppressBlink
-          || (!mRenderingInfo.suppressBlink
-              && (mRenderingInfo.blinkShowState
-                  != mPrevRenderingInfo.blinkShowState))
-          || mRenderingInfo.dateTime != mPrevRenderingInfo.dateTime
-          || mRenderingInfo.zoneSpecifier != mPrevRenderingInfo.zoneSpecifier
-          || mRenderingInfo.hourMode != mPrevRenderingInfo.hourMode;
+      return mRenderingInfo != mPrevRenderingInfo;
     }
 
     void clearDisplay() { mDisplay.renderer->clear(); }
@@ -121,7 +97,7 @@ class Presenter {
           break;
         case MODE_WEEKDAY:
           mDisplay.stringWriter->writeStringAt(
-              0, DateStrings().weekDayShortString(dateTime.dayOfWeek()),
+              0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()),
               true /* padRight */);
           break;
       }
