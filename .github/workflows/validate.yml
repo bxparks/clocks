@@ -13,10 +13,12 @@ jobs:
     - name: Setup
       run: |
         cd ..
+        git clone https://github.com/bxparks/AUnit
         git clone https://github.com/bxparks/AceButton
         git clone https://github.com/bxparks/AceCRC
         git clone https://github.com/bxparks/AceCommon
         git clone https://github.com/bxparks/AceRoutine
+        git clone https://github.com/bxparks/AceSegment
         git clone https://github.com/bxparks/AceTime
         git clone https://github.com/bxparks/AceUtils
         git clone https://github.com/bxparks/EpoxyDuino
@@ -25,6 +27,7 @@ jobs:
     - name: Compile
       run: |
         make -C CommandLineClock
+        make -C LedClock
         make -C MedMinder
         make -C MultiZoneClock
         make -C OneZoneClock
