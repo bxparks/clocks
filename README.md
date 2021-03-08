@@ -56,6 +56,19 @@ AceTime library (https://github.com/bxparks/AceTime).
         * Teensy 3.2
 * [MedMinder](MedMinder)
     * A medication reminder device.
+* [LedClock](LedClock)
+    * Similar to OneZoneClock, but using an 4-digit-7-segment LED display.
+    * Hardware
+        * SparkFun Pro Micro
+        * 7-segment LED
+        * DS3231
+        * 2 buttons
+    * This is one of my earliest Arduino projects. It has a lot of rough
+      edges, so I'm not quite happy with it.
+    * It was starting to bit-rot due to changes to the various libraries that it
+      depends on. So I pulled it into this repo and added to the GitHub Actions
+      continuous integration, which should mitigate or slow down some of the
+      bit-rotting.
 
 All of these will compile under Linux and probably MacOS using EpoxyDuino
 (https://github.com/bxparks/EpoxyDuino). So I was able to add them to the
