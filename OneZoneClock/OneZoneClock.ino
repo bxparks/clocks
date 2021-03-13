@@ -122,7 +122,7 @@ static ExtendedZoneManager<CACHE_SIZE> zoneManager(
   SystemClockCoroutine systemClock(&stmClock, nullptr);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
   Stm32F1Clock stm32F1Clock;
-  SystemClockCoroutine systemClock(&stm32F1Clock, nullptr);
+  SystemClockCoroutine systemClock(&stm32F1Clock, nullptr, 10);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
   DS3231Clock dsClock;
   NtpClock ntpClock;

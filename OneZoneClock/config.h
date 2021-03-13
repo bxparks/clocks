@@ -138,7 +138,7 @@
   #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN A0
   #define CHANGE_BUTTON_PIN A1
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_STM32F1RTC
   #define OLED_REMAP false
 #elif defined(AUNITER_ESP8266)
   // Defined by auniter.ini
