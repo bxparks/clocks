@@ -236,7 +236,26 @@ class Controller {
       switch (mNavigator.mode()) {
         case MODE_CHANGE_YEAR:
           mSuppressBlink = true;
+        #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
           zoned_date_time_mutation::incrementYear(mChangingDateTime);
+        #else
+          {
+            auto& dateTime = mChangingDateTime;
+            int16_t year = dateTime.year();
+            year++;
+            // Keep the year within the bounds of zonedb or zonedbx files.
+            #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+            if (year >= zonedb::kZoneContext.untilYear) {
+              year = zonedb::kZoneContext.startYear;
+            }
+            #else
+            if (year >= zonedbx::kZoneContext.untilYear) {
+              year = zonedbx::kZoneContext.startYear;
+            }
+            #endif
+            dateTime.year(year);
+          }
+        #endif
           break;
         case MODE_CHANGE_MONTH:
           mSuppressBlink = true;
