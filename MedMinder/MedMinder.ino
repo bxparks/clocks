@@ -345,10 +345,20 @@ void handleButton(AceButton* button, uint8_t eventType,
 
   if (pin == CHANGE_BUTTON_PIN) {
     switch (eventType) {
+      // Advance editable field by one step.
       case AceButton::kEventPressed:
         controller.handleChangeButtonPress();
         break;
 
+      // Resume blinking, because both handleChangeButtonPress() and
+      // handleChangeButtonRepeatPress() suppress blinking until the button is
+      // lifted.
+      //
+      // We have only a single ButtonConfig, so both buttons will trigger a
+      // DoubleClicked. On the Change button, we have to treat it like just a
+      // normal click release. Otherwise, the clock never gets the Released
+      // event since it is suppressed by kFeatureSuppressAfterDoubleClick.
+      case AceButton::kEventDoubleClicked:
       case AceButton::kEventReleased:
       case AceButton::kEventLongReleased:
       #if ENABLE_LOW_POWER
@@ -361,16 +371,19 @@ void handleButton(AceButton* button, uint8_t eventType,
         controller.handleChangeButtonRelease();
         break;
 
+      // Repeatedly advance the editable field.
       case AceButton::kEventRepeatPressed:
         controller.handleChangeButtonRepeatPress();
         break;
 
+      // Reset countdown timer.
       case AceButton::kEventLongPressed:
         controller.handleChangeButtonLongPress();
         break;
     }
   } else if (pin == MODE_BUTTON_PIN) {
     switch (eventType) {
+      // Advance to the next mode.
       case AceButton::kEventReleased:
       #if ENABLE_LOW_POWER
         // Eat the first button event if just woken up.
@@ -382,8 +395,14 @@ void handleButton(AceButton* button, uint8_t eventType,
         controller.handleModeButtonPress();
         break;
 
+      // Toggle Edit mode.
       case AceButton::kEventLongPressed:
         controller.handleModeButtonLongPress();
+        break;
+
+      // Cancel Edit mode.
+      case AceButton::kEventDoubleClicked:
+        controller.handleModeButtonDoubleClick();
         break;
     }
   }
@@ -394,6 +413,8 @@ void setupAceButton() {
   pinMode(CHANGE_BUTTON_PIN, INPUT_PULLUP);
 
   buttonConfig.setEventHandler(handleButton);
+  buttonConfig.setFeature(ButtonConfig::kFeatureDoubleClick);
+  buttonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterDoubleClick);
   buttonConfig.setFeature(ButtonConfig::kFeatureLongPress);
   buttonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
   buttonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);

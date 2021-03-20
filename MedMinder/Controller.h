@@ -108,6 +108,40 @@ class Controller {
       performEnteringModeAction();
     }
 
+    /**
+     * Exit the edit mode while throwing away all changes. Does nothing if not
+     * already in edit mode.
+     */
+    void handleModeButtonDoubleClick() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
+      }
+
+      switch (mNavigator.mode()) {
+        case MODE_CHANGE_MED_HOUR:
+        case MODE_CHANGE_MED_MINUTE:
+        case MODE_CHANGE_YEAR:
+        case MODE_CHANGE_MONTH:
+        case MODE_CHANGE_DAY:
+        case MODE_CHANGE_HOUR:
+        case MODE_CHANGE_MINUTE:
+        case MODE_CHANGE_SECOND:
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        case MODE_CHANGE_TIME_ZONE_OFFSET:
+        case MODE_CHANGE_TIME_ZONE_DST:
+      #else
+        case MODE_CHANGE_TIME_ZONE_NAME:
+      #endif
+          // Throw away the changes and just change the mode group.
+          //performLeavingModeAction();
+          //performLeavingModeGroupAction();
+          mNavigator.changeGroup();
+          performEnteringModeGroupAction();
+          performEnteringModeAction();
+          break;
+      }
+    }
+
     void performEnteringModeAction() {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
