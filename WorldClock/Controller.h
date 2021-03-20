@@ -78,10 +78,38 @@ class Controller {
       updateBlinkState();
       updateRenderingInfo();
 
+      // On a 16 MHz Pro Micro, calling Presenter::display() on 3 Presenters
+      // takes an average of 21-33 millis, but sometimes as much as 165 millis,
+      // probably when the 3 displays need to be redrawn. Blocking the
+      // global loop() function for such a long time interferes with the
+      // double-click detection of AceButton. The solution is to break up the
+      // update of the 3 displays into 3 separate parts, so that other things,
+      // like AceButton, can do some of its own work.
+      //
+      // One implementation is to use a somewhat complicated finite state
+      // machine inside the Controller, where each of the 3 displays updates
+      // upon different calls to the update(), splitting the cost of updating
+      // over multiple calls to update(). This allows other things, like
+      // AceButton to perform some of its tasks.
+      //
+      // The second implementation that seems far easier, and is implemented
+      // currently, is to use take advantage of the inherent features of a
+      // coroutine, modify COROUTINE(updateController) in WorldClock.ino to
+      // split up the rendering of the 3 displays into 3 parts within that
+      // coroutine. Essentially, this solution implements the FSM of the first
+      // solution, but in a way that is simpler to understand.
+      /*
       mPresenter0.display();
       mPresenter1.display();
       mPresenter2.display();
+      */
     }
+
+    // These are exposed as public methods so that the
+    // COROUTINE(updateController) can update each Presenter separately.
+    void updatePresenter0() { mPresenter0.display(); }
+    void updatePresenter1() { mPresenter1.display(); }
+    void updatePresenter2() { mPresenter2.display(); }
 
     void handleModeButtonPress() {
       if (ENABLE_SERIAL_DEBUG == 1) {
@@ -92,6 +120,7 @@ class Controller {
       performEnteringModeAction();
     }
 
+    /** Toggle edit mode. The editable field will start blinking. */
     void handleModeButtonLongPress() {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
@@ -102,6 +131,42 @@ class Controller {
       mNavigator.changeGroup();
       performEnteringModeGroupAction();
       performEnteringModeAction();
+    }
+
+    /**
+     * Exit the edit mode while throwing away all changes. Does nothing if not
+     * already in edit mode.
+     */
+    void handleModeButtonDoubleClick() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
+      }
+
+      switch (mNavigator.mode()) {
+        case MODE_CHANGE_YEAR:
+        case MODE_CHANGE_MONTH:
+        case MODE_CHANGE_DAY:
+        case MODE_CHANGE_HOUR:
+        case MODE_CHANGE_MINUTE:
+        case MODE_CHANGE_SECOND:
+
+        case MODE_CHANGE_HOUR_MODE:
+        case MODE_CHANGE_BLINKING_COLON:
+        case MODE_CHANGE_CONTRAST:
+        case MODE_CHANGE_INVERT_DISPLAY:
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        case MODE_CHANGE_TIME_ZONE_DST0:
+        case MODE_CHANGE_TIME_ZONE_DST1:
+        case MODE_CHANGE_TIME_ZONE_DST2:
+      #endif
+          // Throw away the changes and just change the mode group.
+          //performLeavingModeAction();
+          //performLeavingModeGroupAction();
+          mNavigator.changeGroup();
+          performEnteringModeGroupAction();
+          performEnteringModeAction();
+          break;
+      }
     }
 
     void performEnteringModeAction() {
@@ -154,11 +219,11 @@ class Controller {
         case MODE_CHANGE_BLINKING_COLON:
         case MODE_CHANGE_CONTRAST:
         case MODE_CHANGE_INVERT_DISPLAY:
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
         case MODE_CHANGE_TIME_ZONE_DST1:
         case MODE_CHANGE_TIME_ZONE_DST2:
-#endif
+      #endif
           saveClockInfo();
           break;
       }
@@ -223,7 +288,7 @@ class Controller {
           incrementMod(mClockInfo2.invertDisplay, (uint8_t) 2);
           break;
 
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
           mSuppressBlink = true;
           mClockInfo0.timeZone.setDst(!mClockInfo0.timeZone.isDst());
@@ -238,12 +303,13 @@ class Controller {
           mSuppressBlink = true;
           mClockInfo2.timeZone.setDst(!mClockInfo2.timeZone.isDst());
           break;
-#endif
+      #endif
       }
 
       // Update the display right away to prevent jitters in the display when
       // the button is triggering RepeatPressed events.
       update();
+      updatePresenter0();
     }
 
     void handleChangeButtonRepeatPress() {
@@ -262,11 +328,11 @@ class Controller {
         case MODE_CHANGE_BLINKING_COLON:
         case MODE_CHANGE_CONTRAST:
         case MODE_CHANGE_INVERT_DISPLAY:
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
         case MODE_CHANGE_TIME_ZONE_DST1:
         case MODE_CHANGE_TIME_ZONE_DST2:
-#endif
+      #endif
           mSuppressBlink = false;
           break;
       }
@@ -340,7 +406,7 @@ class Controller {
           break;
         }
 
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case MODE_CHANGE_TIME_ZONE_DST0:
           updateChangingDst(0);
           break;
@@ -350,7 +416,7 @@ class Controller {
         case MODE_CHANGE_TIME_ZONE_DST2:
           updateChangingDst(2);
           break;
-#endif
+      #endif
       }
     }
 

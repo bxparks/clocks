@@ -25,6 +25,7 @@
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
+#include <AceCommon.h>
 #include <AceUtilsCrcEeprom.h>
 #include <AceUtilsModeGroup.h>
 #include <SSD1306AsciiSpi.h>
@@ -254,6 +255,16 @@ Controller controller(
 COROUTINE(updateController) {
   COROUTINE_LOOP() {
     controller.update();
+
+    COROUTINE_YIELD();
+    controller.updatePresenter0();
+
+    COROUTINE_YIELD();
+    controller.updatePresenter1();
+
+    COROUTINE_YIELD();
+    controller.updatePresenter2();
+
     COROUTINE_DELAY(100);
   }
 }
@@ -271,24 +282,47 @@ void handleButton(AceButton* button, uint8_t eventType,
 
   if (pin == CHANGE_BUTTON_PIN) {
     switch (eventType) {
+      // Advance editable field by one step.
       case AceButton::kEventPressed:
         controller.handleChangeButtonPress();
         break;
+
+      // Resume blinking, because both handleChangeButtonPress() and
+      // handleChangeButtonRepeatPress() suppress blinking until the button is
+      // lifted.
+      //
+      // We have only a single ButtonConfig, so both buttons will trigger a
+      // DoubleClicked. On the Change button, we have to treat it like just a
+      // normal click release. Otherwise, the clock never gets the Released
+      // event since it is suppressed by kFeatureSuppressAfterDoubleClick.
+      case AceButton::kEventDoubleClicked:
+      case AceButton::kEventClicked:
       case AceButton::kEventReleased:
       case AceButton::kEventLongReleased:
         controller.handleChangeButtonRelease();
         break;
+
+      // Repeatedly advance the editable field.
       case AceButton::kEventRepeatPressed:
         controller.handleChangeButtonRepeatPress();
         break;
     }
   } else if (pin == MODE_BUTTON_PIN) {
     switch (eventType) {
+      // Advance to the next mode.
       case AceButton::kEventReleased:
+      case AceButton::kEventClicked:
         controller.handleModeButtonPress();
         break;
+
+      // Toggle Edit mode.
       case AceButton::kEventLongPressed:
         controller.handleModeButtonLongPress();
+        break;
+
+      // Cancel Edit mode.
+      case AceButton::kEventDoubleClicked:
+        controller.handleModeButtonDoubleClick();
         break;
     }
   }
@@ -300,6 +334,9 @@ void setupAceButton() {
 
   ButtonConfig* buttonConfig = ButtonConfig::getSystemButtonConfig();
   buttonConfig->setEventHandler(handleButton);
+  buttonConfig->setFeature(ButtonConfig::kFeatureDoubleClick);
+  buttonConfig->setFeature(ButtonConfig::kFeatureSuppressAfterClick);
+  buttonConfig->setFeature(ButtonConfig::kFeatureSuppressAfterDoubleClick);
   buttonConfig->setFeature(ButtonConfig::kFeatureLongPress);
   buttonConfig->setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
   buttonConfig->setFeature(ButtonConfig::kFeatureRepeatPress);
