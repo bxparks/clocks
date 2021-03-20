@@ -165,6 +165,55 @@ class Controller {
       performEnteringModeAction();
     }
 
+    /**
+     * Exit the edit mode while throwing away all changes. Does nothing if not
+     * already in edit mode.
+     */
+    void handleModeButtonDoubleClick() {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
+      }
+
+      switch (mNavigator.mode()) {
+        case MODE_CHANGE_YEAR:
+        case MODE_CHANGE_MONTH:
+        case MODE_CHANGE_DAY:
+        case MODE_CHANGE_HOUR:
+        case MODE_CHANGE_MINUTE:
+        case MODE_CHANGE_SECOND:
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        case MODE_CHANGE_TIME_ZONE0_OFFSET:
+        case MODE_CHANGE_TIME_ZONE0_DST:
+        case MODE_CHANGE_TIME_ZONE1_OFFSET:
+        case MODE_CHANGE_TIME_ZONE1_DST:
+        case MODE_CHANGE_TIME_ZONE2_OFFSET:
+        case MODE_CHANGE_TIME_ZONE2_DST:
+        case MODE_CHANGE_TIME_ZONE3_OFFSET:
+        case MODE_CHANGE_TIME_ZONE3_DST:
+      #else
+        case MODE_CHANGE_TIME_ZONE0_NAME:
+        case MODE_CHANGE_TIME_ZONE1_NAME:
+        case MODE_CHANGE_TIME_ZONE2_NAME:
+        case MODE_CHANGE_TIME_ZONE3_NAME:
+      #endif
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        case MODE_CHANGE_SETTINGS_BACKLIGHT:
+        case MODE_CHANGE_SETTINGS_CONTRAST:
+        case MODE_CHANGE_SETTINGS_BIAS:
+      #else
+        case MODE_CHANGE_SETTINGS_CONTRAST:
+        case MODE_CHANGE_INVERT_DISPLAY:
+      #endif
+          // Throw away the changes and just change the mode group.
+          //performLeavingModeAction();
+          //performLeavingModeGroupAction();
+          mNavigator.changeGroup();
+          performEnteringModeGroupAction();
+          performEnteringModeAction();
+          break;
+      }
+    }
+
     /** Do action associated with entering a ModeGroup due to a LongPress. */
     void performEnteringModeGroupAction() {
       if (ENABLE_SERIAL_DEBUG == 1) {
