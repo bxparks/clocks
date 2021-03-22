@@ -14,6 +14,7 @@ using namespace ace_time;
 struct RenderingInfo {
   uint8_t mode = MODE_UNKNOWN; // display mode
   bool blinkShowState = true; // true if blinking info should be shown
+  bool isRendered = false; // true if the info has been rendered
 
   ClockInfo clockInfo;
   acetime_t now; // seconds from AceTime epoch

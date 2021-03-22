@@ -69,8 +69,22 @@ class Controller {
     }
 
     /**
-     * This should be called every 0.1s to support blinking mode and to avoid
-     * noticeable drift against the RTC which has a 1 second resolution.
+     * In other Controller::update() methods, this method not only updates
+     * the RenderingInfo, but also synchronously calls the mPresenter.display(),
+     * to render the display . But for WorldClock, it has 3 OLED displays, and
+     * updating them synchronous takes too long, and interferes with the
+     * double-click detection of AceButton.
+     *
+     * On a 16 MHz Pro Micro, calling 3 Presenter::display() takes an average of
+     * 21-33 millis, but as much as 165 millis when all 3 need to re-render. The
+     * solution is to decouple the rendering of the 3 displays, and rendering
+     * each of them separately, with a "yield" functionality between each
+     * display that other things, like AceButton, can do some of its own work.
+     *
+     * We could have used a finite state machine inside this Controller object
+     * to implement the staggered rendering of the 3 displays. But it was a lot
+     * easier to take advantage of the inherent advantages of a Coroutine,
+     * and call the updatePresenterN() methods separately from the coroutine.
      */
     void update() {
       if (mNavigator.mode() == MODE_UNKNOWN) return;
@@ -78,36 +92,19 @@ class Controller {
       updateBlinkState();
       updateRenderingInfo();
 
-      // On a 16 MHz Pro Micro, calling Presenter::display() on 3 Presenters
-      // takes an average of 21-33 millis, but sometimes as much as 165 millis,
-      // probably when the 3 displays need to be redrawn. Blocking the
-      // global loop() function for such a long time interferes with the
-      // double-click detection of AceButton. The solution is to break up the
-      // update of the 3 displays into 3 separate parts, so that other things,
-      // like AceButton, can do some of its own work.
-      //
-      // One implementation is to use a somewhat complicated finite state
-      // machine inside the Controller, where each of the 3 displays updates
-      // upon different calls to the update(), splitting the cost of updating
-      // over multiple calls to update(). This allows other things, like
-      // AceButton to perform some of its tasks.
-      //
-      // The second implementation that seems far easier, and is implemented
-      // currently, is to use take advantage of the inherent features of a
-      // coroutine, modify COROUTINE(updateController) in WorldClock.ino to
-      // split up the rendering of the 3 displays into 3 parts within that
-      // coroutine. Essentially, this solution implements the FSM of the first
-      // solution, but in a way that is simpler to understand.
-      //
-      // Even if we don't call Presenter::display(), we lighter-weight methods
-      // to handle any display settings like contrast levels and and inversions.
+      // Commented out, to decouple the updating of the RenderingInfo from the
+      // actual re-rendering of the OLED display.
+      /*
       mPresenter0.updateDisplaySettings();
       mPresenter1.updateDisplaySettings();
       mPresenter2.updateDisplaySettings();
+      */
     }
 
     // These are exposed as public methods so that the
-    // COROUTINE(updateController) can update each Presenter separately.
+    // COROUTINE(updateController) can update each Presenter separately. They
+    // should be called 5-10 times a second to support blinking mode and to
+    // avoid noticeable drift against the RTC which has a 1 second resolution.
     void updatePresenter0() { mPresenter0.display(); }
     void updatePresenter1() { mPresenter1.display(); }
     void updatePresenter2() { mPresenter2.display(); }
@@ -326,8 +323,9 @@ class Controller {
       #endif
       }
 
-      // Update the display right away to prevent jitters in the display when
-      // the button is triggering RepeatPressed events.
+      // Update Display0 right away to prevent jitters in the display when the
+      // button is triggering RepeatPressed events. Display1 and Display2 will
+      // follow, perhaps slightly behind the Display0, but that's ok.
       update();
       updatePresenter0();
     }
@@ -400,9 +398,9 @@ class Controller {
           bool blinkShowState = mBlinkShowState || mSuppressBlink;
           uint8_t mode = mNavigator.mode();
           acetime_t now = mClock.getNow();
-          mPresenter0.update(mode, now, blinkShowState, mClockInfo0);
-          mPresenter1.update(mode, now, blinkShowState, mClockInfo1);
-          mPresenter2.update(mode, now, blinkShowState, mClockInfo2);
+          mPresenter0.setRenderingInfo(mode, now, blinkShowState, mClockInfo0);
+          mPresenter1.setRenderingInfo(mode, now, blinkShowState, mClockInfo1);
+          mPresenter2.setRenderingInfo(mode, now, blinkShowState, mClockInfo2);
           break;
         }
 
@@ -420,9 +418,9 @@ class Controller {
           acetime_t now = mChangingDateTime.toEpochSeconds();
           bool blinkShowState = mBlinkShowState || mSuppressBlink;
           uint8_t mode = mNavigator.mode();
-          mPresenter0.update(mode, now, blinkShowState, mClockInfo0);
-          mPresenter1.update(mode, now, true, mClockInfo1);
-          mPresenter2.update(mode, now, true, mClockInfo2);
+          mPresenter0.setRenderingInfo(mode, now, blinkShowState, mClockInfo0);
+          mPresenter1.setRenderingInfo(mode, now, true, mClockInfo1);
+          mPresenter2.setRenderingInfo(mode, now, true, mClockInfo2);
           break;
         }
 
@@ -442,11 +440,11 @@ class Controller {
 
     void updateChangingDst(uint8_t clockId) {
       acetime_t now = mChangingDateTime.toEpochSeconds();
-      mPresenter0.update(
+      mPresenter0.setRenderingInfo(
           mNavigator.mode(), now, mBlinkShowState || clockId!=0, mClockInfo0);
-      mPresenter1.update(
+      mPresenter1.setRenderingInfo(
           mNavigator.mode(), now, mBlinkShowState || clockId!=1, mClockInfo1);
-      mPresenter2.update(
+      mPresenter2.setRenderingInfo(
           mNavigator.mode(), now, mBlinkShowState || clockId!=2, mClockInfo2);
     }
 

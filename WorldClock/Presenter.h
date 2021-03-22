@@ -35,19 +35,34 @@ class Presenter {
       if (needsUpdate()) {
         updateDisplaySettings();
         displayData();
+        mIsRendered = true;
       }
     }
 
-    void update(uint8_t mode, acetime_t now, bool blinkShowState,
+    /**
+     * Updating the rendering info and doing the actual rendering is now
+     * decoupled in WorldClock because it takes too long to render the 3 OLED
+     * displays, while blocking everything else. So use the 'mIsRendered' flag
+     * to keep track of whether the mPrevRenderingInfo has actually been
+     * rendered or not, before clobbering it with the new RenderingInfo.
+     */
+    void setRenderingInfo(uint8_t mode, acetime_t now, bool blinkShowState,
         const ClockInfo& clockInfo) {
-      mPrevRenderingInfo = mRenderingInfo;
+      if (mIsRendered) {
+        mPrevRenderingInfo = mRenderingInfo;
+        mIsRendered = false;
+      }
 
       mRenderingInfo.mode = mode;
       mRenderingInfo.now = now;
       mRenderingInfo.blinkShowState = blinkShowState;
-
       mRenderingInfo.clockInfo = clockInfo;
     }
+
+  private:
+    // Disable copy-constructor and assignment operator
+    Presenter(const Presenter&) = delete;
+    Presenter& operator=(const Presenter&) = delete;
 
     /**
      * Update the display settings, e.g. brightness, backlight, etc. Normally,
@@ -73,11 +88,6 @@ class Presenter {
         mOled.invertDisplay(clockInfo.invertDisplay);
       }
     }
-
-  private:
-    // Disable copy-constructor and assignment operator
-    Presenter(const Presenter&) = delete;
-    Presenter& operator=(const Presenter&) = delete;
 
     void clearDisplay() { mOled.clear(); }
 
@@ -354,6 +364,7 @@ class Presenter {
 
     RenderingInfo mRenderingInfo;
     RenderingInfo mPrevRenderingInfo;
+    bool mIsRendered = true; // true after a successful display()
 };
 
 #endif
