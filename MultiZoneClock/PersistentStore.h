@@ -14,7 +14,7 @@ using ace_utils::crc_eeprom::CrcEeprom;
 class PersistentStore {
   public:
     PersistentStore(IEepromAdapter& eepromAdapter)
-      : mCrcEeprom(eepromAdapter, CrcEeprom::toContextId('w', 'l', 'c', 'd'))
+      : mCrcEeprom(eepromAdapter, 0x03c4711f /*random contextId*/)
     {}
 
     void setup() {

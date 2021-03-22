@@ -2,6 +2,7 @@
 #define ONE_ZONE_CLOCK_CLOCK_INFO_H
 
 #include <AceTime.h>
+#include "config.h" // DISPLAY_TYPE
 
 /** Information about the clock, mostly independent of rendering. */
 struct ClockInfo {
@@ -54,5 +55,24 @@ struct ClockInfo {
   /** Current time. */
   ace_time::ZonedDateTime dateTime;
 };
+
+inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
+  // Fields most likely to change are compared earlier than later.
+  return a.dateTime == b.dateTime
+    && a.hourMode == b.hourMode
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+    && a.backlightLevel == b.backlightLevel
+    && a.contrast == b.contrast
+    && a.bias == b.bias
+  #else
+    && a.contrastLevel == b.contrastLevel
+    && a.invertDisplay == b.invertDisplay
+  #endif
+    && a.timeZoneData == b.timeZoneData;
+}
+
+inline bool operator!=(const ClockInfo& a, const ClockInfo& b) {
+  return ! (a == b);
+}
 
 #endif

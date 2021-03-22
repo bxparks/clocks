@@ -2,6 +2,7 @@
 #define WORLD_CLOCK_CLOCK_INFO_H
 
 #include <AceTime.h>
+#include "config.h"
 
 /**
  * Data that describes the clock of a single time zone. The uint8_t and bool
@@ -26,6 +27,9 @@ struct ClockInfo {
   /** Invert display auto. */
   static uint8_t const kInvertDisplayAuto = 2;
 
+  /** Default constructor. */
+  ClockInfo() {}
+
   /** Construct from ZoneProcessor. */
   ClockInfo(const ace_time::TimeZone& tz, const char* theName) :
       timeZone(tz),
@@ -45,13 +49,28 @@ struct ClockInfo {
   uint8_t contrastLevel = 5;
 
   /** Invert display mode. */
-  uint8_t invertDisplay;
+  uint8_t invertDisplay = 0;
 
   /** The desired time zone of the clock. */
   ace_time::TimeZone timeZone;
 
   /** Name of this clock, e.g. City or Time Zone ID */
-  const char* name;
+  const char* name = nullptr;
 };
+
+
+inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
+  return a.hourMode == b.hourMode
+    && a.blinkingColon == b.blinkingColon
+    && a.contrastLevel == b.contrastLevel
+    && a.invertDisplay == b.invertDisplay
+    && a.timeZone == b.timeZone
+    && a.name == b.name;
+}
+
+inline bool operator!=(const ClockInfo& a, const ClockInfo& b) {
+  return ! (a == b);
+}
+
 
 #endif

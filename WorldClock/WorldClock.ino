@@ -60,7 +60,7 @@ using ace_utils::crc_eeprom::CrcEeprom;
 // Needed by ESP8266 and ESP32 chips. Has no effect on other chips.
 const int EEPROM_SIZE = CrcEeprom::toSavedSize(sizeof(StoredInfo));
 
-CrcEeprom crcEeprom(eepromAdapter, CrcEeprom::toContextId('w', 'c', 'l', 'k'));
+CrcEeprom crcEeprom(eepromAdapter, 0x10186c40 /*random contextId*/);
 
 //----------------------------------------------------------------------------
 // Configure various Clocks.

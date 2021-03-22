@@ -81,18 +81,7 @@ class Presenter {
         const ClockInfo& clockInfo) {
       mRenderingInfo.mode = mode;
       mRenderingInfo.blinkShowState = blinkShowState;
-      mRenderingInfo.hourMode = clockInfo.hourMode;
-      mRenderingInfo.timeZoneData = clockInfo.timeZoneData;
-      mRenderingInfo.dateTime = clockInfo.dateTime;
-
-    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-      mRenderingInfo.backlightLevel = clockInfo.backlightLevel;
-      mRenderingInfo.contrast = clockInfo.contrast;
-      mRenderingInfo.bias = clockInfo.bias;
-    #else
-      mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
-      mRenderingInfo.invertDisplay = clockInfo.invertDisplay;
-    #endif
+      mRenderingInfo.clockInfo = clockInfo;
     }
 
   private:
@@ -189,29 +178,32 @@ class Presenter {
 
     /** Update the display settings, e.g. brightness, backlight, etc. */
     void updateDisplaySettings() {
+      ClockInfo &prevClockInfo = mPrevRenderingInfo.clockInfo;
+      ClockInfo &clockInfo = mRenderingInfo.clockInfo;
+
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
-          mPrevRenderingInfo.backlightLevel != mRenderingInfo.backlightLevel) {
-        uint16_t value = toLcdBacklightValue(mRenderingInfo.backlightLevel);
+          prevClockInfo.backlightLevel != mRenderingInfo.backlightLevel) {
+        uint16_t value = toLcdBacklightValue(clockInfo.backlightLevel);
         analogWrite(LCD_BACKLIGHT_PIN, value);
       }
       if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
-          mPrevRenderingInfo.contrast != mRenderingInfo.contrast) {
-        mDisplay.setContrast(mRenderingInfo.contrast);
+          prevClockInfo.contrast != clockInfo.contrast) {
+        mDisplay.setContrast(clockInfo.contrast);
       }
       if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
-          mPrevRenderingInfo.bias != mRenderingInfo.bias) {
-        mDisplay.setBias(mRenderingInfo.bias);
+          prevClockInfo.bias != clockInfo.bias) {
+        mDisplay.setBias(clockInfo.bias);
       }
     #else
       if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
-          mPrevRenderingInfo.contrastLevel != mRenderingInfo.contrastLevel) {
-        uint8_t value = toOledContrastValue(mRenderingInfo.contrastLevel);
+          prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
+        uint8_t value = toOledContrastValue(clockInfo.contrastLevel);
         mDisplay.setContrast(value);
       }
       if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
-          mPrevRenderingInfo.invertDisplay != mRenderingInfo.invertDisplay) {
-        mDisplay.invertDisplay(mRenderingInfo.invertDisplay);
+          prevClockInfo.invertDisplay != clockInfo.invertDisplay) {
+        mDisplay.invertDisplay(clockInfo.invertDisplay);
       }
     #endif
     }
@@ -294,7 +286,7 @@ class Presenter {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("displayDateTimeMode()"));
       }
-      const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
+      const ZonedDateTime& dateTime = mRenderingInfo.clockInfo.dateTime;
       if (dateTime.isError()) {
         mDisplay.println(F("<Error>"));
         return;
@@ -331,7 +323,7 @@ class Presenter {
     void displayTime(const ZonedDateTime& dateTime) {
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
         uint8_t hour = dateTime.hour();
-        if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
+        if (mRenderingInfo.clockInfo.hourMode == ClockInfo::kTwelve) {
           if (hour == 0) {
             hour = 12;
           } else if (hour > 12) {
@@ -357,7 +349,7 @@ class Presenter {
         mDisplay.print("  ");
       }
       mDisplay.print(' ');
-      if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
+      if (mRenderingInfo.clockInfo.hourMode == ClockInfo::kTwelve) {
         mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
       clearToEOL();
@@ -380,7 +372,7 @@ class Presenter {
       // dateTime will contain a TimeZone, which points to the (singular)
       // Controller::mZoneProcessor, which will contain the old timeZone.
       TimeZone tz = mZoneManager.createForTimeZoneData(
-          mRenderingInfo.timeZoneData);
+          mRenderingInfo.clockInfo.timeZoneData);
       mDisplay.print("TZ: ");
       const __FlashStringHelper* typeString;
       switch (tz.getType()) {
@@ -450,24 +442,26 @@ class Presenter {
         SERIAL_PORT_MONITOR.println(F("displaySettingsMode()"));
       }
 
+      ClockInfo &clockInfo = mRenderingInfo.clockInfo;
+
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       mDisplay.print(F("Backlight:"));
       if (shouldShowFor(MODE_CHANGE_SETTINGS_BACKLIGHT)) {
-        mDisplay.println(mRenderingInfo.backlightLevel);
+        mDisplay.println(clockInfo.backlightLevel);
       } else {
         mDisplay.println(' ');
       }
 
       mDisplay.print(F("Contrast:"));
       if (shouldShowFor(MODE_CHANGE_SETTINGS_CONTRAST)) {
-        mDisplay.println(mRenderingInfo.contrast);
+        mDisplay.println(clockInfo.contrast);
       } else {
         mDisplay.println(' ');
       }
 
       mDisplay.print(F("Bias:"));
       if (shouldShowFor(MODE_CHANGE_SETTINGS_BIAS)) {
-        mDisplay.println(mRenderingInfo.bias);
+        mDisplay.println(clockInfo.bias);
       } else {
         mDisplay.println(' ');
       }
@@ -475,14 +469,14 @@ class Presenter {
     #else
       mDisplay.print(F("Contrast:"));
       if (shouldShowFor(MODE_CHANGE_SETTINGS_CONTRAST)) {
-        mDisplay.println(mRenderingInfo.contrastLevel);
+        mDisplay.println(clockInfo.contrastLevel);
       } else {
         mDisplay.println(' ');
       }
 
       mDisplay.print(F("Invert:"));
       if (shouldShowFor(MODE_CHANGE_INVERT_DISPLAY)) {
-        mDisplay.println(mRenderingInfo.invertDisplay);
+        mDisplay.println(clockInfo.invertDisplay);
       } else {
         mDisplay.println(' ');
       }

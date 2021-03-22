@@ -2,7 +2,7 @@
 #define MULTI_ZONE_CLOCK_RENDERING_INFO_H
 
 #include <AceTime.h>
-#include "config.h"
+#include "ClockInfo.h"
 
 /**
  * Data used by the Presenter (the "View") to determine what has changed and
@@ -12,39 +12,13 @@ struct RenderingInfo {
   uint8_t mode; // display mode, see MODE_xxx in config.h
   bool blinkShowState; // true if blinking info should be shown
 
-  uint8_t hourMode; // ClockInfo::kTwelve or kTwentyFour
-
-  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-    uint8_t backlightLevel; // LCD backlight level [0, 9]
-    uint8_t contrast; // LCD contrast [0, 127]
-    uint8_t bias; // LCD backlight level [0, 7]
-  #else
-    uint8_t contrastLevel; // OLED contrast level [0, 9] -> [0, 255]
-  uint8_t invertDisplay; // 0: off, 1: on; should never be 2
-  #endif
-
-  ace_time::TimeZoneData zones[NUM_TIME_ZONES];
-  ace_time::ZonedDateTime dateTime;
+  ClockInfo clockInfo;
 };
 
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
   return a.mode == b.mode
       && a.blinkShowState == b.blinkShowState
-      && a.hourMode == b.hourMode
-    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-      && a.backlightLevel == b.backlightLevel
-      && a.contrast == b.contrast
-      && a.bias == b.bias
-    #else
-      && a.contrastLevel == b.contrastLevel
-      && a.invertDisplay == b.invertDisplay
-    #endif
-      // Hack: If NUM_TIME_ZONES is changed, change the indexes below!
-      && a.zones[0] == b.zones[0]
-      && a.zones[1] == b.zones[1]
-      && a.zones[2] == b.zones[2]
-      && a.zones[3] == b.zones[3]
-      && a.dateTime == b.dateTime;
+      && a.clockInfo == b.clockInfo;
 }
 
 inline bool operator!=(const RenderingInfo& a, const RenderingInfo& b) {

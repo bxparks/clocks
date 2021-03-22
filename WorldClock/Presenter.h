@@ -35,30 +35,59 @@ class Presenter {
       if (needsUpdate()) {
         updateDisplaySettings();
         displayData();
+        mIsRendered = true;
       }
     }
 
-    void update(uint8_t mode, acetime_t now, bool blinkShowState,
+    /**
+     * Updating the rendering info and doing the actual rendering is now
+     * decoupled in WorldClock because it takes too long to render the 3 OLED
+     * displays, while blocking everything else. So use the 'mIsRendered' flag
+     * to keep track of whether the mPrevRenderingInfo has actually been
+     * rendered or not, before clobbering it with the new RenderingInfo.
+     */
+    void setRenderingInfo(uint8_t mode, acetime_t now, bool blinkShowState,
         const ClockInfo& clockInfo) {
-      mPrevRenderingInfo = mRenderingInfo;
+      if (mIsRendered) {
+        mPrevRenderingInfo = mRenderingInfo;
+        mIsRendered = false;
+      }
 
       mRenderingInfo.mode = mode;
       mRenderingInfo.now = now;
       mRenderingInfo.blinkShowState = blinkShowState;
-
-      mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
-      mRenderingInfo.invertDisplay = clockInfo.invertDisplay;
-
-      mRenderingInfo.name = clockInfo.name;
-      mRenderingInfo.hourMode = clockInfo.hourMode;
-      mRenderingInfo.blinkingColon = clockInfo.blinkingColon;
-      mRenderingInfo.timeZone = clockInfo.timeZone;
+      mRenderingInfo.clockInfo = clockInfo;
     }
 
   private:
     // Disable copy-constructor and assignment operator
     Presenter(const Presenter&) = delete;
     Presenter& operator=(const Presenter&) = delete;
+
+    /**
+     * Update the display settings, e.g. brightness, backlight, etc. Normally,
+     * this is called from display(). But the WorldClock is special because it
+     * has 3 displays so updating all of them takes too much time. But if a
+     * display settings is changed (backlight, inversion, etc), we have to
+     * update those settings right away. So this method is exposed so that
+     * Controller::update() can call this lighter weight method, instead of
+     * display().
+     */
+    void updateDisplaySettings() {
+      ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
+      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
+
+      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+          prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
+        uint8_t value = toContrastValue(clockInfo.contrastLevel);
+        mOled.setContrast(value);
+      }
+
+      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+          prevClockInfo.invertDisplay != clockInfo.invertDisplay) {
+        mOled.invertDisplay(clockInfo.invertDisplay);
+      }
+    }
 
     void clearDisplay() { mOled.clear(); }
 
@@ -101,8 +130,9 @@ class Presenter {
     void displayDateTime() {
       mOled.setFont(fixed_bold10x15);
 
+      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
       const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
-          mRenderingInfo.now, mRenderingInfo.timeZone);
+          mRenderingInfo.now, clockInfo.timeZone);
       if (dateTime.isError()) {
         clearDisplay();
         mOled.println(F("<Error>"));
@@ -112,7 +142,7 @@ class Presenter {
       // time
       mOled.set2X();
       uint8_t hour = dateTime.hour();
-      if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
+      if (clockInfo.hourMode == ClockInfo::kTwelve) {
         if (hour == 0) {
           hour = 12;
         } else if (hour > 12) {
@@ -123,13 +153,13 @@ class Presenter {
         printPad2To(mOled, hour, '0');
       }
       mOled.print(
-          (! mRenderingInfo.blinkingColon || shouldShowFor(MODE_DATE_TIME))
+          (! clockInfo.blinkingColon || shouldShowFor(MODE_DATE_TIME))
           ? ':' : ' ');
       printPad2To(mOled, dateTime.minute(), '0');
 
       // AM/PM indicator
       mOled.set1X();
-      if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
+      if (clockInfo.hourMode == ClockInfo::kTwelve) {
         mOled.print((dateTime.hour() < 12) ? 'A' : 'P');
       }
 
@@ -152,15 +182,16 @@ class Presenter {
       mOled.print(dateTime.timeZone().getAbbrev(epochSeconds));
       mOled.print(' ');
       mOled.print('(');
-      mOled.print(mRenderingInfo.name);
+      mOled.print(clockInfo.name);
       mOled.print(')');
       mOled.clearToEOL();
       mOled.println();
     }
 
     void displayChangeableDateTime() const {
+      const ClockInfo& clockInfo = mRenderingInfo.clockInfo;
       const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
-          mRenderingInfo.now, mRenderingInfo.timeZone);
+          mRenderingInfo.now, clockInfo.timeZone);
 
       mOled.setFont(fixed_bold10x15);
       mOled.set1X();
@@ -189,7 +220,7 @@ class Presenter {
       // time
       if (shouldShowFor(MODE_CHANGE_HOUR)) {
         uint8_t hour = dateTime.hour();
-        if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
+        if (clockInfo.hourMode == ClockInfo::kTwelve) {
           if (hour == 0) {
             hour = 12;
           } else if (hour > 12) {
@@ -215,7 +246,7 @@ class Presenter {
         mOled.print("  ");
       }
       mOled.print(' ');
-      if (mRenderingInfo.hourMode == ClockInfo::kTwelve) {
+      if (clockInfo.hourMode == ClockInfo::kTwelve) {
         mOled.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
       mOled.clearToEOL();
@@ -230,16 +261,18 @@ class Presenter {
       mOled.print(dateTime.timeZone().getAbbrev(mRenderingInfo.now));
       mOled.print(' ');
       mOled.print('(');
-      mOled.print(mRenderingInfo.name);
+      mOled.print(clockInfo.name);
       mOled.print(')');
       mOled.clearToEOL();
       mOled.println();
     }
 
     void displayClockInfo() const {
+      const ClockInfo& clockInfo = mRenderingInfo.clockInfo;
+
       mOled.print(F("12/24:"));
       if (shouldShowFor(MODE_CHANGE_HOUR_MODE)) {
-        mOled.print(mRenderingInfo.hourMode == ClockInfo::kTwelve
+        mOled.print(clockInfo.hourMode == ClockInfo::kTwelve
             ? "12" : "24");
       } else {
         mOled.print("  ");
@@ -248,7 +281,7 @@ class Presenter {
 
       mOled.print(F("Blink:"));
       if (shouldShowFor(MODE_CHANGE_BLINKING_COLON)) {
-        mOled.print(mRenderingInfo.blinkingColon ? "on " : "off");
+        mOled.print(clockInfo.blinkingColon ? "on " : "off");
       } else {
         mOled.print("   ");
       }
@@ -256,7 +289,7 @@ class Presenter {
 
       mOled.print(F("Contrast:"));
       if (shouldShowFor(MODE_CHANGE_CONTRAST)) {
-        mOled.print(mRenderingInfo.contrastLevel);
+        mOled.print(clockInfo.contrastLevel);
       } else {
         mOled.print(' ');
       }
@@ -264,14 +297,14 @@ class Presenter {
 
       mOled.print(F("Invert:"));
       if (shouldShowFor(MODE_CHANGE_INVERT_DISPLAY)) {
-        mOled.println(mRenderingInfo.invertDisplay);
+        mOled.println(clockInfo.invertDisplay);
       } else {
         mOled.println(' ');
       }
 
       // Extract time zone info.
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-      const TimeZone& timeZone = mRenderingInfo.timeZone;
+      const TimeZone& timeZone = clockInfo.timeZone;
       TimeOffset timeOffset = timeZone.getUtcOffset(0);
       int8_t hour;
       uint8_t minute;
@@ -318,20 +351,6 @@ class Presenter {
       return mRenderingInfo != mPrevRenderingInfo;
     }
 
-    /** Update the display settings, e.g. brightness, backlight, etc. */
-    void updateDisplaySettings() {
-      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
-          mPrevRenderingInfo.contrastLevel != mRenderingInfo.contrastLevel) {
-        uint8_t value = toContrastValue(mRenderingInfo.contrastLevel);
-        mOled.setContrast(value);
-      }
-
-      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
-          mPrevRenderingInfo.invertDisplay != mRenderingInfo.invertDisplay) {
-        mOled.invertDisplay(mRenderingInfo.invertDisplay);
-      }
-    }
-
     static uint8_t toContrastValue(uint8_t level) {
       if (level > kNumContrastValues - 1) level = kNumContrastValues - 1;
       return kContrastValues[level];
@@ -345,6 +364,7 @@ class Presenter {
 
     RenderingInfo mRenderingInfo;
     RenderingInfo mPrevRenderingInfo;
+    bool mIsRendered = true; // true after a successful display()
 };
 
 #endif
