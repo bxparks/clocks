@@ -98,11 +98,12 @@ class Controller {
       // split up the rendering of the 3 displays into 3 parts within that
       // coroutine. Essentially, this solution implements the FSM of the first
       // solution, but in a way that is simpler to understand.
-      /*
-      mPresenter0.display();
-      mPresenter1.display();
-      mPresenter2.display();
-      */
+      //
+      // Even if we don't call Presenter::display(), we lighter-weight methods
+      // to handle any display settings like contrast levels and and inversions.
+      mPresenter0.updateDisplaySettings();
+      mPresenter1.updateDisplaySettings();
+      mPresenter2.updateDisplaySettings();
     }
 
     // These are exposed as public methods so that the
