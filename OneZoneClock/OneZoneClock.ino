@@ -113,22 +113,22 @@ static ExtendedZoneManager<CACHE_SIZE> zoneManager(
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   DS3231Clock dsClock;
-  SystemClockCoroutine systemClock(&dsClock, &dsClock);
+  SYSTEM_CLOCK systemClock(&dsClock, &dsClock, 60 /*syncPeriod*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   NtpClock ntpClock;
-  SystemClockCoroutine systemClock(&ntpClock, nullptr);
+  SYSTEM_CLOCK systemClock(&ntpClock, nullptr, 60 /*syncPeriod*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
   StmRtcClock stmClock;
-  SystemClockCoroutine systemClock(&stmClock, nullptr);
+  SYSTEM_CLOCK systemClock(&stmClock, nullptr, 60 /*syncPeriod*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
   Stm32F1Clock stm32F1Clock;
-  SystemClockCoroutine systemClock(&stm32F1Clock, nullptr, 10);
+  SYSTEM_CLOCK systemClock(&stm32F1Clock, nullptr, 60 /*syncPeriod*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
   DS3231Clock dsClock;
   NtpClock ntpClock;
-  SystemClockCoroutine systemClock(&ntpClock, &dsClock);
+  SYSTEM_CLOCK systemClock(&ntpClock, &dsClock, 60 /*syncPeriod*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
-  SystemClockCoroutine systemClock(nullptr /*sync*/, nullptr /*backup*/);
+  SYSTEM_CLOCK systemClock(nullptr /*sync*/, nullptr /*backup*/);
 #else
   #error Unknown clock option
 #endif
@@ -148,7 +148,9 @@ void setupClocks() {
 #endif
 
   systemClock.setup();
+#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_COROUTINE
   systemClock.setupCoroutine(F("clock"));
+#endif
 }
 
 //------------------------------------------------------------------
@@ -196,7 +198,7 @@ void setupPresenter() {
 // Create mode groups that define the navigation path for the Mode button.
 // It forms a recursive tree structure that looks like this:
 //
-// - View date time
+// - View DateTime
 //    - Change hour
 //    - Change minute
 //    - Change second
@@ -207,6 +209,13 @@ void setupPresenter() {
 //    - Change zone offset
 //    - Change zone dst
 //    - Change zone name
+// - Settings
+//    - Change backlight (LCD)
+//    - Change contrast (LCD)
+//    - Change bias (LCD)
+//    - Change contrast (OLED)
+//    - Invert display (OLED)
+// - View SystemClock
 // - About
 //
 // Operation:
@@ -289,6 +298,7 @@ const uint8_t TOP_LEVEL_MODES[] = {
   MODE_DATE_TIME,
   MODE_TIME_ZONE,
   MODE_SETTINGS,
+  MODE_SYSCLOCK,
   MODE_ABOUT,
 };
 
@@ -298,7 +308,8 @@ const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
   &DATE_TIME_MODE_GROUP,
   &TIME_ZONE_MODE_GROUP,
   &SETTINGS_MODE_GROUP,
-  nullptr /* About mode has no submodes */,
+  nullptr /* MODE_SYSCLOCK has no submodes */,
+  nullptr /* MODE_ABOUT has no submodes */,
 };
 
 // Root mode group
@@ -551,6 +562,11 @@ if (ENABLE_SERIAL_DEBUG == 1) {
 
 void loop() {
   CoroutineScheduler::loop();
+
+#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
+  systemClock.loop();
+#endif
+
 #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
   modeButton.check();
   changeButton.check();

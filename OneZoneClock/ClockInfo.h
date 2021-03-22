@@ -54,11 +54,29 @@ struct ClockInfo {
 
   /** Current time. */
   ace_time::ZonedDateTime dateTime;
+
+  // Fields related to SYSCLOCK
+
+  /** TimePeriod since last sync. */
+  ace_time::TimePeriod prevSync;
+
+  /** TimePeriod until next sync. */
+  ace_time::TimePeriod nextSync;
+
+  /** TimePeriod of clock skew. */
+  ace_time::TimePeriod clockSkew;
+
+  /** Status code of the most recent sync attempt. */
+  uint8_t syncStatusCode;
 };
 
 inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
   // Fields most likely to change are compared earlier than later.
   return a.dateTime == b.dateTime
+    && a.prevSync == b.prevSync
+    && a.nextSync == b.nextSync
+    && a.clockSkew == b.clockSkew
+    && a.syncStatusCode == b.syncStatusCode
     && a.hourMode == b.hourMode
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     && a.backlightLevel == b.backlightLevel

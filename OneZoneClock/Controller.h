@@ -45,7 +45,7 @@ class Controller {
      */
     Controller(
         PersistentStore& persistentStore,
-        Clock& clock,
+        SystemClock& clock,
         Presenter& presenter,
         ZoneManager& zoneManager,
         TimeZoneData initialTimeZoneData,
@@ -411,8 +411,17 @@ class Controller {
 
   private:
     void updateDateTime() {
+      acetime_t nowSeconds = mClock.getNow();
       TimeZone tz = mZoneManager.createForTimeZoneData(mClockInfo.timeZoneData);
-      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(mClock.getNow(), tz);
+      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(nowSeconds, tz);
+
+      //acetime_t lastSync = mClock.getLastSyncTime();
+      int32_t secondsSinceSyncAttempt = mClock.getSecondsSinceSyncAttempt();
+      int32_t secondsToSyncAttempt = mClock.getSecondsToSyncAttempt();
+      mClockInfo.prevSync = TimePeriod(secondsSinceSyncAttempt);
+      mClockInfo.nextSync = TimePeriod(secondsToSyncAttempt);
+      mClockInfo.clockSkew = TimePeriod(mClock.getClockSkew());
+      mClockInfo.syncStatusCode = mClock.getSyncStatusCode();
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update the mChangingDateTime.second field with the current second.
@@ -470,8 +479,7 @@ class Controller {
 
       bool blinkShowState = mSuppressBlink || mBlinkShowState;
       mPresenter.setRenderingInfo(
-          mNavigator.mode(), blinkShowState, *clockInfo
-      );
+          mNavigator.mode(), blinkShowState, *clockInfo);
     }
 
     /** Save the current UTC dateTime to the RTC. */
@@ -574,7 +582,7 @@ class Controller {
 
   private:
     PersistentStore& mPersistentStore;
-    Clock& mClock;
+    SystemClock& mClock;
     Presenter& mPresenter;
     ZoneManager& mZoneManager;
     TimeZoneData mInitialTimeZoneData;
