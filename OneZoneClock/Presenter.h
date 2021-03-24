@@ -183,7 +183,7 @@ class Presenter {
 
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
-          prevClockInfo.backlightLevel != mRenderingInfo.backlightLevel) {
+          prevClockInfo.backlightLevel != clockInfo.backlightLevel) {
         uint16_t value = toLcdBacklightValue(clockInfo.backlightLevel);
         analogWrite(LCD_BACKLIGHT_PIN, value);
       }
@@ -287,7 +287,7 @@ class Presenter {
     }
 
     void displayDateTimeMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displayDateTimeMode()"));
       }
       const ZonedDateTime& dateTime = mRenderingInfo.clockInfo.dateTime;
@@ -365,7 +365,7 @@ class Presenter {
     }
 
     void displayTimeZoneMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displayTimeZoneMode()"));
       }
 
@@ -442,7 +442,7 @@ class Presenter {
     }
 
     void displaySettingsMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displaySettingsMode()"));
       }
 
@@ -489,7 +489,7 @@ class Presenter {
     }
 
     void displaySystemClockMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displaySystemClockMode()"));
       }
 
@@ -548,7 +548,7 @@ class Presenter {
     }
 
     void displayAboutMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displayAboutMode()"));
       }
 
