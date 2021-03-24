@@ -377,7 +377,7 @@ class Presenter {
       // Controller::mZoneProcessor, which will contain the old timeZone.
       TimeZone tz = mZoneManager.createForTimeZoneData(
           mRenderingInfo.clockInfo.timeZoneData);
-      mDisplay.print("TZ: ");
+      mDisplay.print("TZ:");
       const __FlashStringHelper* typeString;
       switch (tz.getType()) {
         case TimeZone::kTypeManual:
@@ -518,33 +518,8 @@ class Presenter {
       mDisplay.println();
     }
 
-    /** Print HourMinuteSecond of the time period. */
     void displayTimePeriodHMS(const TimePeriod& tp) {
-      mDisplay.print((tp.sign() < 0) ? '-' : '+');
-      printPad2To(mDisplay, tp.hour(), '0');
-      mDisplay.print('h');
-      printPad2To(mDisplay, tp.minute(), '0');
-      mDisplay.print('m');
-      printPad2To(mDisplay, tp.second(), '0');
-      mDisplay.print('s');
-    }
-
-    /** Print HourMinute of the time period. */
-    void displayTimePeriodHM(const TimePeriod& tp) {
-      mDisplay.print((tp.sign() < 0) ? '-' : '+');
-      printPad2To(mDisplay, tp.hour(), '0');
-      mDisplay.print('h');
-      printPad2To(mDisplay, tp.minute(), '0');
-      mDisplay.print('m');
-    }
-
-    /** Print MinuteSecond of the time period. */
-    void displayTimePeriodMS(const TimePeriod& tp) {
-      mDisplay.print((tp.sign() < 0) ? '-' : '+');
-      printPad2To(mDisplay, tp.minute(), '0');
-      mDisplay.print('m');
-      printPad2To(mDisplay, tp.second(), '0');
-      mDisplay.print('s');
+      tp.printTo(mDisplay);
     }
 
     void displayAboutMode() {
@@ -554,11 +529,14 @@ class Presenter {
 
       // Use F() macros for these longer strings. Seems to save both
       // flash memory and RAM.
-      mDisplay.print(F("TZ: "));
+      mDisplay.print(F("TZDB:"));
       mDisplay.println(zonedb::kTzDatabaseVersion);
-      mDisplay.println(F("AT: " ACE_TIME_VERSION_STRING));
-      mDisplay.println(F("AB: " ACE_BUTTON_VERSION_STRING));
-      mDisplay.println(F("AR: " ACE_ROUTINE_VERSION_STRING));
+      mDisplay.println(F("ATim:" ACE_TIME_VERSION_STRING));
+      mDisplay.println(F("ABut:" ACE_BUTTON_VERSION_STRING));
+      mDisplay.println(F("ARou:" ACE_ROUTINE_VERSION_STRING));
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      mDisplay.println(F("ACom:" ACE_COMMON_VERSION_STRING));
+    #endif
     }
 
   private:

@@ -192,7 +192,7 @@
   #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 4
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
   #define OLED_REMAP false
 #else
   #error Unknown AUNITER environment
