@@ -37,6 +37,16 @@
 #define TIME_ZONE_TYPE_EXTENDED 2
 #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
+#define SYSTEM_CLOCK_TYPE_LOOP 0
+#define SYSTEM_CLOCK_TYPE_COROUTINE 1
+#define SYSTEM_CLOCK_TYPE SYSTEM_CLOCK_TYPE_COROUTINE
+#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
+  #define SYSTEM_CLOCK SystemClockLoop
+#else
+  #define SYSTEM_CLOCK SystemClockCoroutine
+#endif
+
+
 // Options that define the authoratative source of the time.
 #define TIME_SOURCE_TYPE_NONE 0
 #define TIME_SOURCE_TYPE_DS3231 1
@@ -156,7 +166,7 @@
   //#define WIFI_PASSWORD
 
   #define ENABLE_EEPROM 1
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
 
   // Button parameters
   #undef BUTTON_TYPE
@@ -182,7 +192,7 @@
   #define ENABLE_EEPROM 1
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 4
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
   #define OLED_REMAP false
 #else
   #error Unknown AUNITER environment
@@ -197,8 +207,9 @@ const uint8_t MODE_UNKNOWN = 0;
 
 const uint8_t MODE_DATE_TIME = 1;
 const uint8_t MODE_TIME_ZONE = 2;
-const uint8_t MODE_SETTINGS = 3; // misc settings
-const uint8_t MODE_ABOUT = 4;
+const uint8_t MODE_SETTINGS = 3;
+const uint8_t MODE_SYSCLOCK = 4;
+const uint8_t MODE_ABOUT = 5;
 
 const uint8_t MODE_CHANGE_YEAR = 10;
 const uint8_t MODE_CHANGE_MONTH = 11;

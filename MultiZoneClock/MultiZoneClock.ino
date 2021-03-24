@@ -19,7 +19,7 @@
  *   *  SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
  *   *  Adafruit-PCD8544-Nokia-5110-LCD-library (https://github.com/adafruit/Adafruit-PCD8544-Nokia-5110-LCD-library)
  *
- * If ENABLE_SERIAL_DEBUG is set to 1, it prints diagnostics.
+ * If ENABLE_SERIAL_DEBUG is set to >= 1, it prints diagnostics.
  */
 
 #include "config.h"
@@ -137,7 +137,7 @@ void setupZoneManager() {
   #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASICDB \
       || TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDEDDB
     bool status = FILE_SYSTEM.begin();
-    if (ENABLE_SERIAL_DEBUG) {
+    if (ENABLE_SERIAL_DEBUG >= 1) {
       if (status) {
         SERIAL_PORT_MONITOR.println(F("File system initialized."));
       } else {
@@ -148,7 +148,7 @@ void setupZoneManager() {
     File file = FILE_SYSTEM.open(kZoneDbFileName, "r");
     status = zoneManager.load(file);
     file.close();
-    if (ENABLE_SERIAL_DEBUG) {
+    if (ENABLE_SERIAL_DEBUG >= 1) {
       if (status) {
         SERIAL_PORT_MONITOR.println(F("Zone Manager initialized."));
       } else {
@@ -275,7 +275,12 @@ void setupPresenter() {
 //    - Change zone dst
 //    - Change zone name
 // - View Settings
-//    - Change backlight
+//    - Change backlight (LCD)
+//    - Change contrast (LCD)
+//    - Change bias (LCD)
+//    - Change contrast (OLED)
+//    - Invert display (OLED)
+// - View SystemClock
 // - About
 //
 // Operation:
@@ -367,6 +372,7 @@ const uint8_t TOP_LEVEL_MODES[] = {
   MODE_DATE_TIME,
   MODE_TIME_ZONE,
   MODE_SETTINGS,
+  MODE_SYSCLOCK,
   MODE_ABOUT,
 };
 
@@ -376,7 +382,8 @@ const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
   &DATE_TIME_MODE_GROUP,
   &TIME_ZONE_MODE_GROUP,
   &SETTINGS_MODE_GROUP,
-  nullptr /* About mode has no submodes */,
+  nullptr /* MODE_SYSCLOCK has no submodes */,
+  nullptr /* MODE_ABOUT has no submodes */,
 };
 
 // Root mode group
@@ -578,6 +585,24 @@ void setupAceButton() {
   buttonConfig.setRepeatPressInterval(150);
 }
 
+// Read the buttons in a coroutine with a 10ms delay because if analogRead()
+// is used on an ESP8266 to read buttons in a resistor ladder, the WiFi
+// becomes disconnected after 5-10 seconds. See
+// https://github.com/esp8266/Arduino/issues/1634 and
+// https://github.com/esp8266/Arduino/issues/5083.
+COROUTINE(readButtons) {
+  COROUTINE_LOOP() {
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    modeButton.check();
+    changeButton.check();
+  #else
+    buttonConfig.checkButtons();
+  #endif
+
+    COROUTINE_DELAY(10);
+  }
+}
+
 //-----------------------------------------------------------------------------
 // Main setup and loop
 //-----------------------------------------------------------------------------
@@ -594,12 +619,12 @@ void setup() {
   TXLED0; // LED off
 #endif
 
-  if (ENABLE_SERIAL_DEBUG == 1 || ENABLE_FPS_DEBUG == 1) {
+  if (ENABLE_SERIAL_DEBUG >= 1 || ENABLE_FPS_DEBUG >= 1) {
     SERIAL_PORT_MONITOR.begin(115200);
     while (!SERIAL_PORT_MONITOR); // Leonardo/Micro
   }
 
-  if (ENABLE_SERIAL_DEBUG == 1) {
+  if (ENABLE_SERIAL_DEBUG >= 1) {
     SERIAL_PORT_MONITOR.println(F("setup(): begin"));
     SERIAL_PORT_MONITOR.print(F("sizeof(ClockInfo): "));
     SERIAL_PORT_MONITOR.println(sizeof(ClockInfo));
@@ -625,17 +650,11 @@ void setup() {
 
   CoroutineScheduler::setup();
 
-  if (ENABLE_SERIAL_DEBUG == 1) {
+  if (ENABLE_SERIAL_DEBUG >= 1) {
     SERIAL_PORT_MONITOR.println(F("setup(): end"));
   }
 }
 
 void loop() {
   CoroutineScheduler::loop();
-#if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
-  modeButton.check();
-  changeButton.check();
-#else
-  buttonConfig.checkButtons();
-#endif
 }

@@ -293,6 +293,10 @@ class Presenter {
           displaySettingsMode();
           break;
 
+        case MODE_SYSCLOCK:
+          displaySystemClockMode();
+          break;
+
         case MODE_ABOUT:
           displayAboutMode();
           break;
@@ -302,7 +306,7 @@ class Presenter {
     }
 
     void displayDateTimeMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displayDateTimeMode()"));
       }
 
@@ -542,7 +546,7 @@ class Presenter {
     }
 
     void displayTimeZoneMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displayTimeZoneMode()"));
       }
 
@@ -651,7 +655,7 @@ class Presenter {
     }
 
     void displaySettingsMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displaySettingsMode()"));
       }
 
@@ -696,8 +700,42 @@ class Presenter {
     #endif
     }
 
+    void displaySystemClockMode() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("displaySystemClockMode()"));
+      }
+
+      ClockInfo &clockInfo = mRenderingInfo.clockInfo;
+
+    #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
+      mDisplay.print(F("SClkLoop:"));
+    #else
+      mDisplay.print(F("SClkCrtn:"));
+    #endif
+      mDisplay.println(clockInfo.syncStatusCode);
+
+      // Print the prev sync as a negative
+      mDisplay.print(F("<:"));
+      TimePeriod prevSync = clockInfo.prevSync;
+      prevSync.sign(-prevSync.sign());
+      displayTimePeriodHMS(prevSync);
+      mDisplay.println();
+
+      mDisplay.print(F(">:"));
+      displayTimePeriodHMS(clockInfo.nextSync);
+      mDisplay.println();
+
+      mDisplay.print(F("S:"));
+      displayTimePeriodHMS(clockInfo.clockSkew);
+      mDisplay.println();
+    }
+
+    void displayTimePeriodHMS(const TimePeriod& tp) {
+      tp.printTo(mDisplay);
+    }
+
     void displayAboutMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displayAboutMode()"));
       }
 
@@ -708,7 +746,9 @@ class Presenter {
       mDisplay.println(F("ATim:" ACE_TIME_VERSION_STRING));
       mDisplay.println(F("ABut:" ACE_BUTTON_VERSION_STRING));
       mDisplay.println(F("ARou:" ACE_ROUTINE_VERSION_STRING));
+    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       mDisplay.println(F("ACom:" ACE_COMMON_VERSION_STRING));
+    #endif
     }
 
   private:

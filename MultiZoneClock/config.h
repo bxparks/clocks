@@ -9,12 +9,12 @@
 
 #define CLOCK_VERSION_STRING "0.2"
 
-// Set to 1 to print debugging info to SERIAL_PORT_MONITOR
+// Set to >= 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
 #define ENABLE_SERIAL_DEBUG 0
 #endif
 
-// Set to 1 to enable periodic calculation of the frames-per-second.
+// Set to >= 1 to enable periodic calculation of the frames-per-second.
 #ifndef ENABLE_FPS_DEBUG
 #define ENABLE_FPS_DEBUG 0
 #endif
@@ -172,7 +172,7 @@
   //#define WIFI_PASSWORD
 
   #define ENABLE_EEPROM 1
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
 
   // Use BasicDbZoneManager for testing.
   #undef TIME_ZONE_TYPE
@@ -200,10 +200,10 @@
   //#define WIFI_PASSWORD
 
   #define ENABLE_EEPROM 1
-  #define MODE_BUTTON_PIN 4
-  #define CHANGE_BUTTON_PIN 3
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_NTP
-  #define OLED_REMAP true
+  #define MODE_BUTTON_PIN 2
+  #define CHANGE_BUTTON_PIN 4
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
+  #define OLED_REMAP false
 #else
   #error Unknown AUNITER environment
 #endif
@@ -217,8 +217,9 @@ const uint8_t MODE_UNKNOWN = 0;
 
 const uint8_t MODE_DATE_TIME = 1;
 const uint8_t MODE_TIME_ZONE = 2;
-const uint8_t MODE_SETTINGS = 3; // misc settings
-const uint8_t MODE_ABOUT = 4;
+const uint8_t MODE_SETTINGS = 3;
+const uint8_t MODE_SYSCLOCK = 4;
+const uint8_t MODE_ABOUT = 5;
 
 const uint8_t MODE_CHANGE_YEAR = 10;
 const uint8_t MODE_CHANGE_MONTH = 11;

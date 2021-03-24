@@ -45,7 +45,7 @@ class Controller {
      */
     Controller(
         PersistentStore& persistentStore,
-        Clock& clock,
+        SystemClock& clock,
         Presenter& presenter,
         ZoneManager& zoneManager,
         TimeZoneData initialTimeZoneData,
@@ -90,7 +90,7 @@ class Controller {
      * Go to the next Mode, either the next screen or the next editable field.
      */
     void handleModeButtonPress() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
       performLeavingModeAction();
@@ -99,7 +99,7 @@ class Controller {
     }
 
     void performEnteringModeAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
       }
 
@@ -114,14 +114,14 @@ class Controller {
     }
 
     void performLeavingModeAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeAction()"));
       }
     }
 
     /** Toggle edit mode. The editable field will start blinking. */
     void handleModeButtonLongPress() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
       }
 
@@ -137,7 +137,7 @@ class Controller {
      * already in edit mode.
      */
     void handleModeButtonDoubleClick() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
       }
 
@@ -174,7 +174,7 @@ class Controller {
 
     /** Do action associated with entering a ModeGroup due to a LongPress. */
     void performEnteringModeGroupAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
       }
 
@@ -199,7 +199,7 @@ class Controller {
 
     /** Do action associated with leaving a ModeGroup due to a LongPress. */
     void performLeavingModeGroupAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
       }
 
@@ -236,7 +236,7 @@ class Controller {
     }
 
     void handleChangeButtonPress() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
       switch (mNavigator.mode()) {
@@ -411,8 +411,17 @@ class Controller {
 
   private:
     void updateDateTime() {
+      acetime_t nowSeconds = mClock.getNow();
       TimeZone tz = mZoneManager.createForTimeZoneData(mClockInfo.timeZoneData);
-      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(mClock.getNow(), tz);
+      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(nowSeconds, tz);
+
+      //acetime_t lastSync = mClock.getLastSyncTime();
+      int32_t secondsSinceSyncAttempt = mClock.getSecondsSinceSyncAttempt();
+      int32_t secondsToSyncAttempt = mClock.getSecondsToSyncAttempt();
+      mClockInfo.prevSync = TimePeriod(secondsSinceSyncAttempt);
+      mClockInfo.nextSync = TimePeriod(secondsToSyncAttempt);
+      mClockInfo.clockSkew = TimePeriod(mClock.getClockSkew());
+      mClockInfo.syncStatusCode = mClock.getSyncStatusCode();
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update the mChangingDateTime.second field with the current second.
@@ -470,8 +479,7 @@ class Controller {
 
       bool blinkShowState = mSuppressBlink || mBlinkShowState;
       mPresenter.setRenderingInfo(
-          mNavigator.mode(), blinkShowState, *clockInfo
-      );
+          mNavigator.mode(), blinkShowState, *clockInfo);
     }
 
     /** Save the current UTC dateTime to the RTC. */
@@ -481,7 +489,7 @@ class Controller {
 
     /** Transfer info from ChangingClockInfo to ClockInfo. */
     void saveClockInfo() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("saveClockInfo()"));
       }
       mClockInfo = mChangingClockInfo;
@@ -490,7 +498,7 @@ class Controller {
 
     /** Save the clock info into EEPROM. */
     void preserveClockInfo(const ClockInfo& clockInfo) {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("preserveClockInfo()"));
       }
       StoredInfo storedInfo;
@@ -534,13 +542,13 @@ class Controller {
       bool isValid;
 
       if (factoryReset) {
-        if (ENABLE_SERIAL_DEBUG == 1) {
+        if (ENABLE_SERIAL_DEBUG >= 1) {
           SERIAL_PORT_MONITOR.println(F("restoreClockInfo(): FACTORY RESET"));
         }
         isValid = false;
       } else {
         isValid = mPersistentStore.readStoredInfo(storedInfo);
-        if (ENABLE_SERIAL_DEBUG == 1) {
+        if (ENABLE_SERIAL_DEBUG >= 1) {
           if (! isValid) {
             SERIAL_PORT_MONITOR.println(F(
                 "restoreClockInfo(): EEPROM NOT VALID; "
@@ -574,7 +582,7 @@ class Controller {
 
   private:
     PersistentStore& mPersistentStore;
-    Clock& mClock;
+    SystemClock& mClock;
     Presenter& mPresenter;
     ZoneManager& mZoneManager;
     TimeZoneData mInitialTimeZoneData;
