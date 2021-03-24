@@ -293,6 +293,10 @@ class Presenter {
           displaySettingsMode();
           break;
 
+        case MODE_SYSCLOCK:
+          displaySystemClockMode();
+          break;
+
         case MODE_ABOUT:
           displayAboutMode();
           break;
@@ -302,7 +306,7 @@ class Presenter {
     }
 
     void displayDateTimeMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displayDateTimeMode()"));
       }
 
@@ -542,7 +546,7 @@ class Presenter {
     }
 
     void displayTimeZoneMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displayTimeZoneMode()"));
       }
 
@@ -651,7 +655,7 @@ class Presenter {
     }
 
     void displaySettingsMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displaySettingsMode()"));
       }
 
@@ -696,8 +700,49 @@ class Presenter {
     #endif
     }
 
+    void displaySystemClockMode() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("displaySystemClockMode()"));
+      }
+
+      ClockInfo &clockInfo = mRenderingInfo.clockInfo;
+
+    #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
+      mDisplay.print(F("SClkLoop:"));
+    #else
+      mDisplay.print(F("SClkCrtn:"));
+    #endif
+      mDisplay.println(clockInfo.syncStatusCode);
+
+      // Print the prev sync as a negative
+      mDisplay.print(F("<:"));
+      TimePeriod prevSync = clockInfo.prevSync;
+      prevSync.sign(-prevSync.sign());
+      displayTimePeriodHMS(prevSync);
+      mDisplay.println();
+
+      mDisplay.print(F(">:"));
+      displayTimePeriodHMS(clockInfo.nextSync);
+      mDisplay.println();
+
+      mDisplay.print(F("S:"));
+      displayTimePeriodHMS(clockInfo.clockSkew);
+      mDisplay.println();
+    }
+
+    /** Print HourMinuteSecond of the time period. */
+    void displayTimePeriodHMS(const TimePeriod& tp) {
+      mDisplay.print((tp.sign() < 0) ? '-' : '+');
+      printPad2To(mDisplay, tp.hour(), '0');
+      mDisplay.print('h');
+      printPad2To(mDisplay, tp.minute(), '0');
+      mDisplay.print('m');
+      printPad2To(mDisplay, tp.second(), '0');
+      mDisplay.print('s');
+    }
+
     void displayAboutMode() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displayAboutMode()"));
       }
 
