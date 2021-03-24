@@ -285,8 +285,13 @@ check (or there is a bug in my program).
 ### Factory Reset
 
 If the EEPROM state becomes corrupted, or the CRC32 check fails, or there
-is a bug in my code, it is possible to do a factory reset using the following
-compile-time option in `config.h`:
+is a bug in my code, it is possible to do a factory reset. There are 2 ways:
+
+One, hold down the Mode button during power up. The code should reset its
+internal parameters to the defaults. If there is a bug in that code, there's an
+even bigger hammer.
+
+Two, change the `FORCE_INITIALIZE` parameter in `config.h` to:
 
 ```C++
 #define FORCE_INITIALIZE 1
@@ -295,7 +300,3 @@ compile-time option in `config.h`:
 Recompile and upload the program to the microcontroller. This should reset
 all values to their factory defaults. Afterwards, set the `FORCE_INITIALIZE` to
 `0` again, and upload the program again to get the normal behavior.
-
-An easier way to do a factory reset is to reset the microcontroller, while
-holding down the `MODE` button. This is equilvalent to setting
-`FORCE_INITIALIZE`.
