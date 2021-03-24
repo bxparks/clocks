@@ -509,6 +509,24 @@ void setupAceButton() {
   buttonConfig.setRepeatPressInterval(150);
 }
 
+// Read the buttons in a coroutine with a 10ms delay because if analogRead()
+// is used on an ESP8266 to read buttons in a resistor ladder, the WiFi
+// becomes disconnected after 5-10 seconds. See
+// https://github.com/esp8266/Arduino/issues/1634 and
+// https://github.com/esp8266/Arduino/issues/5083.
+COROUTINE(readButtons) {
+  COROUTINE_LOOP() {
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    modeButton.check();
+    changeButton.check();
+  #else
+    buttonConfig.checkButtons();
+  #endif
+
+    COROUTINE_DELAY(10);
+  }
+}
+
 //------------------------------------------------------------------
 // Main setup and loop
 //------------------------------------------------------------------
@@ -525,12 +543,12 @@ void setup() {
   TXLED0; // LED off
 #endif
 
-if (ENABLE_SERIAL_DEBUG == 1 || ENABLE_FPS_DEBUG == 1) {
+if (ENABLE_SERIAL_DEBUG >= 1 || ENABLE_FPS_DEBUG >= 1) {
   SERIAL_PORT_MONITOR.begin(115200);
   while (!SERIAL_PORT_MONITOR); // Leonardo/Micro
 }
 
-if (ENABLE_SERIAL_DEBUG == 1) {
+if (ENABLE_SERIAL_DEBUG >= 1) {
   SERIAL_PORT_MONITOR.println(F("setup(): begin"));
   SERIAL_PORT_MONITOR.print(F("sizeof(ClockInfo): "));
   SERIAL_PORT_MONITOR.println(sizeof(ClockInfo));
@@ -555,7 +573,7 @@ if (ENABLE_SERIAL_DEBUG == 1) {
 
   CoroutineScheduler::setup();
 
-  if (ENABLE_SERIAL_DEBUG == 1) {
+  if (ENABLE_SERIAL_DEBUG >= 1) {
     SERIAL_PORT_MONITOR.println(F("setup(): end"));
   }
 }
@@ -565,12 +583,5 @@ void loop() {
 
 #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
   systemClock.loop();
-#endif
-
-#if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
-  modeButton.check();
-  changeButton.check();
-#else
-  buttonConfig.checkButtons();
 #endif
 }
