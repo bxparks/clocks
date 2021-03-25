@@ -34,7 +34,7 @@ class Presenter {
     }
 
     void setRenderingInfo(
-        uint8_t mode,
+        Mode mode,
         bool blinkShowState,
         const ClockInfo& clockInfo
     ) {
@@ -60,40 +60,43 @@ class Presenter {
       mOled.home();
 
       switch (mRenderingInfo.mode) {
-        case MODE_VIEW_MED:
+        case Mode::kViewMed:
           displayMed();
           break;
 
-        case MODE_VIEW_DATE_TIME:
+        case Mode::kViewDateTime:
           displayDateTime();
           break;
 
-        case MODE_VIEW_ABOUT:
+        case Mode::kViewAbout:
           displayAbout();
           break;
 
-        case MODE_VIEW_TIME_ZONE:
+        case Mode::kViewTimeZone:
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE_OFFSET:
-        case MODE_CHANGE_TIME_ZONE_DST:
+        case Mode::kChangeTimeZoneOffset:
+        case Mode::kChangeTimeZoneDst:
       #else
-        case MODE_CHANGE_TIME_ZONE_NAME:
+        case Mode::kChangeTimeZoneName:
       #endif
           displayTimeZone();
           break;
 
-        case MODE_CHANGE_MED_HOUR:
-        case MODE_CHANGE_MED_MINUTE:
+        case Mode::kChangeMedHour:
+        case Mode::kChangeMedMinute:
           displayChangeMed();
           break;
 
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
           displayDateTime();
+          break;
+
+        default:
           break;
       }
     }
@@ -126,13 +129,13 @@ class Presenter {
     void displayChangeMed() const {
       mOled.println("Med intrvl");
 
-      if (shouldShowFor(MODE_CHANGE_MED_HOUR)) {
+      if (shouldShowFor(Mode::kChangeMedHour)) {
         printPad2To(mOled, mRenderingInfo.timePeriod.hour(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
-      if (shouldShowFor(MODE_CHANGE_MED_MINUTE)) {
+      if (shouldShowFor(Mode::kChangeMedMinute)) {
         printPad2To(mOled, mRenderingInfo.timePeriod.minute(), '0');
       } else {
         mOled.print("  ");
@@ -158,19 +161,19 @@ class Presenter {
         mOled.print(F("<INVALID>"));
         return;
       }
-      if (shouldShowFor(MODE_CHANGE_YEAR)) {
+      if (shouldShowFor(Mode::kChangeYear)) {
         mOled.print(dateTime.year());
       } else {
         mOled.print("    ");
       }
       mOled.print('-');
-      if (shouldShowFor(MODE_CHANGE_MONTH)) {
+      if (shouldShowFor(Mode::kChangeMonth)) {
         printPad2To(mOled, dateTime.month(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print('-');
-      if (shouldShowFor(MODE_CHANGE_DAY)) {
+      if (shouldShowFor(Mode::kChangeDay)) {
         printPad2To(mOled, dateTime.day(), '0');
       } else{
         mOled.print("  ");
@@ -181,19 +184,19 @@ class Presenter {
     void displayTime() const {
       const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
 
-      if (shouldShowFor(MODE_CHANGE_HOUR)) {
+      if (shouldShowFor(Mode::kChangeHour)) {
         printPad2To(mOled, dateTime.hour(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
-      if (shouldShowFor(MODE_CHANGE_MINUTE)) {
+      if (shouldShowFor(Mode::kChangeMinute)) {
         printPad2To(mOled, dateTime.minute(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
-      if (shouldShowFor(MODE_CHANGE_SECOND)) {
+      if (shouldShowFor(Mode::kChangeSecond)) {
         printPad2To(mOled, dateTime.second(), '0');
       } else {
         mOled.print("  ");
@@ -236,7 +239,7 @@ class Presenter {
         case TimeZone::kTypeManual:
           mOled.println();
           mOled.print("UTC");
-          if (shouldShowFor(MODE_CHANGE_TIME_ZONE_OFFSET)) {
+          if (shouldShowFor(Mode::kChangeTimeZoneOffset)) {
             TimeOffset offset = tz.getStdOffset();
             offset.printTo(mOled);
           }
@@ -244,7 +247,7 @@ class Presenter {
 
           mOled.println();
           mOled.print("DST: ");
-          if (shouldShowFor(MODE_CHANGE_TIME_ZONE_DST)) {
+          if (shouldShowFor(Mode::kChangeTimeZoneDst)) {
             mOled.print((tz.getDstOffset().isZero()) ? "off" : "on ");
           }
           mOled.clearToEOL();
@@ -253,7 +256,7 @@ class Presenter {
         case BasicZoneProcessor::kTypeBasic:
         case ExtendedZoneProcessor::kTypeExtended:
           // Print name of timezone
-          if (shouldShowFor(MODE_CHANGE_TIME_ZONE_NAME)) {
+          if (shouldShowFor(Mode::kChangeTimeZoneName)) {
             tz.printShortTo(mOled);
           }
           mOled.clearToEOL();
@@ -271,7 +274,7 @@ class Presenter {
      * If the clock is in "blinking" mode, then this will return false in
      * accordance with the mBlinkShowState.
      */
-    bool shouldShowFor(uint8_t mode) const {
+    bool shouldShowFor(Mode mode) const {
       return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
     }
 

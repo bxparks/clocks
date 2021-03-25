@@ -118,31 +118,33 @@
 // Constants for button and UI states.
 //------------------------------------------------------------------
 
-// View modes
-static const uint8_t MODE_UNKNOWN = 0; // uninitialized
-static const uint8_t MODE_VIEW_MED = 1;
-static const uint8_t MODE_VIEW_DATE_TIME = 2;
-static const uint8_t MODE_VIEW_TIME_ZONE = 3;
-static const uint8_t MODE_VIEW_ABOUT = 4;
+enum class Mode : uint8_t {
+  kUnknown = 0, // uninitialized
 
-// Change Med info
-static const uint8_t MODE_CHANGE_MED_HOUR = 10;
-static const uint8_t MODE_CHANGE_MED_MINUTE = 11;
+  // View modes
+  kViewMed,
+  kViewDateTime,
+  kViewTimeZone,
+  kViewAbout,
 
-// Change date/time modes
-static const uint8_t MODE_CHANGE_YEAR = 20;
-static const uint8_t MODE_CHANGE_MONTH = 21;
-static const uint8_t MODE_CHANGE_DAY = 22;
-static const uint8_t MODE_CHANGE_HOUR = 23;
-static const uint8_t MODE_CHANGE_MINUTE = 24;
-static const uint8_t MODE_CHANGE_SECOND = 25;
+  // Change Med info
+  kChangeMedHour,
+  kChangeMedMinute,
 
+  // Change date/time modes
+  kChangeYear,
+  kChangeMonth,
+  kChangeDay,
+  kChangeHour,
+  kChangeMinute,
+  kChangeSecond,
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-static const uint8_t MODE_CHANGE_TIME_ZONE_OFFSET = 30;
-static const uint8_t MODE_CHANGE_TIME_ZONE_DST = 31;
+  kChangeTimeZoneOffset,
+  kChangeTimeZoneDst,
 #else
-static const uint8_t MODE_CHANGE_TIME_ZONE_NAME = 30;
+  kChangeTimeZoneName,
 #endif
+};
 
 #endif

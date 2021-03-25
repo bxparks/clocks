@@ -11,7 +11,7 @@ using namespace ace_time;
  * information which will be rendered to the display.
  */ 
 struct RenderingInfo {
-  uint8_t mode = 0;
+  Mode mode = Mode::kUnknown;
   bool blinkShowState = true; // true if should be rendered
   TimeZone timeZone; // currentTimeZone or changingTimeZone
   ZonedDateTime dateTime; // currentDateTime or changingDateTime
