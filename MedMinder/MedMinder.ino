@@ -275,17 +275,19 @@ COROUTINE(runController) {
 // Sleep Manager
 //------------------------------------------------------------------
 
-const uint8_t RUN_MODE_AWAKE = 0;
-const uint8_t RUN_MODE_SLEEPING = 1;
-const uint8_t RUN_MODE_DREAMING = 2;
+enum class RunMode : uint8_t {
+  kAwake,
+  kSleeping,
+  kDreaming,
+};
 
 static uint16_t lastUserActionMillis;
 
 #if ENABLE_LOW_POWER == 1
-volatile uint8_t runMode = RUN_MODE_AWAKE;
+volatile RunMode runMode = RunMode::kAwake;
 
 void buttonInterrupt() {
-  runMode = RUN_MODE_AWAKE;
+  runMode = RunMode::kAwake;
 }
 
 const uint16_t SLEEP_DELAY_MILLIS = 5000;
@@ -303,14 +305,14 @@ COROUTINE(manageSleep) {
       COROUTINE_DELAY(500);
     }
 
-    runMode = RUN_MODE_SLEEPING;
+    runMode = RunMode::kSleeping;
     // What happens if a button is pressed right here?
     while (true) {
       isWakingUp = false;
       LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
 
       // Check if button caused wakeup.
-      if (runMode == RUN_MODE_AWAKE) break;
+      if (runMode == RunMode::kAwake) break;
 
       isWakingUp = true;
       if (ENABLE_SERIAL_DEBUG) {
@@ -318,7 +320,7 @@ COROUTINE(manageSleep) {
             F("Dreaming for 1000ms... then going back to sleep"));
         COROUTINE_DELAY(500);
       }
-      runMode = RUN_MODE_DREAMING;
+      runMode = RunMode::kDreaming;
       COROUTINE_DELAY(250);
     }
 
