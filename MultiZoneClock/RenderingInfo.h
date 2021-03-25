@@ -9,7 +9,7 @@
  * what needs to be displayed.
  */ 
 struct RenderingInfo {
-  uint8_t mode; // display mode, see MODE_xxx in config.h
+  Mode mode; // display mode
   bool blinkShowState; // true if blinking info should be shown
 
   ClockInfo clockInfo;

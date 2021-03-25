@@ -212,46 +212,49 @@
 // Button state transition nodes.
 //------------------------------------------------------------------
 
-// must be identical to ace_utils::mode_groups::kModeUnknown
-const uint8_t MODE_UNKNOWN = 0;
+enum class Mode : uint8_t {
+  // must be identical to ace_utils::mode_groups::kModeUnknown
+  kUnknown = 0,
 
-const uint8_t MODE_DATE_TIME = 1;
-const uint8_t MODE_TIME_ZONE = 2;
-const uint8_t MODE_SETTINGS = 3;
-const uint8_t MODE_SYSCLOCK = 4;
-const uint8_t MODE_ABOUT = 5;
+  kViewDateTime,
+  kViewTimeZone,
+  kViewSettings,
+  kViewSysclock,
+  kViewAbout,
 
-const uint8_t MODE_CHANGE_YEAR = 10;
-const uint8_t MODE_CHANGE_MONTH = 11;
-const uint8_t MODE_CHANGE_DAY = 12;
-const uint8_t MODE_CHANGE_HOUR = 13;
-const uint8_t MODE_CHANGE_MINUTE = 14;
-const uint8_t MODE_CHANGE_SECOND = 15;
+  kChangeYear,
+  kChangeMonth,
+  kChangeDay,
+  kChangeHour,
+  kChangeMinute,
+  kChangeSecond,
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-const uint8_t MODE_CHANGE_TIME_ZONE0_OFFSET = 20;
-const uint8_t MODE_CHANGE_TIME_ZONE0_DST = 21;
-const uint8_t MODE_CHANGE_TIME_ZONE1_OFFSET = 22;
-const uint8_t MODE_CHANGE_TIME_ZONE1_DST = 23;
-const uint8_t MODE_CHANGE_TIME_ZONE2_OFFSET = 24;
-const uint8_t MODE_CHANGE_TIME_ZONE2_DST = 25;
-const uint8_t MODE_CHANGE_TIME_ZONE3_OFFSET = 26;
-const uint8_t MODE_CHANGE_TIME_ZONE3_DST = 27;
+  kChangeTimeZone0Offset,
+  kChangeTimeZone0Dst,
+  kChangeTimeZone1Offset,
+  kChangeTimeZone1Dst,
+  kChangeTimeZone2Offset,
+  kChangeTimeZone2Dst,
+  kChangeTimeZone3Offset,
+  kChangeTimeZone3Dst,
 #else
-const uint8_t MODE_CHANGE_TIME_ZONE0_NAME = 20;
-const uint8_t MODE_CHANGE_TIME_ZONE1_NAME = 21;
-const uint8_t MODE_CHANGE_TIME_ZONE2_NAME = 22;
-const uint8_t MODE_CHANGE_TIME_ZONE3_NAME = 23;
+  kChangeTimeZone0Name,
+  kChangeTimeZone1Name,
+  kChangeTimeZone2Name,
+  kChangeTimeZone3Name,
 #endif
 
 #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-const uint8_t MODE_CHANGE_SETTINGS_BACKLIGHT = 30;
-const uint8_t MODE_CHANGE_SETTINGS_CONTRAST = 31;
-const uint8_t MODE_CHANGE_SETTINGS_BIAS = 32;
-const uint8_t MODE_CHANGE_INVERT_DISPLAY = 33;
+  kChangeSettingsBacklight,
+  kChangeSettingsContrast,
+  kChangeSettingsBias,
+  kChangeInvertDisplay,
 #else
-const uint8_t MODE_CHANGE_SETTINGS_CONTRAST = 30;
-const uint8_t MODE_CHANGE_INVERT_DISPLAY = 31;
+  kChangeSettingsContrast,
+  kChangeInvertDisplay,
 #endif
+
+};
 
 #endif

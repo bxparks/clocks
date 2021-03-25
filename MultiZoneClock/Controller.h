@@ -83,7 +83,7 @@ class Controller {
      * noticeable drift against the RTC which has a 1 second resolution.
      */
     void update() {
-      if (mNavigator.mode() == MODE_UNKNOWN) return;
+      if (mNavigator.mode() == (uint8_t) Mode::kUnknown) return;
       updateDateTime();
       updateBlinkState();
       updateRenderingInfo();
@@ -104,46 +104,49 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
       }
 
-      switch (mNavigator.mode()) {
+      switch ((Mode) mNavigator.mode()) {
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE0_OFFSET:
-        case MODE_CHANGE_TIME_ZONE0_DST:
+        case Mode::kChangeTimeZone0Offset:
+        case Mode::kChangeTimeZone0Dst:
           mCurrentZone = &mChangingClockInfo.zones[0];
           break;
-        case MODE_CHANGE_TIME_ZONE1_OFFSET:
-        case MODE_CHANGE_TIME_ZONE1_DST:
+        case Mode::kChangeTimeZone1Offset:
+        case Mode::kChangeTimeZone1Dst:
           mCurrentZone = &mChangingClockInfo.zones[1];
           break;
-        case MODE_CHANGE_TIME_ZONE2_OFFSET:
-        case MODE_CHANGE_TIME_ZONE2_DST:
+        case Mode::kChangeTimeZone2Offset:
+        case Mode::kChangeTimeZone2Dst:
           mCurrentZone = &mChangingClockInfo.zones[2];
           break;
-        case MODE_CHANGE_TIME_ZONE3_OFFSET:
-        case MODE_CHANGE_TIME_ZONE3_DST:
+        case Mode::kChangeTimeZone3Offset:
+        case Mode::kChangeTimeZone3Dst:
           mCurrentZone = &mChangingClockInfo.zones[3];
           break;
       #else
-        case MODE_CHANGE_TIME_ZONE0_NAME:
+        case Mode::kChangeTimeZone0Name:
           mCurrentZone = &mChangingClockInfo.zones[0];
           mZoneRegistryIndex =
               mZoneManager.indexForZoneId(mCurrentZone->zoneId);
           break;
-        case MODE_CHANGE_TIME_ZONE1_NAME:
+        case Mode::kChangeTimeZone1Name:
           mCurrentZone = &mChangingClockInfo.zones[1];
           mZoneRegistryIndex =
               mZoneManager.indexForZoneId(mCurrentZone->zoneId);
           break;
-        case MODE_CHANGE_TIME_ZONE2_NAME:
+        case Mode::kChangeTimeZone2Name:
           mCurrentZone = &mChangingClockInfo.zones[2];
           mZoneRegistryIndex =
               mZoneManager.indexForZoneId(mCurrentZone->zoneId);
           break;
-        case MODE_CHANGE_TIME_ZONE3_NAME:
+        case Mode::kChangeTimeZone3Name:
           mCurrentZone = &mChangingClockInfo.zones[3];
           mZoneRegistryIndex =
               mZoneManager.indexForZoneId(mCurrentZone->zoneId);
           break;
       #endif
+
+        default:
+          break;
       }
     }
 
@@ -174,35 +177,35 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
       }
 
-      switch (mNavigator.mode()) {
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
+      switch ((Mode) mNavigator.mode()) {
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE0_OFFSET:
-        case MODE_CHANGE_TIME_ZONE0_DST:
-        case MODE_CHANGE_TIME_ZONE1_OFFSET:
-        case MODE_CHANGE_TIME_ZONE1_DST:
-        case MODE_CHANGE_TIME_ZONE2_OFFSET:
-        case MODE_CHANGE_TIME_ZONE2_DST:
-        case MODE_CHANGE_TIME_ZONE3_OFFSET:
-        case MODE_CHANGE_TIME_ZONE3_DST:
+        case Mode::kChangeTimeZone0Offset:
+        case Mode::kChangeTimeZone0Dst:
+        case Mode::kChangeTimeZone1Offset:
+        case Mode::kChangeTimeZone1Dst:
+        case Mode::kChangeTimeZone2Offset:
+        case Mode::kChangeTimeZone2Dst:
+        case Mode::kChangeTimeZone3Offset:
+        case Mode::kChangeTimeZone3Dst:
       #else
-        case MODE_CHANGE_TIME_ZONE0_NAME:
-        case MODE_CHANGE_TIME_ZONE1_NAME:
-        case MODE_CHANGE_TIME_ZONE2_NAME:
-        case MODE_CHANGE_TIME_ZONE3_NAME:
+        case Mode::kChangeTimeZone0Name:
+        case Mode::kChangeTimeZone1Name:
+        case Mode::kChangeTimeZone2Name:
+        case Mode::kChangeTimeZone3Name:
       #endif
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-        case MODE_CHANGE_SETTINGS_BACKLIGHT:
-        case MODE_CHANGE_SETTINGS_CONTRAST:
-        case MODE_CHANGE_SETTINGS_BIAS:
+        case Mode::kChangeSettingsBacklight:
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeSettingsBias:
       #else
-        case MODE_CHANGE_SETTINGS_CONTRAST:
-        case MODE_CHANGE_INVERT_DISPLAY:
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeInvertDisplay:
       #endif
           // Throw away the changes and just change the mode group.
           //performLeavingModeAction();
@@ -210,6 +213,9 @@ class Controller {
           mNavigator.changeGroup();
           performEnteringModeGroupAction();
           performEnteringModeAction();
+          break;
+
+        default:
           break;
       }
     }
@@ -220,30 +226,33 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
       }
 
-      switch (mNavigator.mode()) {
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
+      switch ((Mode) mNavigator.mode()) {
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE0_OFFSET:
-        case MODE_CHANGE_TIME_ZONE0_DST:
-        case MODE_CHANGE_TIME_ZONE1_OFFSET:
-        case MODE_CHANGE_TIME_ZONE1_DST:
-        case MODE_CHANGE_TIME_ZONE2_OFFSET:
-        case MODE_CHANGE_TIME_ZONE2_DST:
-        case MODE_CHANGE_TIME_ZONE3_OFFSET:
-        case MODE_CHANGE_TIME_ZONE3_DST:
+        case Mode::kChangeTimeZone0Offset:
+        case Mode::kChangeTimeZone0Dst:
+        case Mode::kChangeTimeZone1Offset:
+        case Mode::kChangeTimeZone1Dst:
+        case Mode::kChangeTimeZone2Offset:
+        case Mode::kChangeTimeZone2Dst:
+        case Mode::kChangeTimeZone3Offset:
+        case Mode::kChangeTimeZone3Dst:
       #else
-        case MODE_CHANGE_TIME_ZONE0_NAME:
-        case MODE_CHANGE_TIME_ZONE1_NAME:
-        case MODE_CHANGE_TIME_ZONE2_NAME:
-        case MODE_CHANGE_TIME_ZONE3_NAME:
+        case Mode::kChangeTimeZone0Name:
+        case Mode::kChangeTimeZone1Name:
+        case Mode::kChangeTimeZone2Name:
+        case Mode::kChangeTimeZone3Name:
       #endif
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
+          break;
+
+        default:
           break;
       }
     }
@@ -254,43 +263,46 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
       }
 
-      switch (mNavigator.mode()) {
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
+      switch ((Mode) mNavigator.mode()) {
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
           saveDateTime();
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE0_OFFSET:
-        case MODE_CHANGE_TIME_ZONE0_DST:
-        case MODE_CHANGE_TIME_ZONE1_OFFSET:
-        case MODE_CHANGE_TIME_ZONE1_DST:
-        case MODE_CHANGE_TIME_ZONE2_OFFSET:
-        case MODE_CHANGE_TIME_ZONE2_DST:
-        case MODE_CHANGE_TIME_ZONE3_OFFSET:
-        case MODE_CHANGE_TIME_ZONE3_DST:
+        case Mode::kChangeTimeZone0Offset:
+        case Mode::kChangeTimeZone0Dst:
+        case Mode::kChangeTimeZone1Offset:
+        case Mode::kChangeTimeZone1Dst:
+        case Mode::kChangeTimeZone2Offset:
+        case Mode::kChangeTimeZone2Dst:
+        case Mode::kChangeTimeZone3Offset:
+        case Mode::kChangeTimeZone3Dst:
       #else
-        case MODE_CHANGE_TIME_ZONE0_NAME:
-        case MODE_CHANGE_TIME_ZONE1_NAME:
-        case MODE_CHANGE_TIME_ZONE2_NAME:
-        case MODE_CHANGE_TIME_ZONE3_NAME:
+        case Mode::kChangeTimeZone0Name:
+        case Mode::kChangeTimeZone1Name:
+        case Mode::kChangeTimeZone2Name:
+        case Mode::kChangeTimeZone3Name:
       #endif
           saveClockInfo();
           break;
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-        case MODE_CHANGE_SETTINGS_BACKLIGHT:
-        case MODE_CHANGE_SETTINGS_CONTRAST:
-        case MODE_CHANGE_SETTINGS_BIAS:
+        case Mode::kChangeSettingsBacklight:
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeSettingsBias:
       #else
-        case MODE_CHANGE_SETTINGS_CONTRAST:
+        case Mode::kChangeSettingsContrast:
       #endif
-        case MODE_CHANGE_INVERT_DISPLAY:
+        case Mode::kChangeInvertDisplay:
           preserveClockInfo(mClockInfo);
+          break;
+
+        default:
           break;
       }
     }
@@ -299,14 +311,14 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
-      switch (mNavigator.mode()) {
-        // Change button causes toggling of 12/24 modes if in MODE_DATE_TIME
-        case MODE_DATE_TIME:
+      switch ((Mode) mNavigator.mode()) {
+        // Change button causes toggling of 12/24 modes if in Mode::kViewDateTime
+        case Mode::kViewDateTime:
           mClockInfo.hourMode ^= 0x1;
           preserveClockInfo(mClockInfo);
           break;
 
-        case MODE_CHANGE_YEAR:
+        case Mode::kChangeYear:
           mSuppressBlink = true;
           #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
             zoned_date_time_mutation::incrementYear(
@@ -330,34 +342,34 @@ class Controller {
             }
           #endif
           break;
-        case MODE_CHANGE_MONTH:
+        case Mode::kChangeMonth:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
           break;
-        case MODE_CHANGE_DAY:
+        case Mode::kChangeDay:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
-        case MODE_CHANGE_HOUR:
+        case Mode::kChangeHour:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
-        case MODE_CHANGE_MINUTE:
+        case Mode::kChangeMinute:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(
               mChangingClockInfo.dateTime);
           break;
-        case MODE_CHANGE_SECOND:
+        case Mode::kChangeSecond:
           mSuppressBlink = true;
           mChangingClockInfo.dateTime.second(0);
           mSecondFieldCleared = true;
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE0_OFFSET:
-        case MODE_CHANGE_TIME_ZONE1_OFFSET:
-        case MODE_CHANGE_TIME_ZONE2_OFFSET:
-        case MODE_CHANGE_TIME_ZONE3_OFFSET:
+        case Mode::kChangeTimeZone0Offset:
+        case Mode::kChangeTimeZone1Offset:
+        case Mode::kChangeTimeZone2Offset:
+        case Mode::kChangeTimeZone3Offset:
         {
           mSuppressBlink = true;
           if (ENABLE_SERIAL_DEBUG >= 1) {
@@ -373,10 +385,10 @@ class Controller {
           break;
         }
 
-        case MODE_CHANGE_TIME_ZONE0_DST:
-        case MODE_CHANGE_TIME_ZONE1_DST:
-        case MODE_CHANGE_TIME_ZONE2_DST:
-        case MODE_CHANGE_TIME_ZONE3_DST:
+        case Mode::kChangeTimeZone0Dst:
+        case Mode::kChangeTimeZone1Dst:
+        case Mode::kChangeTimeZone2Dst:
+        case Mode::kChangeTimeZone3Dst:
         {
           mSuppressBlink = true;
           TimeZone tz = mZoneManager.createForTimeZoneData(*mCurrentZone);
@@ -391,10 +403,10 @@ class Controller {
 
       #else
         // Cycle through the zones in the registry
-        case MODE_CHANGE_TIME_ZONE0_NAME:
-        case MODE_CHANGE_TIME_ZONE1_NAME:
-        case MODE_CHANGE_TIME_ZONE2_NAME:
-        case MODE_CHANGE_TIME_ZONE3_NAME:
+        case Mode::kChangeTimeZone0Name:
+        case Mode::kChangeTimeZone1Name:
+        case Mode::kChangeTimeZone2Name:
+        case Mode::kChangeTimeZone3Name:
         {
           mSuppressBlink = true;
           mZoneRegistryIndex++;
@@ -405,7 +417,7 @@ class Controller {
           *mCurrentZone = tz.toTimeZoneData();
 
           // TimeZone 0 is the default displayed timezone.
-          if (mNavigator.mode() == MODE_CHANGE_TIME_ZONE0_NAME) {
+          if (mNavigator.mode() == (uint8_t) Mode::kChangeTimeZone0Name) {
             mChangingClockInfo.dateTime =
                 mChangingClockInfo.dateTime.convertToTimeZone(tz);
           }
@@ -414,33 +426,36 @@ class Controller {
       #endif
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-        case MODE_CHANGE_SETTINGS_BACKLIGHT: {
+        case Mode::kChangeSettingsBacklight: {
           mSuppressBlink = true;
           incrementMod(mClockInfo.backlightLevel, (uint8_t) 10);
           break;
         }
-        case MODE_CHANGE_SETTINGS_CONTRAST: {
+        case Mode::kChangeSettingsContrast: {
           mSuppressBlink = true;
           incrementMod(mClockInfo.contrast, (uint8_t) 128);
           break;
         }
-        case MODE_CHANGE_SETTINGS_BIAS: {
+        case Mode::kChangeSettingsBias: {
           mSuppressBlink = true;
           incrementMod(mClockInfo.bias, (uint8_t) 8);
           break;
         }
       #else
-        case MODE_CHANGE_SETTINGS_CONTRAST: {
+        case Mode::kChangeSettingsContrast: {
           mSuppressBlink = true;
           incrementMod(mClockInfo.contrastLevel, (uint8_t) 10);
           break;
         }
-        case MODE_CHANGE_INVERT_DISPLAY: {
+        case Mode::kChangeInvertDisplay: {
           mSuppressBlink = true;
           incrementMod(mClockInfo.invertDisplay, (uint8_t) 3);
           break;
         }
       #endif
+
+        default:
+          break;
       }
 
       // Update the display right away to prevent jitters in the display when
@@ -453,43 +468,46 @@ class Controller {
       // sense to repeatedly change the 12/24 mode when the button is held
       // down. 2) Each change of 12/24 mode causes a write to the EEPPROM,
       // which causes wear and tear.
-      if (mNavigator.mode() != MODE_DATE_TIME) {
+      if (mNavigator.mode() != (uint8_t) Mode::kViewDateTime) {
         handleChangeButtonPress();
       }
     }
 
     void handleChangeButtonRelease() {
-      switch (mNavigator.mode()) {
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
+      switch ((Mode) mNavigator.mode()) {
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE0_OFFSET:
-        case MODE_CHANGE_TIME_ZONE0_DST:
-        case MODE_CHANGE_TIME_ZONE1_OFFSET:
-        case MODE_CHANGE_TIME_ZONE1_DST:
-        case MODE_CHANGE_TIME_ZONE2_OFFSET:
-        case MODE_CHANGE_TIME_ZONE2_DST:
-        case MODE_CHANGE_TIME_ZONE3_OFFSET:
-        case MODE_CHANGE_TIME_ZONE3_DST:
+        case Mode::kChangeTimeZone0Offset:
+        case Mode::kChangeTimeZone0Dst:
+        case Mode::kChangeTimeZone1Offset:
+        case Mode::kChangeTimeZone1Dst:
+        case Mode::kChangeTimeZone2Offset:
+        case Mode::kChangeTimeZone2Dst:
+        case Mode::kChangeTimeZone3Offset:
+        case Mode::kChangeTimeZone3Dst:
       #else
-        case MODE_CHANGE_TIME_ZONE0_NAME:
-        case MODE_CHANGE_TIME_ZONE1_NAME:
-        case MODE_CHANGE_TIME_ZONE2_NAME:
-        case MODE_CHANGE_TIME_ZONE3_NAME:
+        case Mode::kChangeTimeZone0Name:
+        case Mode::kChangeTimeZone1Name:
+        case Mode::kChangeTimeZone2Name:
+        case Mode::kChangeTimeZone3Name:
       #endif
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-        case MODE_CHANGE_SETTINGS_BACKLIGHT:
-        case MODE_CHANGE_SETTINGS_CONTRAST:
-        case MODE_CHANGE_SETTINGS_BIAS:
+        case Mode::kChangeSettingsBacklight:
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeSettingsBias:
       #else
-        case MODE_CHANGE_SETTINGS_CONTRAST:
-        case MODE_CHANGE_INVERT_DISPLAY:
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeInvertDisplay:
       #endif
           mSuppressBlink = false;
+          break;
+
+        default:
           break;
       }
     }
@@ -519,21 +537,24 @@ class Controller {
       // exception is the 'second' field which will continue to be updated...
       // unless the second field has been explicitly cleared. Then we keep it
       // pegged at '00' second.
-      switch (mNavigator.mode()) {
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
+      switch ((Mode) mNavigator.mode()) {
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
           if (!mSecondFieldCleared) {
             mChangingClockInfo.dateTime.second(mClockInfo.dateTime.second());
           }
           break;
 
-        // We can ignore the MODE_CHANGE_XXX for display time zones because
+        // We can ignore the Mode::kChangeXxx for display time zones because
         // those modes do not display the time, so we don't need to update
         // mChangingClockInfo.dateTime.
+
+        default:
+          break;
       }
     }
 
@@ -561,31 +582,31 @@ class Controller {
     void updateRenderingInfo() {
       ClockInfo* clockInfo;
 
-      switch (mNavigator.mode()) {
+      switch ((Mode) mNavigator.mode()) {
         // If we are changing the current date, time or time zones, render the
         // mChangingClockInfo instead, because changes are made to the copy,
         // instead of the current mClockInfo, and copied over to mClockInfo
         // upon LongPress.
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE0_OFFSET:
-        case MODE_CHANGE_TIME_ZONE0_DST:
-        case MODE_CHANGE_TIME_ZONE1_OFFSET:
-        case MODE_CHANGE_TIME_ZONE1_DST:
-        case MODE_CHANGE_TIME_ZONE2_OFFSET:
-        case MODE_CHANGE_TIME_ZONE2_DST:
-        case MODE_CHANGE_TIME_ZONE3_OFFSET:
-        case MODE_CHANGE_TIME_ZONE3_DST:
+        case Mode::kChangeTimeZone0Offset:
+        case Mode::kChangeTimeZone0Dst:
+        case Mode::kChangeTimeZone1Offset:
+        case Mode::kChangeTimeZone1Dst:
+        case Mode::kChangeTimeZone2Offset:
+        case Mode::kChangeTimeZone2Dst:
+        case Mode::kChangeTimeZone3Offset:
+        case Mode::kChangeTimeZone3Dst:
       #else
-        case MODE_CHANGE_TIME_ZONE0_NAME:
-        case MODE_CHANGE_TIME_ZONE1_NAME:
-        case MODE_CHANGE_TIME_ZONE2_NAME:
-        case MODE_CHANGE_TIME_ZONE3_NAME:
+        case Mode::kChangeTimeZone0Name:
+        case Mode::kChangeTimeZone1Name:
+        case Mode::kChangeTimeZone2Name:
+        case Mode::kChangeTimeZone3Name:
       #endif
           clockInfo = &mChangingClockInfo;
           break;
@@ -599,7 +620,7 @@ class Controller {
 
       bool blinkShowState = mSuppressBlink || mBlinkShowState;
       mPresenter.setRenderingInfo(
-          mNavigator.mode(), blinkShowState, *clockInfo
+          (Mode) mNavigator.mode(), blinkShowState, *clockInfo
       );
     }
 
