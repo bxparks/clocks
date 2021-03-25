@@ -2,7 +2,7 @@
 #define ONE_ZONE_CLOCK_RENDERING_INFO_H
 
 #include <AceTime.h>
-#include "config.h" // MODE_UNKNOWN
+#include "config.h" // Mode::kUnknown
 #include "ClockInfo.h"
 
 /**
@@ -10,7 +10,7 @@
  * what needs to be displayed.
  */ 
 struct RenderingInfo {
-  uint8_t mode = MODE_UNKNOWN; // display mode, see MODE_xxx in config.h
+  Mode mode = Mode::kUnknown; // display mode
   bool blinkShowState; // true if blinking info should be shown
 
   ClockInfo clockInfo;

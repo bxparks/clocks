@@ -166,7 +166,7 @@
   //#define WIFI_PASSWORD
 
   #define ENABLE_EEPROM 1
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #undef BUTTON_TYPE
@@ -202,37 +202,37 @@
 // Button state transition nodes.
 //------------------------------------------------------------------
 
-// must be identical to ace_utils::mode_groups::kModeUnknown
-const uint8_t MODE_UNKNOWN = 0;
+enum class Mode : uint8_t {
+  kUnknown = 0, // must be identical to ace_utils::mode_groups::kModeUnknown
 
-const uint8_t MODE_DATE_TIME = 1;
-const uint8_t MODE_TIME_ZONE = 2;
-const uint8_t MODE_SETTINGS = 3;
-const uint8_t MODE_SYSCLOCK = 4;
-const uint8_t MODE_ABOUT = 5;
+  kViewDateTime,
+  kViewTimeZone,
+  kViewSettings,
+  kViewSysclock,
+  kViewAbout,
 
-const uint8_t MODE_CHANGE_YEAR = 10;
-const uint8_t MODE_CHANGE_MONTH = 11;
-const uint8_t MODE_CHANGE_DAY = 12;
-const uint8_t MODE_CHANGE_HOUR = 13;
-const uint8_t MODE_CHANGE_MINUTE = 14;
-const uint8_t MODE_CHANGE_SECOND = 15;
+  kChangeYear,
+  kChangeMonth,
+  kChangeDay,
+  kChangeHour,
+  kChangeMinute,
+  kChangeSecond,
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-const uint8_t MODE_CHANGE_TIME_ZONE_OFFSET = 20;
-const uint8_t MODE_CHANGE_TIME_ZONE_DST = 21;
+  kChangeTimeZoneOffset,
+  kChangeTimeZoneDst,
 #else
-const uint8_t MODE_CHANGE_TIME_ZONE_NAME = 20;
+  kChangeTimeZoneName,
 #endif
 
 #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-const uint8_t MODE_CHANGE_SETTINGS_BACKLIGHT = 30;
-const uint8_t MODE_CHANGE_SETTINGS_CONTRAST = 31;
-const uint8_t MODE_CHANGE_SETTINGS_BIAS = 32;
+  kChangeSettingsBacklight,
+  kChangeSettingsContrast,
+  kChangeSettingsBias,
 #else
-const uint8_t MODE_CHANGE_SETTINGS_CONTRAST = 30;
-const uint8_t MODE_CHANGE_INVERT_DISPLAY = 31;
+  kChangeSettingsContrast,
+  kChangeInvertDisplay,
 #endif
-
+};
 
 #endif
