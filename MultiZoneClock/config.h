@@ -147,7 +147,7 @@
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
   #define ENABLE_EEPROM 1
 
   // Button parameters

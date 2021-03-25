@@ -599,7 +599,7 @@ COROUTINE(readButtons) {
     buttonConfig.checkButtons();
   #endif
 
-    COROUTINE_DELAY(10);
+    COROUTINE_DELAY(6);
   }
 }
 
