@@ -77,7 +77,7 @@ class Presenter {
       mPrevRenderingInfo = mRenderingInfo;
     }
 
-    void setRenderingInfo(uint8_t mode, bool blinkShowState,
+    void setRenderingInfo(Mode mode, bool blinkShowState,
         const ClockInfo& clockInfo) {
       mRenderingInfo.mode = mode;
       mRenderingInfo.blinkShowState = blinkShowState;
@@ -167,7 +167,7 @@ class Presenter {
      * "blinking" mode, then this will return false in accordance with the
      * mBlinkShowState.
      */
-    bool shouldShowFor(uint8_t mode) const {
+    bool shouldShowFor(Mode mode) const {
       return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
     }
 
@@ -182,26 +182,26 @@ class Presenter {
       ClockInfo &clockInfo = mRenderingInfo.clockInfo;
 
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
           prevClockInfo.backlightLevel != clockInfo.backlightLevel) {
         uint16_t value = toLcdBacklightValue(clockInfo.backlightLevel);
         analogWrite(LCD_BACKLIGHT_PIN, value);
       }
-      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
           prevClockInfo.contrast != clockInfo.contrast) {
         mDisplay.setContrast(clockInfo.contrast);
       }
-      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
           prevClockInfo.bias != clockInfo.bias) {
         mDisplay.setBias(clockInfo.bias);
       }
     #else
-      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
           prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
         uint8_t value = toOledContrastValue(clockInfo.contrastLevel);
         mDisplay.setContrast(value);
       }
-      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
           prevClockInfo.invertDisplay != clockInfo.invertDisplay) {
         mDisplay.invertDisplay(clockInfo.invertDisplay);
       }
@@ -242,44 +242,48 @@ class Presenter {
       setFont();
 
       switch (mRenderingInfo.mode) {
-        case MODE_DATE_TIME:
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
+        case Mode::kViewDateTime:
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
           displayDateTimeMode();
           break;
 
-        case MODE_TIME_ZONE:
+        case Mode::kViewTimeZone:
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE_OFFSET:
-        case MODE_CHANGE_TIME_ZONE_DST:
+        case Mode::kChangeTimeZoneOffset:
+        case Mode::kChangeTimeZoneDst:
       #else
-        case MODE_CHANGE_TIME_ZONE_NAME:
+        case Mode::kChangeTimeZoneName:
       #endif
           displayTimeZoneMode();
           break;
 
-        case MODE_SETTINGS:
+        case Mode::kViewSettings:
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-        case MODE_CHANGE_SETTINGS_BACKLIGHT:
-        case MODE_CHANGE_SETTINGS_CONTRAST:
-        case MODE_CHANGE_SETTINGS_BIAS:
+        case Mode::kChangeSettingsBacklight:
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeSettingsBias:
       #else
-        case MODE_CHANGE_SETTINGS_CONTRAST:
-        case MODE_CHANGE_INVERT_DISPLAY:
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeInvertDisplay:
       #endif
           displaySettingsMode();
           break;
 
-        case MODE_SYSCLOCK:
+        case Mode::kViewSysclock:
           displaySystemClockMode();
           break;
 
-        case MODE_ABOUT:
+        case Mode::kViewAbout:
           displayAboutMode();
+          break;
+
+        default:
+          // do nothing
           break;
       }
 
@@ -304,19 +308,19 @@ class Presenter {
     }
 
     void displayDate(const ZonedDateTime& dateTime) {
-      if (shouldShowFor(MODE_CHANGE_YEAR)) {
+      if (shouldShowFor(Mode::kChangeYear)) {
         mDisplay.print(dateTime.year());
       } else {
         mDisplay.print("    ");
       }
       mDisplay.print('-');
-      if (shouldShowFor(MODE_CHANGE_MONTH)) {
+      if (shouldShowFor(Mode::kChangeMonth)) {
         printPad2To(mDisplay, dateTime.month(), '0');
       } else {
         mDisplay.print("  ");
       }
       mDisplay.print('-');
-      if (shouldShowFor(MODE_CHANGE_DAY)) {
+      if (shouldShowFor(Mode::kChangeDay)) {
         printPad2To(mDisplay, dateTime.day(), '0');
       } else{
         mDisplay.print("  ");
@@ -325,7 +329,7 @@ class Presenter {
     }
 
     void displayTime(const ZonedDateTime& dateTime) {
-      if (shouldShowFor(MODE_CHANGE_HOUR)) {
+      if (shouldShowFor(Mode::kChangeHour)) {
         uint8_t hour = dateTime.hour();
         if (mRenderingInfo.clockInfo.hourMode == ClockInfo::kTwelve) {
           if (hour == 0) {
@@ -341,13 +345,13 @@ class Presenter {
         mDisplay.print("  ");
       }
       mDisplay.print(':');
-      if (shouldShowFor(MODE_CHANGE_MINUTE)) {
+      if (shouldShowFor(Mode::kChangeMinute)) {
         printPad2To(mDisplay, dateTime.minute(), '0');
       } else {
         mDisplay.print("  ");
       }
       mDisplay.print(':');
-      if (shouldShowFor(MODE_CHANGE_SECOND)) {
+      if (shouldShowFor(Mode::kChangeSecond)) {
         printPad2To(mDisplay, dateTime.second(), '0');
       } else {
         mDisplay.print("  ");
@@ -400,7 +404,7 @@ class Presenter {
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case TimeZone::kTypeManual:
           mDisplay.print("UTC");
-          if (shouldShowFor(MODE_CHANGE_TIME_ZONE_OFFSET)) {
+          if (shouldShowFor(Mode::kChangeTimeZoneOffset)) {
             TimeOffset offset = tz.getStdOffset();
             offset.printTo(mDisplay);
           }
@@ -408,7 +412,7 @@ class Presenter {
           mDisplay.println();
 
           mDisplay.print("DST: ");
-          if (shouldShowFor(MODE_CHANGE_TIME_ZONE_DST)) {
+          if (shouldShowFor(Mode::kChangeTimeZoneDst)) {
             mDisplay.print((tz.getDstOffset().isZero()) ? "off" : "on ");
           }
           clearToEOL();
@@ -419,7 +423,7 @@ class Presenter {
         case BasicZoneProcessor::kTypeBasic:
         case ExtendedZoneProcessor::kTypeExtended:
           // Print name of timezone
-          if (shouldShowFor(MODE_CHANGE_TIME_ZONE_NAME)) {
+          if (shouldShowFor(Mode::kChangeTimeZoneName)) {
             tz.printShortTo(mDisplay);
           }
           clearToEOL();
@@ -450,21 +454,21 @@ class Presenter {
 
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       mDisplay.print(F("Backlight:"));
-      if (shouldShowFor(MODE_CHANGE_SETTINGS_BACKLIGHT)) {
+      if (shouldShowFor(Mode::kChangeSettingsBacklight)) {
         mDisplay.println(clockInfo.backlightLevel);
       } else {
         mDisplay.println(' ');
       }
 
       mDisplay.print(F("Contrast:"));
-      if (shouldShowFor(MODE_CHANGE_SETTINGS_CONTRAST)) {
+      if (shouldShowFor(Mode::kChangeSettingsContrast)) {
         mDisplay.println(clockInfo.contrast);
       } else {
         mDisplay.println(' ');
       }
 
       mDisplay.print(F("Bias:"));
-      if (shouldShowFor(MODE_CHANGE_SETTINGS_BIAS)) {
+      if (shouldShowFor(Mode::kChangeSettingsBias)) {
         mDisplay.println(clockInfo.bias);
       } else {
         mDisplay.println(' ');
@@ -472,14 +476,14 @@ class Presenter {
 
     #else
       mDisplay.print(F("Contrast:"));
-      if (shouldShowFor(MODE_CHANGE_SETTINGS_CONTRAST)) {
+      if (shouldShowFor(Mode::kChangeSettingsContrast)) {
         mDisplay.println(clockInfo.contrastLevel);
       } else {
         mDisplay.println(' ');
       }
 
       mDisplay.print(F("Invert:"));
-      if (shouldShowFor(MODE_CHANGE_INVERT_DISPLAY)) {
+      if (shouldShowFor(Mode::kChangeInvertDisplay)) {
         mDisplay.println(clockInfo.invertDisplay);
       } else {
         mDisplay.println(' ');

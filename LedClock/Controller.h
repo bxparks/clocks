@@ -34,7 +34,7 @@ class Controller {
         mZoneManager(zoneManager),
         mInitialTimeZoneData(initialTimeZoneData)
     {
-      mMode = MODE_HOUR_MINUTE;
+      mMode = Mode::kViewHourMinute;
     }
 
     void setup() {
@@ -58,7 +58,7 @@ class Controller {
      * noticeable drift against the RTC which has a 1 second resolution.
      */
     void update() {
-      if (mMode == MODE_UNKNOWN) return;
+      if (mMode == Mode::kUnknown) return;
       updateDateTime();
       updateBlinkState();
       updateRenderingInfo();
@@ -66,117 +66,126 @@ class Controller {
     }
 
     void modeButtonPress() {
-      switch (mMode) {
-        case MODE_HOUR_MINUTE:
-          mMode = MODE_MINUTE_SECOND;
+      switch ((Mode) mMode) {
+        case Mode::kViewHourMinute:
+          mMode = Mode::kViewMinuteSecond;
           break;
-        case MODE_MINUTE_SECOND:
-          mMode = MODE_YEAR;
+        case Mode::kViewMinuteSecond:
+          mMode = Mode::kViewYear;
           break;
-        case MODE_YEAR:
-          mMode = MODE_MONTH;
+        case Mode::kViewYear:
+          mMode = Mode::kViewMonth;
           break;
-        case MODE_MONTH:
-          mMode = MODE_DAY;
+        case Mode::kViewMonth:
+          mMode = Mode::kViewDay;
           break;
-        case MODE_DAY:
-          mMode = MODE_WEEKDAY;
+        case Mode::kViewDay:
+          mMode = Mode::kViewWeekday;
           break;
-        case MODE_WEEKDAY:
-          mMode = MODE_HOUR_MINUTE;
+        case Mode::kViewWeekday:
+          mMode = Mode::kViewHourMinute;
           break;
-        case MODE_CHANGE_HOUR:
-          mMode = MODE_CHANGE_MINUTE;
+        case Mode::kChangeHour:
+          mMode = Mode::kChangeMinute;
           break;
-        case MODE_CHANGE_MINUTE:
-          mMode = MODE_CHANGE_YEAR;
+        case Mode::kChangeMinute:
+          mMode = Mode::kChangeYear;
           break;
-        case MODE_CHANGE_YEAR:
-          mMode = MODE_CHANGE_MONTH;
+        case Mode::kChangeYear:
+          mMode = Mode::kChangeMonth;
           break;
-        case MODE_CHANGE_MONTH:
-          mMode = MODE_CHANGE_DAY;
+        case Mode::kChangeMonth:
+          mMode = Mode::kChangeDay;
           break;
-        case MODE_CHANGE_DAY:
-          mMode = MODE_CHANGE_HOUR;
+        case Mode::kChangeDay:
+          mMode = Mode::kChangeHour;
+          break;
+
+        default:
           break;
       }
     }
 
     void modeButtonLongPress() {
-      switch (mMode) {
-        case MODE_HOUR_MINUTE:
+      switch ((Mode) mMode) {
+        case Mode::kViewHourMinute:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = MODE_CHANGE_HOUR;
+          mMode = Mode::kChangeHour;
           break;
-        case MODE_MINUTE_SECOND:
+        case Mode::kViewMinuteSecond:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = MODE_CHANGE_MINUTE;
+          mMode = Mode::kChangeMinute;
           break;
 
-        case MODE_YEAR:
+        case Mode::kViewYear:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = MODE_CHANGE_YEAR;
+          mMode = Mode::kChangeYear;
           break;
-        case MODE_MONTH:
+        case Mode::kViewMonth:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = MODE_CHANGE_MONTH;
+          mMode = Mode::kChangeMonth;
           break;
-        case MODE_DAY:
+        case Mode::kViewDay:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = MODE_CHANGE_DAY;
+          mMode = Mode::kChangeDay;
           break;
 
-        case MODE_CHANGE_YEAR:
+        case Mode::kChangeYear:
           saveDateTime();
-          mMode = MODE_YEAR;
+          mMode = Mode::kViewYear;
           break;
-        case MODE_CHANGE_MONTH:
+        case Mode::kChangeMonth:
           saveDateTime();
-          mMode = MODE_MONTH;
+          mMode = Mode::kViewMonth;
           break;
-        case MODE_CHANGE_DAY:
+        case Mode::kChangeDay:
           saveDateTime();
-          mMode = MODE_DAY;
+          mMode = Mode::kViewDay;
           break;
-        case MODE_CHANGE_HOUR:
+        case Mode::kChangeHour:
           saveDateTime();
-          mMode = MODE_HOUR_MINUTE;
+          mMode = Mode::kViewHourMinute;
           break;
-        case MODE_CHANGE_MINUTE:
+        case Mode::kChangeMinute:
           saveDateTime();
-          mMode = MODE_HOUR_MINUTE;
+          mMode = Mode::kViewHourMinute;
+          break;
+
+        default:
           break;
       }
     }
 
     void changeButtonPress() {
-      switch (mMode) {
-        case MODE_CHANGE_HOUR:
+      switch ((Mode) mMode) {
+        case Mode::kChangeHour:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
-        case MODE_CHANGE_MINUTE:
+        case Mode::kChangeMinute:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(
               mChangingClockInfo.dateTime);
           break;
-        case MODE_CHANGE_YEAR:
+        case Mode::kChangeYear:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
           break;
-        case MODE_CHANGE_MONTH:
+        case Mode::kChangeMonth:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
           break;
-        case MODE_CHANGE_DAY:
+        case Mode::kChangeDay:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
+          break;
+
+        default:
           break;
       }
 
@@ -190,15 +199,18 @@ class Controller {
     }
 
     void changeButtonRelease() {
-      switch (mMode) {
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
-        case MODE_CHANGE_TIME_ZONE_OFFSET:
+      switch ((Mode) mMode) {
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
+        case Mode::kChangeTimeZoneOffset:
           mSuppressBlink = false;
+          break;
+
+        default:
           break;
       }
     }
@@ -210,16 +222,19 @@ class Controller {
 
       // If in CHANGE mode, and the 'second' field has not been cleared, update
       // the displayed time with the current second.
-      switch (mMode) {
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
+      switch ((Mode) mMode) {
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
           if (!mSecondFieldCleared) {
             mChangingClockInfo.dateTime.second(mClockInfo.dateTime.second());
           }
+          break;
+
+        default:
           break;
       }
     }
@@ -239,16 +254,16 @@ class Controller {
     void updateRenderingInfo() {
       ClockInfo* clockInfo;
 
-      switch (mMode) {
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
-        case MODE_CHANGE_TIME_ZONE_OFFSET:
-        case MODE_CHANGE_TIME_ZONE_DST:
-        case MODE_CHANGE_HOUR_MODE:
+      switch ((Mode) mMode) {
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
+        case Mode::kChangeTimeZoneOffset:
+        case Mode::kChangeTimeZoneDst:
+        case Mode::kChangeHourMode:
           clockInfo = &mChangingClockInfo;
           break;
 
@@ -311,7 +326,7 @@ class Controller {
     ClockInfo mClockInfo; // current clock
     ClockInfo mChangingClockInfo; // the target clock
 
-    uint8_t mMode = MODE_UNKNOWN; // current mode
+    Mode mMode = Mode::kUnknown; // current mode
 
     bool mSecondFieldCleared;
     bool mSuppressBlink; // true if blinking should be suppressed

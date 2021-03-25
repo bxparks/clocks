@@ -304,12 +304,12 @@ extern const ModeGroup ROOT_MODE_GROUP;
 
 // List of DateTime modes.
 const uint8_t DATE_TIME_MODES[] = {
-  MODE_CHANGE_HOUR,
-  MODE_CHANGE_MINUTE,
-  // MODE_CHANGE_SECOND,
-  MODE_CHANGE_DAY,
-  MODE_CHANGE_MONTH,
-  MODE_CHANGE_YEAR,
+  (uint8_t) Mode::kChangeHour,
+  (uint8_t) Mode::kChangeMinute,
+  // (uint8_t) Mode::kChangeSecond,
+  (uint8_t) Mode::kChangeDay,
+  (uint8_t) Mode::kChangeMonth,
+  (uint8_t) Mode::kChangeYear,
 };
 
 // ModeGroup for the DateTime modes.
@@ -323,19 +323,19 @@ const ModeGroup DATE_TIME_MODE_GROUP = {
 // List of TimeZone modes.
 const uint8_t TIME_ZONE_MODES[] = {
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-  MODE_CHANGE_TIME_ZONE0_OFFSET,
-  MODE_CHANGE_TIME_ZONE0_DST,
-  MODE_CHANGE_TIME_ZONE1_OFFSET,
-  MODE_CHANGE_TIME_ZONE1_DST,
-  MODE_CHANGE_TIME_ZONE2_OFFSET,
-  MODE_CHANGE_TIME_ZONE2_DST,
-  MODE_CHANGE_TIME_ZONE3_OFFSET,
-  MODE_CHANGE_TIME_ZONE3_DST,
+  (uint8_t) Mode::kChangeTimeZone0Offset,
+  (uint8_t) Mode::kChangeTimeZone0Dst,
+  (uint8_t) Mode::kChangeTimeZone1Offset,
+  (uint8_t) Mode::kChangeTimeZone1Dst,
+  (uint8_t) Mode::kChangeTimeZone2Offset,
+  (uint8_t) Mode::kChangeTimeZone2Dst,
+  (uint8_t) Mode::kChangeTimeZone3Offset,
+  (uint8_t) Mode::kChangeTimeZone3Dst,
 #else
-  MODE_CHANGE_TIME_ZONE0_NAME,
-  MODE_CHANGE_TIME_ZONE1_NAME,
-  MODE_CHANGE_TIME_ZONE2_NAME,
-  MODE_CHANGE_TIME_ZONE3_NAME,
+  (uint8_t) Mode::kChangeTimeZone0Name,
+  (uint8_t) Mode::kChangeTimeZone1Name,
+  (uint8_t) Mode::kChangeTimeZone2Name,
+  (uint8_t) Mode::kChangeTimeZone3Name,
 #endif
 };
 
@@ -350,12 +350,12 @@ const ModeGroup TIME_ZONE_MODE_GROUP = {
 // List of Settings modes.
 const uint8_t SETTINGS_MODES[] = {
 #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-  MODE_CHANGE_SETTINGS_BACKLIGHT,
-  MODE_CHANGE_SETTINGS_CONTRAST,
-  MODE_CHANGE_SETTINGS_BIAS,
+  (uint8_t) Mode::kChangeSettingsBacklight,
+  (uint8_t) Mode::kChangeSettingsContrast,
+  (uint8_t) Mode::kChangeSettingsBias,
 #else
-  MODE_CHANGE_SETTINGS_CONTRAST,
-  MODE_CHANGE_INVERT_DISPLAY,
+  (uint8_t) Mode::kChangeSettingsContrast,
+  (uint8_t) Mode::kChangeInvertDisplay,
 #endif
 };
 
@@ -369,11 +369,11 @@ const ModeGroup SETTINGS_MODE_GROUP = {
 
 // List of top level modes.
 const uint8_t TOP_LEVEL_MODES[] = {
-  MODE_DATE_TIME,
-  MODE_TIME_ZONE,
-  MODE_SETTINGS,
-  MODE_SYSCLOCK,
-  MODE_ABOUT,
+  (uint8_t) Mode::kViewDateTime,
+  (uint8_t) Mode::kViewTimeZone,
+  (uint8_t) Mode::kViewSettings,
+  (uint8_t) Mode::kViewSysclock,
+  (uint8_t) Mode::kViewAbout,
 };
 
 // List of children ModeGroups for each element in TOP_LEVEL_MODES, in the same
@@ -382,8 +382,8 @@ const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
   &DATE_TIME_MODE_GROUP,
   &TIME_ZONE_MODE_GROUP,
   &SETTINGS_MODE_GROUP,
-  nullptr /* MODE_SYSCLOCK has no submodes */,
-  nullptr /* MODE_ABOUT has no submodes */,
+  nullptr /* Mode::kViewSettings has no submodes */,
+  nullptr /* Mode::kViewAbout has no submodes */,
 };
 
 // Root mode group

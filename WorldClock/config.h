@@ -38,29 +38,32 @@
 // Rendering modes.
 //------------------------------------------------------------------
 
-// must be identical to ace_utils::mode_groups::kModeUnknown
-const uint8_t MODE_UNKNOWN = 0;
+enum class Mode : uint8_t {
+  // must be identical to ace_utils::mode_groups::kModeUnknown
+  kUnknown = 0,
 
-const uint8_t MODE_DATE_TIME = 1;
-const uint8_t MODE_SETTINGS = 2;
-const uint8_t MODE_ABOUT = 3;
+  kViewDateTime,
+  kViewSettings,
+  kViewAbout,
 
-const uint8_t MODE_CHANGE_YEAR = 10;
-const uint8_t MODE_CHANGE_MONTH = 11;
-const uint8_t MODE_CHANGE_DAY = 12;
-const uint8_t MODE_CHANGE_HOUR = 13;
-const uint8_t MODE_CHANGE_MINUTE = 14;
-const uint8_t MODE_CHANGE_SECOND = 15;
+  kChangeYear,
+  kChangeMonth,
+  kChangeDay,
+  kChangeHour,
+  kChangeMinute,
+  kChangeSecond,
 
-const uint8_t MODE_CHANGE_HOUR_MODE = 20;
-const uint8_t MODE_CHANGE_BLINKING_COLON = 21;
-const uint8_t MODE_CHANGE_CONTRAST = 22; // OLED contrast/brightness
-const uint8_t MODE_CHANGE_INVERT_DISPLAY = 23;
+  kChangeHourMode,
+  kChangeBlinkingColon,
+  kChangeContrast, // OLED contrast/brightness
+  kChangeInvertDisplay,
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-const uint8_t MODE_CHANGE_TIME_ZONE_DST0 = 30;
-const uint8_t MODE_CHANGE_TIME_ZONE_DST1 = 31;
-const uint8_t MODE_CHANGE_TIME_ZONE_DST2 = 32;
+  kChangeTimeZoneDst0,
+  kChangeTimeZoneDst1,
+  kChangeTimeZoneDst2,
 #endif
+
+};
 
 #endif

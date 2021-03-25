@@ -9,7 +9,7 @@
  * what needs to be displayed.
  */ 
 struct RenderingInfo {
-  uint8_t mode = 0; // display mode, see MODE_xxx above
+  Mode mode = Mode::kUnknown; // display mode
   bool blinkShowState = true; // true if blinking info should be shown
   uint8_t hourMode = 0; // 12/24 mode
   ace_time::TimeZoneData timeZoneData;

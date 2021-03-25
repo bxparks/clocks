@@ -5,7 +5,7 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
-// Set to 1 to print debugging info to SERIAL_PORT_MONITOR
+// Set >= 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
 #define ENABLE_SERIAL_DEBUG 0
 #endif
@@ -67,25 +67,28 @@
 // Button state transition nodes.
 //------------------------------------------------------------------
 
-static const uint8_t MODE_UNKNOWN = 0; // uninitialized
-static const uint8_t MODE_DATE_TIME = 1;
-static const uint8_t MODE_HOUR_MINUTE = 2;
-static const uint8_t MODE_MINUTE_SECOND = 3;
-static const uint8_t MODE_YEAR = 4;
-static const uint8_t MODE_MONTH = 5;
-static const uint8_t MODE_DAY = 6;
-static const uint8_t MODE_WEEKDAY = 7;
-static const uint8_t MODE_TIME_ZONE = 8;
+enum class Mode : uint8_t {
+  kUnknown = 0, // uninitialized
 
-static const uint8_t MODE_CHANGE_YEAR = 10;
-static const uint8_t MODE_CHANGE_MONTH = 11;
-static const uint8_t MODE_CHANGE_DAY = 12;
-static const uint8_t MODE_CHANGE_HOUR = 13;
-static const uint8_t MODE_CHANGE_MINUTE = 14;
-static const uint8_t MODE_CHANGE_SECOND = 15;
+  kViewDateTime,
+  kViewHourMinute,
+  kViewMinuteSecond,
+  kViewYear,
+  kViewMonth,
+  kViewDay,
+  kViewWeekday,
+  kViewTimeZone,
 
-static const uint8_t MODE_CHANGE_TIME_ZONE_OFFSET = 20;
-static const uint8_t MODE_CHANGE_TIME_ZONE_DST = 21;
-static const uint8_t MODE_CHANGE_HOUR_MODE = 22;
+  kChangeYear,
+  kChangeMonth,
+  kChangeDay,
+  kChangeHour,
+  kChangeMinute,
+  kChangeSecond,
+
+  kChangeTimeZoneOffset,
+  kChangeTimeZoneDst,
+  kChangeHourMode,
+};
 
 #endif

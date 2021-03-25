@@ -15,7 +15,7 @@ struct ClockInfo {
   uint32_t medStartTime;
 
   /**
-   * How often the pill should be taken. In MODE_VIEW_MED mode, the
+   * How often the pill should be taken. In Mode::kViewMed mode, the
    * ChangingClockInfo.medInterval field is overloaded to hold the TimePeriod
    * corresponding to "time until next med" information.
    */

@@ -7,8 +7,6 @@
 #include "LedDisplay.h"
 #include "RenderingInfo.h"
 
-#if DISPLAY_TYPE == DISPLAY_TYPE_LED
-
 using namespace ace_segment;
 using namespace ace_time;
 using ace_time::DateStrings;
@@ -29,7 +27,7 @@ class Presenter {
       mPrevRenderingInfo = mRenderingInfo;
     }
 
-    void setRenderingInfo(uint8_t mode, bool blinkShowState,
+    void setRenderingInfo(Mode mode, bool blinkShowState,
         const ClockInfo& clockInfo) {
       mRenderingInfo.mode = mode;
       mRenderingInfo.blinkShowState = blinkShowState;
@@ -44,7 +42,7 @@ class Presenter {
      * "blinking" mode, then this will return false in accordance with the
      * mBlinkShowState.
      */
-    bool shouldShowFor(uint8_t mode) const {
+    bool shouldShowFor(Mode mode) const {
       return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
     }
 
@@ -64,72 +62,83 @@ class Presenter {
       setBlinkStyle();
 
       const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
-      switch (mRenderingInfo.mode) {
-        case MODE_HOUR_MINUTE:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
+      switch ((Mode) mRenderingInfo.mode) {
+        case Mode::kViewHourMinute:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
           mDisplay.clockWriter->writeClock(dateTime.hour(), dateTime.minute());
           break;
-        case MODE_MINUTE_SECOND:
+
+        case Mode::kViewMinuteSecond:
           mDisplay.clockWriter->writeCharAt(0, ClockWriter::kSpace);
           mDisplay.clockWriter->writeCharAt(1, ClockWriter::kSpace);
           mDisplay.clockWriter->writeDecimalAt(2, dateTime.second());
           mDisplay.clockWriter->writeColon(true);
           break;
-        case MODE_YEAR:
-        case MODE_CHANGE_YEAR:
+
+        case Mode::kViewYear:
+        case Mode::kChangeYear:
           mDisplay.clockWriter->writeClock(20, dateTime.yearTiny());
           mDisplay.clockWriter->writeColon(false);
           break;
-        case MODE_MONTH:
-        case MODE_CHANGE_MONTH:
+
+        case Mode::kViewMonth:
+        case Mode::kChangeMonth:
           mDisplay.clockWriter->writeDecimalAt(0, dateTime.month());
           mDisplay.clockWriter->writeColon(false);
           mDisplay.clockWriter->writeCharAt(2, ClockWriter::kSpace);
           mDisplay.clockWriter->writeCharAt(3, ClockWriter::kSpace);
           break;
-        case MODE_DAY:
-        case MODE_CHANGE_DAY:
+
+        case Mode::kViewDay:
+        case Mode::kChangeDay:
           mDisplay.clockWriter->writeDecimalAt(0, dateTime.day());
           mDisplay.clockWriter->writeColon(false);
           mDisplay.clockWriter->writeCharAt(2, ClockWriter::kSpace);
           mDisplay.clockWriter->writeCharAt(3, ClockWriter::kSpace);
           break;
-        case MODE_WEEKDAY:
+
+        case Mode::kViewWeekday:
           mDisplay.stringWriter->writeStringAt(
               0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()),
               true /* padRight */);
+          break;
+
+        default:
           break;
       }
     }
 
     void setBlinkStyle() {
-      switch (mRenderingInfo.mode) {
-        case MODE_CHANGE_HOUR:
+      switch ((Mode) mRenderingInfo.mode) {
+        case Mode::kChangeHour:
           mDisplay.clockWriter->writeStyleAt(0, LedDisplay::BLINK_STYLE);
           mDisplay.clockWriter->writeStyleAt(1, LedDisplay::BLINK_STYLE);
           mDisplay.clockWriter->writeStyleAt(2, 0);
           mDisplay.clockWriter->writeStyleAt(3, 0);
           break;
-        case MODE_CHANGE_MINUTE:
+
+        case Mode::kChangeMinute:
           mDisplay.clockWriter->writeStyleAt(0, 0);
           mDisplay.clockWriter->writeStyleAt(1, 0);
           mDisplay.clockWriter->writeStyleAt(2, LedDisplay::BLINK_STYLE);
           mDisplay.clockWriter->writeStyleAt(3, LedDisplay::BLINK_STYLE);
           break;
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
+
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
           mDisplay.clockWriter->writeStyleAt(0, LedDisplay::BLINK_STYLE);
           mDisplay.clockWriter->writeStyleAt(1, LedDisplay::BLINK_STYLE);
           mDisplay.clockWriter->writeStyleAt(2, LedDisplay::BLINK_STYLE);
           mDisplay.clockWriter->writeStyleAt(3, LedDisplay::BLINK_STYLE);
           break;
-      default:
-        mDisplay.clockWriter->writeStyleAt(0, 0);
-        mDisplay.clockWriter->writeStyleAt(1, 0);
-        mDisplay.clockWriter->writeStyleAt(2, 0);
-        mDisplay.clockWriter->writeStyleAt(3, 0);
+
+        default:
+          mDisplay.clockWriter->writeStyleAt(0, 0);
+          mDisplay.clockWriter->writeStyleAt(1, 0);
+          mDisplay.clockWriter->writeStyleAt(2, 0);
+          mDisplay.clockWriter->writeStyleAt(3, 0);
       }
     }
 
@@ -143,7 +152,5 @@ class Presenter {
     RenderingInfo mPrevRenderingInfo;
 
 };
-
-#endif
 
 #endif

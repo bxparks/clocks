@@ -157,8 +157,8 @@ extern const ModeGroup ROOT_MODE_GROUP;
 
 // List of MedTimer modes
 const uint8_t MED_INFO_MODES[] = {
-  MODE_CHANGE_MED_HOUR,
-  MODE_CHANGE_MED_MINUTE,
+  (uint8_t) Mode::kChangeMedHour,
+  (uint8_t) Mode::kChangeMedMinute,
 };
 
 // ModeGroup for the DateTime modes.
@@ -171,12 +171,12 @@ const ModeGroup MED_INFO_MODE_GROUP = {
 
 // List of DateTime modes.
 const uint8_t DATE_TIME_MODES[] = {
-  MODE_CHANGE_YEAR,
-  MODE_CHANGE_MONTH,
-  MODE_CHANGE_DAY,
-  MODE_CHANGE_HOUR,
-  MODE_CHANGE_MINUTE,
-  MODE_CHANGE_SECOND,
+  (uint8_t) Mode::kChangeYear,
+  (uint8_t) Mode::kChangeMonth,
+  (uint8_t) Mode::kChangeDay,
+  (uint8_t) Mode::kChangeHour,
+  (uint8_t) Mode::kChangeMinute,
+  (uint8_t) Mode::kChangeSecond,
 };
 
 // ModeGroup for the DateTime modes.
@@ -190,10 +190,10 @@ const ModeGroup DATE_TIME_MODE_GROUP = {
 // List of TimeZone modes.
 const uint8_t TIME_ZONE_MODES[] = {
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-  MODE_CHANGE_TIME_ZONE_OFFSET,
-  MODE_CHANGE_TIME_ZONE_DST,
+  (uint8_t) Mode::kChangeTimeZoneOffset,
+  (uint8_t) Mode::kChangeTimeZoneDst,
 #else
-  MODE_CHANGE_TIME_ZONE_NAME,
+  (uint8_t) Mode::kChangeTimeZoneName,
 #endif
 };
 
@@ -207,10 +207,10 @@ const ModeGroup TIME_ZONE_MODE_GROUP = {
 
 // List of top level modes.
 const uint8_t TOP_LEVEL_MODES[] = {
-  MODE_VIEW_MED,
-  MODE_VIEW_DATE_TIME,
-  MODE_VIEW_TIME_ZONE,
-  MODE_VIEW_ABOUT,
+  (uint8_t) Mode::kViewMed,
+  (uint8_t) Mode::kViewDateTime,
+  (uint8_t) Mode::kViewTimeZone,
+  (uint8_t) Mode::kViewAbout,
 };
 
 // List of children ModeGroups for each element in TOP_LEVEL_MODES, in the same
