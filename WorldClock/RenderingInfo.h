@@ -12,7 +12,7 @@ using namespace ace_time;
  * addition to other information related to the presentation of the clock.
  */ 
 struct RenderingInfo {
-  uint8_t mode = MODE_UNKNOWN; // display mode
+  Mode mode = Mode::kUnknown; // display mode
   bool blinkShowState = true; // true if blinking info should be shown
   bool isRendered = false; // true if the info has been rendered
 

@@ -24,7 +24,7 @@ class Presenter {
         mOled(oled) {}
 
     void display() {
-      if (mRenderingInfo.mode == MODE_UNKNOWN) {
+      if (mRenderingInfo.mode == Mode::kUnknown) {
         clearDisplay();
         return;
       }
@@ -46,7 +46,7 @@ class Presenter {
      * to keep track of whether the mPrevRenderingInfo has actually been
      * rendered or not, before clobbering it with the new RenderingInfo.
      */
-    void setRenderingInfo(uint8_t mode, acetime_t now, bool blinkShowState,
+    void setRenderingInfo(Mode mode, acetime_t now, bool blinkShowState,
         const ClockInfo& clockInfo) {
       if (mIsRendered) {
         mPrevRenderingInfo = mRenderingInfo;
@@ -77,13 +77,13 @@ class Presenter {
       ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
       ClockInfo& clockInfo = mRenderingInfo.clockInfo;
 
-      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
           prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
         uint8_t value = toContrastValue(clockInfo.contrastLevel);
         mOled.setContrast(value);
       }
 
-      if (mPrevRenderingInfo.mode == MODE_UNKNOWN ||
+      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
           prevClockInfo.invertDisplay != clockInfo.invertDisplay) {
         mOled.invertDisplay(clockInfo.invertDisplay);
       }
@@ -94,35 +94,38 @@ class Presenter {
     void displayData() {
       mOled.home();
 
-      switch (mRenderingInfo.mode) {
-        case MODE_DATE_TIME:
+      switch ((Mode) mRenderingInfo.mode) {
+        case Mode::kViewDateTime:
           displayDateTime();
           break;
 
-        case MODE_ABOUT:
+        case Mode::kViewAbout:
           displayAbout();
           break;
 
-        case MODE_SETTINGS:
-        case MODE_CHANGE_HOUR_MODE:
-        case MODE_CHANGE_BLINKING_COLON:
-        case MODE_CHANGE_CONTRAST:
-        case MODE_CHANGE_INVERT_DISPLAY:
+        case Mode::kViewSettings:
+        case Mode::kChangeHourMode:
+        case Mode::kChangeBlinkingColon:
+        case Mode::kChangeContrast:
+        case Mode::kChangeInvertDisplay:
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case MODE_CHANGE_TIME_ZONE_DST0:
-        case MODE_CHANGE_TIME_ZONE_DST1:
-        case MODE_CHANGE_TIME_ZONE_DST2:
+        case Mode::kChangeTimeZoneDst0:
+        case Mode::kChangeTimeZoneDst1:
+        case Mode::kChangeTimeZoneDst2:
 #endif
           displayClockInfo();
           break;
 
-        case MODE_CHANGE_YEAR:
-        case MODE_CHANGE_MONTH:
-        case MODE_CHANGE_DAY:
-        case MODE_CHANGE_HOUR:
-        case MODE_CHANGE_MINUTE:
-        case MODE_CHANGE_SECOND:
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
           displayChangeableDateTime();
+          break;
+
+        default:
           break;
       }
     }
@@ -153,7 +156,7 @@ class Presenter {
         printPad2To(mOled, hour, '0');
       }
       mOled.print(
-          (! clockInfo.blinkingColon || shouldShowFor(MODE_DATE_TIME))
+          (! clockInfo.blinkingColon || shouldShowFor(Mode::kViewDateTime))
           ? ':' : ' ');
       printPad2To(mOled, dateTime.minute(), '0');
 
@@ -197,19 +200,19 @@ class Presenter {
       mOled.set1X();
 
       // date
-      if (shouldShowFor(MODE_CHANGE_YEAR)) {
+      if (shouldShowFor(Mode::kChangeYear)) {
         mOled.print(dateTime.year());
       } else {
         mOled.print("    ");
       }
       mOled.print('-');
-      if (shouldShowFor(MODE_CHANGE_MONTH)) {
+      if (shouldShowFor(Mode::kChangeMonth)) {
         printPad2To(mOled, dateTime.month(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print('-');
-      if (shouldShowFor(MODE_CHANGE_DAY)) {
+      if (shouldShowFor(Mode::kChangeDay)) {
         printPad2To(mOled, dateTime.day(), '0');
       } else{
         mOled.print("  ");
@@ -218,7 +221,7 @@ class Presenter {
       mOled.println();
 
       // time
-      if (shouldShowFor(MODE_CHANGE_HOUR)) {
+      if (shouldShowFor(Mode::kChangeHour)) {
         uint8_t hour = dateTime.hour();
         if (clockInfo.hourMode == ClockInfo::kTwelve) {
           if (hour == 0) {
@@ -234,13 +237,13 @@ class Presenter {
         mOled.print("  ");
       }
       mOled.print(':');
-      if (shouldShowFor(MODE_CHANGE_MINUTE)) {
+      if (shouldShowFor(Mode::kChangeMinute)) {
         printPad2To(mOled, dateTime.minute(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
-      if (shouldShowFor(MODE_CHANGE_SECOND)) {
+      if (shouldShowFor(Mode::kChangeSecond)) {
         printPad2To(mOled, dateTime.second(), '0');
       } else {
         mOled.print("  ");
@@ -271,7 +274,7 @@ class Presenter {
       const ClockInfo& clockInfo = mRenderingInfo.clockInfo;
 
       mOled.print(F("12/24:"));
-      if (shouldShowFor(MODE_CHANGE_HOUR_MODE)) {
+      if (shouldShowFor(Mode::kChangeHourMode)) {
         mOled.print(clockInfo.hourMode == ClockInfo::kTwelve
             ? "12" : "24");
       } else {
@@ -280,7 +283,7 @@ class Presenter {
       mOled.println();
 
       mOled.print(F("Blink:"));
-      if (shouldShowFor(MODE_CHANGE_BLINKING_COLON)) {
+      if (shouldShowFor(Mode::kChangeBlinkingColon)) {
         mOled.print(clockInfo.blinkingColon ? "on " : "off");
       } else {
         mOled.print("   ");
@@ -288,7 +291,7 @@ class Presenter {
       mOled.println();
 
       mOled.print(F("Contrast:"));
-      if (shouldShowFor(MODE_CHANGE_CONTRAST)) {
+      if (shouldShowFor(Mode::kChangeContrast)) {
         mOled.print(clockInfo.contrastLevel);
       } else {
         mOled.print(' ');
@@ -296,7 +299,7 @@ class Presenter {
       mOled.println();
 
       mOled.print(F("Invert:"));
-      if (shouldShowFor(MODE_CHANGE_INVERT_DISPLAY)) {
+      if (shouldShowFor(Mode::kChangeInvertDisplay)) {
         mOled.println(clockInfo.invertDisplay);
       } else {
         mOled.println(' ');
@@ -319,9 +322,9 @@ class Presenter {
       mOled.println();
 
       mOled.print("DST:");
-      if (shouldShowFor(MODE_CHANGE_TIME_ZONE_DST0)
-          && shouldShowFor(MODE_CHANGE_TIME_ZONE_DST1)
-          && shouldShowFor(MODE_CHANGE_TIME_ZONE_DST2)) {
+      if (shouldShowFor(Mode::kChangeTimeZoneDst0)
+          && shouldShowFor(Mode::kChangeTimeZoneDst1)
+          && shouldShowFor(Mode::kChangeTimeZoneDst2)) {
         mOled.print(timeZone.isDst() ? "on " : "off");
       } else {
         mOled.print("   ");
@@ -337,7 +340,7 @@ class Presenter {
      * "blinking" mode, then this will return false in accordance with the
      * mBlinkShowState.
      */
-    bool shouldShowFor(uint8_t mode) const {
+    bool shouldShowFor(Mode mode) const {
       return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
     }
 
