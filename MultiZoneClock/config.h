@@ -28,7 +28,6 @@
 // Define the display type, either a 128x64 OLED or a 88x48 LCD
 #define DISPLAY_TYPE_OLED 0
 #define DISPLAY_TYPE_LCD 1
-#define DISPLAY_TYPE DISPLAY_TYPE_OLED
 
 // Determine type of TimeZone. Extended is too big for a Nano or Pro Micro, but
 // will work on an ESP8266 or ESP32.
@@ -53,40 +52,58 @@
 // ESP8266: 10-bit analog pin
 #define BUTTON_TYPE_DIGITAL 0
 #define BUTTON_TYPE_ANALOG 1
-#define BUTTON_TYPE BUTTON_TYPE_DIGITAL
 
 #if ! defined(AUNITER) // Arduino IDE in interactive mode
   // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
   #define WIFI_SSID "your wifi ssid here"
   #define WIFI_PASSWORD "your wifi password here"
 
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #define BUTTON_TYPE_DIGITAL 0
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
-  #define ENABLE_EEPROM 1
 
 #elif defined(EPOXY_DUINO)
   // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
   #define WIFI_SSID "your wifi ssid here"
   #define WIFI_PASSWORD "your wifi password here"
 
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #define BUTTON_TYPE_DIGITAL 0
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
-  #define ENABLE_EEPROM 1
 
 #elif defined(AUNITER_NANO)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #define BUTTON_TYPE_DIGITAL 0
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
-  #define ENABLE_EEPROM 1
+
 #elif defined(AUNITER_MICRO)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -97,61 +114,96 @@
   // the Manual timezones must be used.
   #undef TIME_ZONE_TYPE
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
+
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #define BUTTON_TYPE_DIGITAL 0
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
-  #define ENABLE_EEPROM 1
+
 #elif defined(AUNITER_MINI_MINDER)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #define BUTTON_TYPE_DIGITAL 0
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
-  #define ENABLE_EEPROM 1
+
 #elif defined(AUNITER_MEGA)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #define BUTTON_TYPE_DIGITAL 0
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
-  #define ENABLE_EEPROM 1
+
 #elif defined(AUNITER_SAMD)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 0
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #define BUTTON_TYPE_DIGITAL 0
   #define MODE_BUTTON_PIN 11
   #define CHANGE_BUTTON_PIN 10
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP true
-  #define ENABLE_EEPROM 0
+
 #elif defined(AUNITER_ESP8266)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #define BUTTON_TYPE_DIGITAL 0
   #define MODE_BUTTON_PIN D4
   #define CHANGE_BUTTON_PIN D3
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
-  #define ENABLE_EEPROM 1
+
 #elif defined(AUNITER_WORLD_CLOCK_LCD)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
   #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
 
   // Button parameters
-  #undef BUTTON_TYPE
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 1
@@ -159,13 +211,13 @@
   #define ANALOG_BITS 10
 
   // Display parameters
-  #undef DISPLAY_TYPE
   #define DISPLAY_TYPE DISPLAY_TYPE_LCD
   #define LCD_SPI_DATA_COMMAND_PIN D4
   #define LCD_BACKLIGHT_PIN D3
   #define LCD_INITIAL_CONTRAST 20
   #define LCD_INITIAL_BIAS 7
   #define OLED_REMAP true
+
 #elif defined(AUNITER_D1MINI)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -179,31 +231,68 @@
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDEDDB
 
   // Button parameters
-  #undef BUTTON_TYPE
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define ANALOG_BUTTON_COUNT 2
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 1
   #define ANALOG_BUTTON_PIN A0
   #define ANALOG_BITS 10
 
   // Display parameters
-  #undef DISPLAY_TYPE
   #define DISPLAY_TYPE DISPLAY_TYPE_LCD
-  #define LCD_SPI_DATA_COMMAND_PIN D4
-  #define LCD_BACKLIGHT_PIN D3
-  #define LCD_INITIAL_CONTRAST 20
-  #define LCD_INITIAL_BIAS 7
-  #define OLED_REMAP true
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+    #define LCD_SPI_DATA_COMMAND_PIN D4
+    #define LCD_BACKLIGHT_PIN D3
+    #define LCD_INITIAL_CONTRAST 20
+    #define LCD_INITIAL_BIAS 7
+  #else
+    #define OLED_REMAP true
+  #endif
+
+#elif defined(AUNITER_D1MINI_LARGE)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define ANALOG_BUTTON_COUNT 4
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 2
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BITS 10
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_LCD
+  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+    #define LCD_SPI_DATA_COMMAND_PIN D4
+    #define LCD_BACKLIGHT_PIN D3
+    #define LCD_INITIAL_CONTRAST 20
+    #define LCD_INITIAL_BIAS 7
+  #else
+    #define OLED_REMAP false
+  #endif
+
 #elif defined(AUNITER_ESP32)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
   #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
+
+  // Button parameters
+  #define BUTTON_TYPE_DIGITAL 0
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 4
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
+
 #else
   #error Unknown AUNITER environment
 #endif
