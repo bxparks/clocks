@@ -424,23 +424,59 @@ COROUTINE(printFrameRate) {
 
 #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
 
-ButtonConfig buttonConfig;
-AceButton modeButton(&buttonConfig, MODE_BUTTON_PIN);
-AceButton changeButton(&buttonConfig, CHANGE_BUTTON_PIN);
+  ButtonConfig buttonConfig;
+  AceButton modeButton(&buttonConfig, MODE_BUTTON_PIN);
+  AceButton changeButton(&buttonConfig, CHANGE_BUTTON_PIN);
 
-#else
+#elif BUTTON_TYPE == BUTTON_TYPE_ANALOG
 
   AceButton modeButton((uint8_t) MODE_BUTTON_PIN);
   AceButton changeButton((uint8_t) CHANGE_BUTTON_PIN);
   AceButton* const BUTTONS[] = {&modeButton, &changeButton};
-  #if ANALOG_BITS == 8
-    const uint16_t LEVELS[] = {0, 128, 255};
-  #elif ANALOG_BITS == 10
-    const uint16_t LEVELS[] = {0, 512, 1023};
+
+  #if ANALOG_BUTTON_COUNT == 2
+    #if ANALOG_BITS == 8
+      const uint16_t LEVELS[] = {0, 128, 255};
+    #elif ANALOG_BITS == 10
+      const uint16_t LEVELS[] = {0, 512, 1023};
+    #else
+      #error Unknown number of ADC bits
+    #endif
+  #elif ANALOG_BUTTON_COUNT == 4
+    #if ANALOG_BITS == 8
+      const uint16_t LEVELS[] = {
+        0 /*short to ground*/,
+        82 /*32%, 4.7k*/,
+        128 /*50%, 10k*/,
+        210 /*82%, 47k*/,
+        255 /*100%, open*/
+      };
+    #elif ANALOG_BITS == 10
+      const uint16_t LEVELS[] = {
+        0 /*short to ground*/,
+        327 /*32%, 4.7k*/,
+        512 /*50%, 10k*/,
+        844 /*82%, 47k*/,
+        1023 /*100%, open*/
+      };
+    #else
+      #error Unknown number of ADC bits
+    #endif
   #else
-    #error Unknown number of ADC bits
+    #error Unknown ANALOG_BUTTON_COUNT
   #endif
-  LadderButtonConfig buttonConfig(ANALOG_BUTTON_PIN, 3, LEVELS, 2, BUTTONS);
+
+  LadderButtonConfig buttonConfig(
+      ANALOG_BUTTON_PIN,
+      sizeof(LEVELS) / sizeof(LEVELS[0]),
+      LEVELS,
+      sizeof(BUTTONS) / sizeof(BUTTONS[0]),
+      BUTTONS
+  );
+
+#else
+
+  #error Unknown BUTTON_TYPE
 
 #endif
 
