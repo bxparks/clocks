@@ -4,17 +4,23 @@
 #include <AceTime.h>
 #include <AceSegment.h>
 #include "config.h"
-#include "LedDisplay.h"
 #include "RenderingInfo.h"
 
-using namespace ace_segment;
-using namespace ace_time;
 using ace_time::DateStrings;
+using ace_time::ZonedDateTime;
+using ace_segment::LedDisplay;
+using ace_segment::ClockWriter;
+using ace_segment::CharWriter;
+using ace_segment::StringWriter;
 
 class Presenter {
   public:
-    Presenter(const LedDisplay& display):
-        mDisplay(display) {}
+    Presenter(LedDisplay& display):
+        mDisplay(display),
+        mClockWriter(display),
+        mCharWriter(display),
+        mStringWriter(mCharWriter)
+    {}
 
     void display() {
       if (needsClear()) {
@@ -56,50 +62,43 @@ class Presenter {
       return mRenderingInfo != mPrevRenderingInfo;
     }
 
-    void clearDisplay() { mDisplay.renderer->clear(); }
+    void clearDisplay() { mDisplay.clear(); }
 
     void displayData() {
-      setBlinkStyle();
-
       const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
+      #if ENABLE_SERIAL_DEBUG > 0
+        dateTime.printTo(SERIAL_PORT_MONITOR);
+        SERIAL_PORT_MONITOR.println();
+      #endif
+
       switch ((Mode) mRenderingInfo.mode) {
         case Mode::kViewHourMinute:
         case Mode::kChangeHour:
         case Mode::kChangeMinute:
-          mDisplay.clockWriter->writeClock(dateTime.hour(), dateTime.minute());
+          displayHourMinute(dateTime);
           break;
 
         case Mode::kViewMinuteSecond:
-          mDisplay.clockWriter->writeCharAt(0, ClockWriter::kSpace);
-          mDisplay.clockWriter->writeCharAt(1, ClockWriter::kSpace);
-          mDisplay.clockWriter->writeDecimalAt(2, dateTime.second());
-          mDisplay.clockWriter->writeColon(true);
+          displayMinuteSecond(dateTime);
           break;
 
         case Mode::kViewYear:
         case Mode::kChangeYear:
-          mDisplay.clockWriter->writeClock(20, dateTime.yearTiny());
-          mDisplay.clockWriter->writeColon(false);
+          displayYear(dateTime);
           break;
 
         case Mode::kViewMonth:
         case Mode::kChangeMonth:
-          mDisplay.clockWriter->writeDecimalAt(0, dateTime.month());
-          mDisplay.clockWriter->writeColon(false);
-          mDisplay.clockWriter->writeCharAt(2, ClockWriter::kSpace);
-          mDisplay.clockWriter->writeCharAt(3, ClockWriter::kSpace);
+          displayMonth(dateTime);
           break;
 
         case Mode::kViewDay:
         case Mode::kChangeDay:
-          mDisplay.clockWriter->writeDecimalAt(0, dateTime.day());
-          mDisplay.clockWriter->writeColon(false);
-          mDisplay.clockWriter->writeCharAt(2, ClockWriter::kSpace);
-          mDisplay.clockWriter->writeCharAt(3, ClockWriter::kSpace);
+          displayDay(dateTime);
           break;
 
         case Mode::kViewWeekday:
-          mDisplay.stringWriter->writeStringAt(
+          mStringWriter.writeStringAt(
               0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()),
               true /* padRight */);
           break;
@@ -109,37 +108,61 @@ class Presenter {
       }
     }
 
-    void setBlinkStyle() {
-      switch ((Mode) mRenderingInfo.mode) {
-        case Mode::kChangeHour:
-          mDisplay.clockWriter->writeStyleAt(0, LedDisplay::BLINK_STYLE);
-          mDisplay.clockWriter->writeStyleAt(1, LedDisplay::BLINK_STYLE);
-          mDisplay.clockWriter->writeStyleAt(2, 0);
-          mDisplay.clockWriter->writeStyleAt(3, 0);
-          break;
-
-        case Mode::kChangeMinute:
-          mDisplay.clockWriter->writeStyleAt(0, 0);
-          mDisplay.clockWriter->writeStyleAt(1, 0);
-          mDisplay.clockWriter->writeStyleAt(2, LedDisplay::BLINK_STYLE);
-          mDisplay.clockWriter->writeStyleAt(3, LedDisplay::BLINK_STYLE);
-          break;
-
-        case Mode::kChangeYear:
-        case Mode::kChangeMonth:
-        case Mode::kChangeDay:
-          mDisplay.clockWriter->writeStyleAt(0, LedDisplay::BLINK_STYLE);
-          mDisplay.clockWriter->writeStyleAt(1, LedDisplay::BLINK_STYLE);
-          mDisplay.clockWriter->writeStyleAt(2, LedDisplay::BLINK_STYLE);
-          mDisplay.clockWriter->writeStyleAt(3, LedDisplay::BLINK_STYLE);
-          break;
-
-        default:
-          mDisplay.clockWriter->writeStyleAt(0, 0);
-          mDisplay.clockWriter->writeStyleAt(1, 0);
-          mDisplay.clockWriter->writeStyleAt(2, 0);
-          mDisplay.clockWriter->writeStyleAt(3, 0);
+    void displayHourMinute(const ZonedDateTime& dateTime) {
+      if (shouldShowFor(Mode::kChangeHour)) {
+        mClockWriter.writeDec2At(0, dateTime.hour());
+      } else {
+        mClockWriter.writeCharAt(0, ClockWriter::kCharSpace);
+        mClockWriter.writeCharAt(1, ClockWriter::kCharSpace);
       }
+
+      if (shouldShowFor(Mode::kChangeMinute)) {
+        mClockWriter.writeDec2At(2, dateTime.minute());
+      } else {
+        mClockWriter.writeCharAt(2, ClockWriter::kCharSpace);
+        mClockWriter.writeCharAt(3, ClockWriter::kCharSpace);
+      }
+      mClockWriter.writeColon(true);
+    }
+
+    void displayMinuteSecond(const ZonedDateTime& dateTime) {
+      mClockWriter.writeCharAt(0, ClockWriter::kCharSpace);
+      mClockWriter.writeCharAt(1, ClockWriter::kCharSpace);
+      mClockWriter.writeDec2At(2, dateTime.second());
+      mClockWriter.writeColon(true);
+    }
+
+    void displayYear(const ZonedDateTime& dateTime) {
+      if (shouldShowFor(Mode::kChangeYear)) {
+        mClockWriter.writeDec4At(0, dateTime.year());
+      } else {
+        clearDisplay();
+      }
+      mClockWriter.writeColon(false);
+    }
+
+    void displayMonth(const ZonedDateTime& dateTime) {
+      mClockWriter.writeCharAt(0, ClockWriter::kCharSpace);
+      mClockWriter.writeCharAt(1, ClockWriter::kCharSpace);
+      if (shouldShowFor(Mode::kChangeMonth)) {
+        mClockWriter.writeDec2At(2, dateTime.month());
+      } else {
+        mClockWriter.writeCharAt(2, ClockWriter::kCharSpace);
+        mClockWriter.writeCharAt(3, ClockWriter::kCharSpace);
+      }
+      mClockWriter.writeColon(false);
+    }
+
+    void displayDay(const ZonedDateTime& dateTime) {
+      mClockWriter.writeCharAt(0, ClockWriter::kCharSpace);
+      mClockWriter.writeCharAt(1, ClockWriter::kCharSpace);
+      if (shouldShowFor(Mode::kChangeDay)) {
+        mClockWriter.writeDec2At(2, dateTime.day());
+      } else  {
+        mClockWriter.writeCharAt(2, ClockWriter::kCharSpace);
+        mClockWriter.writeCharAt(3, ClockWriter::kCharSpace);
+      }
+      mClockWriter.writeColon(false);
     }
 
   private:
@@ -147,7 +170,11 @@ class Presenter {
     Presenter(const Presenter&) = delete;
     Presenter& operator=(const Presenter&) = delete;
 
-    const LedDisplay& mDisplay;
+    LedDisplay& mDisplay;
+    ClockWriter mClockWriter;
+    CharWriter mCharWriter;
+    StringWriter mStringWriter;
+
     RenderingInfo mRenderingInfo;
     RenderingInfo mPrevRenderingInfo;
 

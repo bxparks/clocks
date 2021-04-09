@@ -10,15 +10,16 @@ Supported boards are:
   * Arduino Leonardo (Pro Micro clone)
 */
 
+#include "config.h"
 #include <Wire.h>
 #include <AceSegment.h>
+#include <ace_segment/fast/SwSpiAdapterFast.h>
+#include <ace_segment/fast/LedMatrixDirectFast.h>
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
 #include <AceUtilsCrcEeprom.h>
 #include <SSD1306AsciiWire.h>
-#include "config.h"
-#include "LedDisplay.h"
 #include "Controller.h"
 
 using namespace ace_segment;
@@ -146,6 +147,9 @@ void setupClocks() {
 
   systemClock.setup();
   systemClock.setupCoroutine(F("clock"));
+  if (systemClock.getNow() == ace_time::LocalDate::kInvalidEpochSeconds) {
+    systemClock.setNow(0);
+  }
 }
 
 //------------------------------------------------------------------
@@ -155,27 +159,143 @@ void setupClocks() {
 // Use polling or interrupt for AceSegment
 #define USE_INTERRUPT 0
 
-LedDisplay ledDisplay;
+const uint8_t FRAMES_PER_SECOND = 60;
+const uint8_t NUM_SUBFIELDS = 16;
+const uint8_t NUM_DIGITS = 4;
+const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
+
+#if LED_MATRIX_MODE == LED_MATRIX_MODE_DIRECT
+  // 4 digits, resistors on segments on Pro Micro.
+  const uint8_t NUM_SEGMENTS = 8;
+  const uint8_t SEGMENT_PINS[NUM_SEGMENTS] = {8, 9, 10, 16, 14, 18, 19, 15};
+#else
+  const uint8_t LATCH_PIN = 10; // ST_CP on 74HC595
+  const uint8_t DATA_PIN = MOSI; // DS on 74HC595
+  const uint8_t CLOCK_PIN = SCK; // SH_CP on 74HC595
+#endif
+
+// The chain of resources.
+Hardware hardware;
+#if LED_MATRIX_MODE == LED_MATRIX_MODE_DIRECT
+  // Common Anode, with transitions on Group pins
+  using LedMatrix = LedMatrixDirect<Hardware>;
+  LedMatrix ledMatrix(
+      hardware,
+      LedMatrix::kActiveLowPattern /*groupOnPattern*/,
+      LedMatrix::kActiveLowPattern /*elementOnPattern*/,
+      NUM_DIGITS,
+      DIGIT_PINS,
+      NUM_SEGMENTS,
+      SEGMENT_PINS);
+#elif LED_MATRIX_MODE == LED_MATRIX_MODE_DIRECT_FAST
+  // Common Anode, with transitions on Group pins
+  using LedMatrix = LedMatrixDirectFast<
+    4, 5, 6, 7,
+    8, 9, 10, 16, 14, 18, 19, 15
+  >;
+  LedMatrix ledMatrix(
+      LedMatrix::kActiveLowPattern /*groupOnPattern*/,
+      LedMatrix::kActiveLowPattern /*elementOnPattern*/);
+#elif LED_MATRIX_MODE == LED_MATRIX_MODE_PARIAL_SW_SPI
+  // Common Cathode, with transistors on Group pins
+  SwSpiAdapter spiAdapter(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  using LedMatrix = LedMatrixSingleShiftRegister<Hardware, SwSpiAdapter>;
+  LedMatrix ledMatrix(
+      hardware,
+      spiAdapter,
+      LedMatrix::kActiveHighPattern /*groupOnPattern*/,
+      LedMatrix::kActiveHighPattern /*elementOnPattern*/,
+      NUM_DIGITS,
+      DIGIT_PINS):
+#elif LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_SW_SPI_FAST
+  // Common Cathode, with transistors on Group pins
+  using SpiAdapter = SwSpiAdapterFast<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+  SpiAdapter spiAdapter;
+  using LedMatrix = LedMatrixSingleShiftRegister<Hardware, SpiAdapter>;
+  LedMatrix ledMatrix(
+      hardware,
+      spiAdapter,
+      LedMatrix::kActiveHighPattern /*groupOnPattern*/,
+      LedMatrix::kActiveHighPattern /*elementOnPattern*/,
+      NUM_DIGITS,
+      DIGIT_PINS);
+#elif LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_HW_SPI
+  // Common Cathode, with transistors on Group pins
+  HwSpiAdapter spiAdapter(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  using LedMatrix = LedMatrixSingleShiftRegister<Hardware, HwSpiAdapter>;
+  LedMatrix ledMatrix(
+      hardware,
+      spiAdapter,
+      LedMatrix::kActiveHighPattern /*groupOnPattern*/,
+      LedMatrix::kActiveHighPattern /*elementOnPattern*/,
+      NUM_DIGITS,
+      DIGIT_PINS);
+#elif LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI
+  // Common Anode, with transistors on Group pins
+  SwSpiAdapter spiAdapter(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  using LedMatrix = LedMatrixDualShiftRegister<SwSpiAdapter>;
+  LedMatrix ledMatrix(
+      spiAdapter,
+      LedMatrix::kActiveLowPattern /*groupOnPattern*/,
+      LedMatrix::kActiveLowPattern /*elementOnPattern*/);
+#elif LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI_FAST
+  // Common Anode, with transistors on Group pins
+  using SpiAdapter = SwSpiAdapterFast<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+  SpiAdapter spiAdapter;
+  using LedMatrix = LedMatrixDualShiftRegister<SpiAdapter>;
+  LedMatrix ledMatrix(
+      spiAdapter,
+      LedMatrix::kActiveLowPattern /*groupOnPattern*/,
+      LedMatrix::kActiveLowPattern /*elementOnPattern*/);
+#elif LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_HW_SPI
+  // Common Anode, with transistors on Group pins
+  HwSpiAdapter spiAdapter(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  using LedMatrix = LedMatrixDualShiftRegister<HwSpiAdapter>;
+  LedMatrix ledMatrix(
+      spiAdapter,
+      LedMatrix::kActiveLowPattern /*groupOnPattern*/,
+      LedMatrix::kActiveLowPattern /*elementOnPattern*/);
+#else
+  #error Unsupported LED_MATRIX_MODE
+#endif
+
+ScanningDisplay<Hardware, LedMatrix, NUM_DIGITS, 1> scanningDisplay(
+    hardware, ledMatrix, FRAMES_PER_SECOND);
+
+// Setup the various resources.
+void setupAceSegment() {
+  #if LED_MATRIX_MODE == LED_MATRIX_MODE_PARIAL_SW_SPI \
+      || LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_HW_SPI \
+      || LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_SW_SPI_FAST \
+      || LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI \
+      || LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_HW_SPI \
+      || LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI_FAST
+    spiAdapter.begin();
+  #endif
+
+    ledMatrix.begin();
+    scanningDisplay.begin();
+}
 
 #if USE_INTERRUPT == 1
   // interrupt handler for timer 2
   ISR(TIMER2_COMPA_vect) {
-    ledDisplay.renderField();
+    scanningDisplay.renderFieldNow();
   }
 #else
   COROUTINE(renderLed) {
     COROUTINE_LOOP() {
-      ledDisplay.renderFieldWhenReady();
+      scanningDisplay.renderFieldWhenReady();
       COROUTINE_YIELD();
     }
   }
 #endif
 
-void setupLed() {
+void setupRenderingInterrupt() {
 #if USE_INTERRUPT == 1
   // set up Timer 2
   uint8_t timerCompareValue =
-      (long) F_CPU / 1024 / ledDisplay->getFieldsPerSecond() - 1;
+      (long) F_CPU / 1024 / scanningDisplay->getFieldsPerSecond() - 1;
   #if ENABLE_SERIAL_DEBUG == 1
     Serial.print(F("Timer 2, Compare A: "));
     Serial.println(timerCompareValue);
@@ -197,7 +317,7 @@ void setupLed() {
 // Create an appropriate controller/presenter pair.
 //------------------------------------------------------------------
 
-Presenter presenter(ledDisplay);
+Presenter presenter(scanningDisplay);
 Controller controller(systemClock, crcEeprom, presenter, zoneManager,
     DISPLAY_ZONE);
 
@@ -229,6 +349,11 @@ AceButton changeButton(&changeButtonConfig);
 
 void handleModeButton(AceButton* /* button */, uint8_t eventType,
     uint8_t /* buttonState */) {
+  if (ENABLE_SERIAL_DEBUG >= 2) {
+    SERIAL_PORT_MONITOR.print(F("handleModeButton(): eventType="));
+    SERIAL_PORT_MONITOR.println(eventType);
+  }
+
   switch (eventType) {
     case AceButton::kEventReleased:
       controller.modeButtonPress();
@@ -241,6 +366,11 @@ void handleModeButton(AceButton* /* button */, uint8_t eventType,
 
 void handleChangeButton(AceButton* /* button */, uint8_t eventType,
     uint8_t /* buttonState */) {
+  if (ENABLE_SERIAL_DEBUG >= 2) {
+    SERIAL_PORT_MONITOR.print(F("handleChangeButton(): eventType="));
+    SERIAL_PORT_MONITOR.println(eventType);
+  }
+
   switch (eventType) {
     case AceButton::kEventPressed:
       controller.changeButtonPress();
@@ -293,13 +423,17 @@ void setup() {
   Serial.println(F("setup(): begin"));
 #endif
 
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
+    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
   Wire.begin();
   Wire.setClock(400000L);
+#endif
 
   crcEeprom.begin(EEPROM_SIZE);
   setupAceButton();
   setupClocks();
-  setupLed();
+  setupAceSegment();
+  setupRenderingInterrupt();
   controller.setup();
 
   CoroutineScheduler::setup();

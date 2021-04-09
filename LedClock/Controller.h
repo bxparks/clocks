@@ -66,6 +66,10 @@ class Controller {
     }
 
     void modeButtonPress() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("modeButtonPress()"));
+      }
+
       switch ((Mode) mMode) {
         case Mode::kViewHourMinute:
           mMode = Mode::kViewMinuteSecond;
@@ -107,12 +111,17 @@ class Controller {
     }
 
     void modeButtonLongPress() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("modeButtonLongPress()"));
+      }
+
       switch ((Mode) mMode) {
         case Mode::kViewHourMinute:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
           mMode = Mode::kChangeHour;
           break;
+
         case Mode::kViewMinuteSecond:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
@@ -124,11 +133,13 @@ class Controller {
           mSecondFieldCleared = false;
           mMode = Mode::kChangeYear;
           break;
+
         case Mode::kViewMonth:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
           mMode = Mode::kChangeMonth;
           break;
+
         case Mode::kViewDay:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
@@ -139,18 +150,22 @@ class Controller {
           saveDateTime();
           mMode = Mode::kViewYear;
           break;
+
         case Mode::kChangeMonth:
           saveDateTime();
           mMode = Mode::kViewMonth;
           break;
+
         case Mode::kChangeDay:
           saveDateTime();
           mMode = Mode::kViewDay;
           break;
+
         case Mode::kChangeHour:
           saveDateTime();
           mMode = Mode::kViewHourMinute;
           break;
+
         case Mode::kChangeMinute:
           saveDateTime();
           mMode = Mode::kViewHourMinute;
@@ -162,24 +177,32 @@ class Controller {
     }
 
     void changeButtonPress() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("changeButtonPress()"));
+      }
+
       switch ((Mode) mMode) {
         case Mode::kChangeHour:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
+
         case Mode::kChangeMinute:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(
               mChangingClockInfo.dateTime);
           break;
+
         case Mode::kChangeYear:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
           break;
+
         case Mode::kChangeMonth:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
           break;
+
         case Mode::kChangeDay:
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
@@ -195,10 +218,18 @@ class Controller {
     }
 
     void changeButtonRepeatPress() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("changeButtonRepeatPress()"));
+      }
+
       changeButtonPress();
     }
 
     void changeButtonRelease() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("changeButtonRelease()"));
+      }
+
       switch ((Mode) mMode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
