@@ -1,6 +1,8 @@
 #ifndef LED_CLOCK_CONFIG_H
 #define LED_CLOCK_CONFIG_H
 
+#include <stdint.h> // uint8_t
+
 //------------------------------------------------------------------
 // Configuration parameters.
 //------------------------------------------------------------------
