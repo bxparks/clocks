@@ -174,6 +174,11 @@ const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
   const uint8_t CLOCK_PIN = SCK; // SH_CP on 74HC595
 #endif
 
+#if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+  const uint8_t CLK_PIN = 16;
+  const uint8_t DIO_PIN = 10;
+#endif
+
 // The chain of resources.
 Hardware hardware;
 #if LED_MATRIX_MODE == LED_MATRIX_MODE_DIRECT
@@ -255,12 +260,20 @@ Hardware hardware;
       spiAdapter,
       LedMatrix::kActiveLowPattern /*groupOnPattern*/,
       LedMatrix::kActiveLowPattern /*elementOnPattern*/);
+#elif LED_MATRIX_MODE == LED_MATRIX_MODE_NONE
+  // Do nothing
 #else
   #error Unsupported LED_MATRIX_MODE
 #endif
 
-ScanningDisplay<Hardware, LedMatrix, NUM_DIGITS, 1> scanningDisplay(
-    hardware, ledMatrix, FRAMES_PER_SECOND);
+#if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_SCANNING
+  ScanningDisplay<Hardware, LedMatrix, NUM_DIGITS, 1> display(
+      hardware, ledMatrix, FRAMES_PER_SECOND);
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+  Tm1637Display<4> display(CLK_PIN, DIO_PIN);
+#else
+  #error Unknown LED_DISPLAY_TYPE
+#endif
 
 // Setup the various resources.
 void setupAceSegment() {
@@ -273,19 +286,27 @@ void setupAceSegment() {
     spiAdapter.begin();
   #endif
 
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+    display.begin();
+  #else
     ledMatrix.begin();
-    scanningDisplay.begin();
+    display.begin();
+  #endif
 }
 
 #if USE_INTERRUPT == 1
   // interrupt handler for timer 2
   ISR(TIMER2_COMPA_vect) {
-    scanningDisplay.renderFieldNow();
+    display.renderFieldNow();
   }
 #else
   COROUTINE(renderLed) {
     COROUTINE_LOOP() {
-      scanningDisplay.renderFieldWhenReady();
+    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_SCANNING
+      display.renderFieldWhenReady();
+    #else
+      display.flushIncremental();
+    #endif
       COROUTINE_YIELD();
     }
   }
@@ -295,7 +316,7 @@ void setupRenderingInterrupt() {
 #if USE_INTERRUPT == 1
   // set up Timer 2
   uint8_t timerCompareValue =
-      (long) F_CPU / 1024 / scanningDisplay->getFieldsPerSecond() - 1;
+      (long) F_CPU / 1024 / display->getFieldsPerSecond() - 1;
   #if ENABLE_SERIAL_DEBUG == 1
     Serial.print(F("Timer 2, Compare A: "));
     Serial.println(timerCompareValue);
@@ -317,7 +338,7 @@ void setupRenderingInterrupt() {
 // Create an appropriate controller/presenter pair.
 //------------------------------------------------------------------
 
-Presenter presenter(scanningDisplay);
+Presenter presenter(display);
 Controller controller(systemClock, crcEeprom, presenter, zoneManager,
     DISPLAY_ZONE);
 
