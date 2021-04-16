@@ -187,8 +187,13 @@ class Presenter {
       mCharWriter.writeCharAt(1, 'r');
       mClockWriter.writeColon(true);
       if (shouldShowFor(Mode::kChangeBrightness)) {
-        mNumberWriter.writeUnsignedDecimalAt(
-            2, mRenderingInfo.brightness, 2 /*boxSize*/);
+        // Save 110 bytes of flash using NumberWriter::writeUnsignedDecimal2At()
+        // instead of the more general writeUnsignedDecimalAt(). We could avoid
+        // NumberWriter completely by manually doing the conversion here. But
+        // that turns out to save only 18 bytes (12 of which are character
+        // patterns in NumberWriter::kHexCharPatterns[]) so not really worth
+        // duplicating the code here.
+        mNumberWriter.writeUnsignedDecimal2At(2, mRenderingInfo.brightness);
       } else {
         mDisplay.writePatternAt(2, 0);
         mDisplay.writePatternAt(3, 0);
