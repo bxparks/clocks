@@ -179,8 +179,8 @@ const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
 #endif
 
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-  const uint8_t CLK_PIN = 16;
-  const uint8_t DIO_PIN = 10;
+  const uint8_t CLK_PIN = 10;
+  const uint8_t DIO_PIN = 9;
   const uint16_t BIT_DELAY = 100;
 #endif
 
