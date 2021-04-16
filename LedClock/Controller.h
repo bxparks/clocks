@@ -1,6 +1,7 @@
 #ifndef LED_CLOCK_CONTROLLER_H
 #define LED_CLOCK_CONTROLLER_H
 
+#include <AceCommon.h> // incrementModOffset()
 #include <AceTime.h>
 #include <AceSegment.h>
 #include <AceUtilsCrcEeprom.h>
@@ -13,6 +14,7 @@ using namespace ace_segment;
 using namespace ace_time;
 using ace_time::clock::Clock;
 using ace_utils::crc_eeprom::CrcEeprom;
+using ace_common::incrementModOffset;
 
 class Controller {
   public:
@@ -87,8 +89,12 @@ class Controller {
           mMode = Mode::kViewWeekday;
           break;
         case Mode::kViewWeekday:
+          mMode = Mode::kViewBrightness;
+          break;
+        case Mode::kViewBrightness:
           mMode = Mode::kViewHourMinute;
           break;
+
         case Mode::kChangeHour:
           mMode = Mode::kChangeMinute;
           break;
@@ -146,6 +152,10 @@ class Controller {
           mMode = Mode::kChangeDay;
           break;
 
+        case Mode::kViewBrightness:
+          mMode = Mode::kChangeBrightness;
+          break;
+
         case Mode::kChangeYear:
           saveDateTime();
           mMode = Mode::kViewYear;
@@ -169,6 +179,11 @@ class Controller {
         case Mode::kChangeMinute:
           saveDateTime();
           mMode = Mode::kViewHourMinute;
+          break;
+
+        case Mode::kChangeBrightness:
+          preserveClockInfo(mClockInfo);
+          mMode = Mode::kViewBrightness;
           break;
 
         default:
@@ -208,6 +223,11 @@ class Controller {
           zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
 
+        case Mode::kChangeBrightness:
+          mSuppressBlink = true;
+          incrementModOffset(mClockInfo.brightness, (uint8_t) 7, (uint8_t) 1);
+          break;
+
         default:
           break;
       }
@@ -238,6 +258,7 @@ class Controller {
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
         case Mode::kChangeTimeZoneOffset:
+        case Mode::kChangeBrightness:
           mSuppressBlink = false;
           break;
 
@@ -321,6 +342,7 @@ class Controller {
     static void clockInfoFromStoredInfo(
         ClockInfo& clockInfo, const StoredInfo& storedInfo) {
       clockInfo.hourMode = storedInfo.hourMode;
+      clockInfo.brightness = storedInfo.brightness;
       clockInfo.timeZoneData = storedInfo.timeZoneData;
     }
 
@@ -344,6 +366,7 @@ class Controller {
     static void storedInfoFromClockInfo(
         StoredInfo& storedInfo, const ClockInfo& clockInfo) {
       storedInfo.hourMode = clockInfo.hourMode;
+      storedInfo.brightness = clockInfo.brightness;
       storedInfo.timeZoneData = clockInfo.timeZoneData;
     }
 

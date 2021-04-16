@@ -120,6 +120,7 @@ enum class Mode : uint8_t {
   kViewDay,
   kViewWeekday,
   kViewTimeZone,
+  kViewBrightness,
 
   kChangeYear,
   kChangeMonth,
@@ -131,6 +132,8 @@ enum class Mode : uint8_t {
   kChangeTimeZoneOffset,
   kChangeTimeZoneDst,
   kChangeHourMode,
+
+  kChangeBrightness,
 };
 
 #endif

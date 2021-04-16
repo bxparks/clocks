@@ -10,6 +10,7 @@ using ace_time::DateStrings;
 using ace_time::ZonedDateTime;
 using ace_segment::LedDisplay;
 using ace_segment::ClockWriter;
+using ace_segment::NumberWriter;
 using ace_segment::CharWriter;
 using ace_segment::StringWriter;
 
@@ -18,6 +19,7 @@ class Presenter {
     Presenter(LedDisplay& display):
         mDisplay(display),
         mClockWriter(display),
+        mNumberWriter(display),
         mCharWriter(display),
         mStringWriter(mCharWriter)
     {}
@@ -27,6 +29,7 @@ class Presenter {
         clearDisplay();
       }
       if (needsUpdate()) {
+        updateDisplaySettings();
         displayData();
       }
 
@@ -38,6 +41,7 @@ class Presenter {
       mRenderingInfo.mode = mode;
       mRenderingInfo.blinkShowState = blinkShowState;
       mRenderingInfo.hourMode = clockInfo.hourMode;
+      mRenderingInfo.brightness = clockInfo.brightness;
       mRenderingInfo.timeZoneData = clockInfo.timeZoneData;
       mRenderingInfo.dateTime = clockInfo.dateTime;
     }
@@ -60,6 +64,14 @@ class Presenter {
     /** The display needs to be updated because something changed. */
     bool needsUpdate() const {
       return mRenderingInfo != mPrevRenderingInfo;
+    }
+
+    /** Update the display settings, e.g. brightness, backlight, etc. */
+    void updateDisplaySettings() {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
+          mPrevRenderingInfo.brightness != mRenderingInfo.brightness) {
+        mDisplay.setBrightness(mRenderingInfo.brightness);
+      }
     }
 
     void clearDisplay() { mDisplay.clear(); }
@@ -101,6 +113,11 @@ class Presenter {
           mStringWriter.writeStringAt(
               0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()),
               true /* padRight */);
+          break;
+
+        case Mode::kViewBrightness:
+        case Mode::kChangeBrightness:
+          displayBrightness();
           break;
 
         default:
@@ -165,6 +182,19 @@ class Presenter {
       mClockWriter.writeColon(false);
     }
 
+    void displayBrightness() {
+      mCharWriter.writeCharAt(0, 'b');
+      mCharWriter.writeCharAt(1, 'r');
+      mClockWriter.writeColon(true);
+      if (shouldShowFor(Mode::kChangeBrightness)) {
+        mNumberWriter.writeUnsignedDecimalAt(
+            2, mRenderingInfo.brightness, 2 /*boxSize*/);
+      } else {
+        mDisplay.writePatternAt(2, 0);
+        mDisplay.writePatternAt(3, 0);
+      }
+    }
+
   private:
     // Disable copy-constructor and assignment operator
     Presenter(const Presenter&) = delete;
@@ -172,6 +202,7 @@ class Presenter {
 
     LedDisplay& mDisplay;
     ClockWriter mClockWriter;
+    NumberWriter mNumberWriter;
     CharWriter mCharWriter;
     StringWriter mStringWriter;
 
