@@ -13,8 +13,12 @@ Supported boards are:
 #include "config.h"
 #include <Wire.h>
 #include <AceSegment.h>
-#include <ace_segment/fast/SwSpiAdapterFast.h>
-#include <ace_segment/fast/LedMatrixDirectFast.h>
+#if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
+#include <digitalWriteFast.h>
+#include <ace_segment/hw/SwSpiAdapterFast.h>
+#include <ace_segment/scanning/LedMatrixDirectFast.h>
+#include <ace_segment/tm1637/Tm1637DriverFast.h>
+#endif
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
@@ -177,6 +181,7 @@ const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
   const uint8_t CLK_PIN = 16;
   const uint8_t DIO_PIN = 10;
+  const uint16_t BIT_DELAY = 100;
 #endif
 
 // The chain of resources.
@@ -269,8 +274,18 @@ Hardware hardware;
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_SCANNING
   ScanningDisplay<Hardware, LedMatrix, NUM_DIGITS, 1> display(
       hardware, ledMatrix, FRAMES_PER_SECOND);
+
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-  Tm1637Display<4> display(CLK_PIN, DIO_PIN);
+  #if TM1637_DRIVER_TYPE == TM1637_DRIVER_TYPE_NORMAL
+    using TmDriver = Tm1637Driver
+    TmDriver driver(CLK_PIN, DIO_PIN, BIT_DELAY);
+    Tm1637Display<TmDriver, 4> display(driver);
+  #else
+    using TmDriver = Tm1637DriverFast<CLK_PIN, DIO_PIN, BIT_DELAY>;
+    TmDriver driver;
+    Tm1637Display<TmDriver, 4> display(driver);
+  #endif
+
 #else
   #error Unknown LED_DISPLAY_TYPE
 #endif
@@ -287,6 +302,7 @@ void setupAceSegment() {
   #endif
 
   #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+    driver.begin();
     display.begin();
   #else
     ledMatrix.begin();

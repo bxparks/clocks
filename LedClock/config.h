@@ -31,6 +31,11 @@
 #define LED_DISPLAY_TYPE_SCANNING 0
 #define LED_DISPLAY_TYPE_TM1637 1
 
+// Type of Tm1637Driver
+#define TM1637_DRIVER_TYPE_NORMAL 0
+#define TM1637_DRIVER_TYPE_FAST 1
+#define TM1637_DRIVER_TYPE TM1637_DRIVER_TYPE_FAST
+
 // Options that determine that type of LED display.
 #define LED_MATRIX_MODE_NONE 0
 #define LED_MATRIX_MODE_DIRECT 1
