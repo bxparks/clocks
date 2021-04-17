@@ -185,12 +185,10 @@ const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
 #endif
 
 // The chain of resources.
-Hardware hardware;
 #if LED_MATRIX_MODE == LED_MATRIX_MODE_DIRECT
   // Common Anode, with transitions on Group pins
-  using LedMatrix = LedMatrixDirect<Hardware>;
+  using LedMatrix = LedMatrixDirect<>;
   LedMatrix ledMatrix(
-      hardware,
       LedMatrix::kActiveLowPattern /*groupOnPattern*/,
       LedMatrix::kActiveLowPattern /*elementOnPattern*/,
       NUM_DIGITS,
@@ -209,9 +207,8 @@ Hardware hardware;
 #elif LED_MATRIX_MODE == LED_MATRIX_MODE_PARIAL_SW_SPI
   // Common Cathode, with transistors on Group pins
   SwSpiAdapter spiAdapter(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  using LedMatrix = LedMatrixSingleShiftRegister<Hardware, SwSpiAdapter>;
+  using LedMatrix = LedMatrixSingleShiftRegister<SwSpiAdapter>;
   LedMatrix ledMatrix(
-      hardware,
       spiAdapter,
       LedMatrix::kActiveHighPattern /*groupOnPattern*/,
       LedMatrix::kActiveHighPattern /*elementOnPattern*/,
@@ -221,9 +218,8 @@ Hardware hardware;
   // Common Cathode, with transistors on Group pins
   using SpiAdapter = SwSpiAdapterFast<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
   SpiAdapter spiAdapter;
-  using LedMatrix = LedMatrixSingleShiftRegister<Hardware, SpiAdapter>;
+  using LedMatrix = LedMatrixSingleShiftRegister<SpiAdapter>;
   LedMatrix ledMatrix(
-      hardware,
       spiAdapter,
       LedMatrix::kActiveHighPattern /*groupOnPattern*/,
       LedMatrix::kActiveHighPattern /*elementOnPattern*/,
@@ -232,9 +228,8 @@ Hardware hardware;
 #elif LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_HW_SPI
   // Common Cathode, with transistors on Group pins
   HwSpiAdapter spiAdapter(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  using LedMatrix = LedMatrixSingleShiftRegister<Hardware, HwSpiAdapter>;
+  using LedMatrix = LedMatrixSingleShiftRegister<HwSpiAdapter>;
   LedMatrix ledMatrix(
-      hardware,
       spiAdapter,
       LedMatrix::kActiveHighPattern /*groupOnPattern*/,
       LedMatrix::kActiveHighPattern /*elementOnPattern*/,
@@ -272,19 +267,21 @@ Hardware hardware;
 #endif
 
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_SCANNING
-  ScanningDisplay<Hardware, LedMatrix, NUM_DIGITS, 1> display(
-      hardware, ledMatrix, FRAMES_PER_SECOND);
+  ScanningModule<LedMatrix, NUM_DIGITS, 1> module(
+      ledMatrix, FRAMES_PER_SECOND);
+  LedDisplay display(module);
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
   #if TM1637_DRIVER_TYPE == TM1637_DRIVER_TYPE_NORMAL
     using TmDriver = Tm1637Driver
     TmDriver driver(CLK_PIN, DIO_PIN, BIT_DELAY);
-    Tm1637Display<TmDriver, 4> display(driver);
+    Tm1637Module<TmDriver, 4> module(driver);
   #else
     using TmDriver = Tm1637DriverFast<CLK_PIN, DIO_PIN, BIT_DELAY>;
     TmDriver driver;
-    Tm1637Display<TmDriver, 4> display(driver);
+    Tm1637Module<TmDriver, 4> module(driver);
   #endif
+  LedDisplay display(module);
 
 #else
   #error Unknown LED_DISPLAY_TYPE
@@ -303,25 +300,25 @@ void setupAceSegment() {
 
   #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
     driver.begin();
-    display.begin();
+    module.begin();
   #else
     ledMatrix.begin();
-    display.begin();
+    module.begin();
   #endif
 }
 
 #if USE_INTERRUPT == 1
   // interrupt handler for timer 2
   ISR(TIMER2_COMPA_vect) {
-    display.renderFieldNow();
+    module.renderFieldNow();
   }
 #else
   COROUTINE(renderLed) {
     COROUTINE_LOOP() {
     #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_SCANNING
-      display.renderFieldWhenReady();
+      module.renderFieldWhenReady();
     #else
-      display.flushIncremental();
+      module.flushIncremental();
     #endif
       COROUTINE_YIELD();
     }
@@ -332,7 +329,7 @@ void setupRenderingInterrupt() {
 #if USE_INTERRUPT == 1
   // set up Timer 2
   uint8_t timerCompareValue =
-      (long) F_CPU / 1024 / display->getFieldsPerSecond() - 1;
+      (long) F_CPU / 1024 / module.getFieldsPerSecond() - 1;
   #if ENABLE_SERIAL_DEBUG == 1
     Serial.print(F("Timer 2, Compare A: "));
     Serial.println(timerCompareValue);
