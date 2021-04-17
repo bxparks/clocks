@@ -16,8 +16,8 @@ Supported boards are:
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
 #include <ace_segment/hw/FastSwSpiInterface.h>
+#include <ace_segment/hw/FastSwWireInterface.h>
 #include <ace_segment/scanning/LedMatrixDirectFast.h>
-#include <ace_segment/tm1637/Tm1637DriverFast.h>
 #endif
 #include <AceButton.h>
 #include <AceRoutine.h>
@@ -273,13 +273,13 @@ const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
   #if TM1637_DRIVER_TYPE == TM1637_DRIVER_TYPE_NORMAL
-    using TmDriver = Tm1637Driver
-    TmDriver driver(CLK_PIN, DIO_PIN, BIT_DELAY);
-    Tm1637Module<TmDriver, 4> module(driver);
+    using WireInterface = SwWireInterface
+    WireInterface wireInterface(CLK_PIN, DIO_PIN, BIT_DELAY);
+    Tm1637Module<WireInterface, 4> module(wireInterface);
   #else
-    using TmDriver = Tm1637DriverFast<CLK_PIN, DIO_PIN, BIT_DELAY>;
-    TmDriver driver;
-    Tm1637Module<TmDriver, 4> module(driver);
+    using WireInterface = FastSwWireInterface<CLK_PIN, DIO_PIN, BIT_DELAY>;
+    WireInterface wireInterface;
+    Tm1637Module<WireInterface, 4> module(wireInterface);
   #endif
   LedDisplay display(module);
 
@@ -299,7 +299,7 @@ void setupAceSegment() {
   #endif
 
   #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-    driver.begin();
+    wireInterface.begin();
     module.begin();
   #else
     ledMatrix.begin();
