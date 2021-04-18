@@ -15,8 +15,8 @@ Supported boards are:
 #include <AceSegment.h>
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
-#include <ace_segment/hw/FastSwSpiInterface.h>
-#include <ace_segment/hw/FastSwWireInterface.h>
+#include <ace_segment/hw/SwSpiFastInterface.h>
+#include <ace_segment/hw/SwWireFastInterface.h>
 #include <ace_segment/scanning/LedMatrixDirectFast.h>
 #endif
 #include <AceButton.h>
@@ -206,58 +206,58 @@ const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
       LedMatrix::kActiveLowPattern /*elementOnPattern*/);
 #elif LED_MATRIX_MODE == LED_MATRIX_MODE_PARIAL_SW_SPI
   // Common Cathode, with transistors on Group pins
-  SwSpiInterface spiAdapter(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  SwSpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
   using LedMatrix = LedMatrixSingleShiftRegister<SwSpiInterface>;
   LedMatrix ledMatrix(
-      spiAdapter,
+      spiInterface,
       LedMatrix::kActiveHighPattern /*groupOnPattern*/,
       LedMatrix::kActiveHighPattern /*elementOnPattern*/,
       NUM_DIGITS,
       DIGIT_PINS):
 #elif LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_SW_SPI_FAST
   // Common Cathode, with transistors on Group pins
-  using SpiInterface = SwSpiAdapterFast<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
-  SpiInterface spiAdapter;
+  using SpiInterface = SwSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+  SpiInterface spiInterface;
   using LedMatrix = LedMatrixSingleShiftRegister<SpiInterface>;
   LedMatrix ledMatrix(
-      spiAdapter,
+      spiInterface,
       LedMatrix::kActiveHighPattern /*groupOnPattern*/,
       LedMatrix::kActiveHighPattern /*elementOnPattern*/,
       NUM_DIGITS,
       DIGIT_PINS);
 #elif LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_HW_SPI
   // Common Cathode, with transistors on Group pins
-  HwSpiInterface spiAdapter(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  HwSpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
   using LedMatrix = LedMatrixSingleShiftRegister<HwSpiInterface>;
   LedMatrix ledMatrix(
-      spiAdapter,
+      spiInterface,
       LedMatrix::kActiveHighPattern /*groupOnPattern*/,
       LedMatrix::kActiveHighPattern /*elementOnPattern*/,
       NUM_DIGITS,
       DIGIT_PINS);
 #elif LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI
   // Common Anode, with transistors on Group pins
-  SwSpiInterface spiAdapter(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  SwSpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
   using LedMatrix = LedMatrixDualShiftRegister<SwSpiInterface>;
   LedMatrix ledMatrix(
-      spiAdapter,
+      spiInterface,
       LedMatrix::kActiveLowPattern /*groupOnPattern*/,
       LedMatrix::kActiveLowPattern /*elementOnPattern*/);
 #elif LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI_FAST
   // Common Anode, with transistors on Group pins
-  using SpiInterface = SwSpiAdapterFast<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
-  SpiInterface spiAdapter;
+  using SpiInterface = SwSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+  SpiInterface spiInterface;
   using LedMatrix = LedMatrixDualShiftRegister<SpiInterface>;
   LedMatrix ledMatrix(
-      spiAdapter,
+      spiInterface,
       LedMatrix::kActiveLowPattern /*groupOnPattern*/,
       LedMatrix::kActiveLowPattern /*elementOnPattern*/);
 #elif LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_HW_SPI
   // Common Anode, with transistors on Group pins
-  HwSpiInterface spiAdapter(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  HwSpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
   using LedMatrix = LedMatrixDualShiftRegister<HwSpiInterface>;
   LedMatrix ledMatrix(
-      spiAdapter,
+      spiInterface,
       LedMatrix::kActiveLowPattern /*groupOnPattern*/,
       LedMatrix::kActiveLowPattern /*elementOnPattern*/);
 #elif LED_MATRIX_MODE == LED_MATRIX_MODE_NONE
@@ -277,7 +277,7 @@ const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
     WireInterface wireInterface(CLK_PIN, DIO_PIN, BIT_DELAY);
     Tm1637Module<WireInterface, 4> module(wireInterface);
   #else
-    using WireInterface = FastSwWireInterface<CLK_PIN, DIO_PIN, BIT_DELAY>;
+    using WireInterface = SwWireFastInterface<CLK_PIN, DIO_PIN, BIT_DELAY>;
     WireInterface wireInterface;
     Tm1637Module<WireInterface, 4> module(wireInterface);
   #endif
@@ -295,7 +295,7 @@ void setupAceSegment() {
       || LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI \
       || LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_HW_SPI \
       || LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI_FAST
-    spiAdapter.begin();
+    spiInterface.begin();
   #endif
 
   #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
