@@ -470,15 +470,14 @@ void setup() {
   setupRenderingInterrupt();
   controller.setup();
 
-  CoroutineScheduler::setup();
-
 #if ENABLE_SERIAL_DEBUG == 1
   Serial.println(F("setup(): end"));
 #endif
 }
 
 void loop() {
-  CoroutineScheduler::loop();
+  renderLed.runCoroutine();
+  displayClock.runCoroutine();
 
   modeButton.check();
   changeButton.check();
