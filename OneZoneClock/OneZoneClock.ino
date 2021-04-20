@@ -148,6 +148,9 @@ void setupClocks() {
 #endif
 
   systemClock.setup();
+  if (systemClock.getNow() == ace_time::LocalDate::kInvalidEpochSeconds) {
+    systemClock.setNow(0);
+  }
 #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_COROUTINE
   systemClock.setupCoroutine(F("clock"));
 #endif
