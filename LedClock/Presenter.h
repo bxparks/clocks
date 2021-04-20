@@ -78,7 +78,8 @@ class Presenter {
 
     void displayData() {
       const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
-      #if ENABLE_SERIAL_DEBUG > 0
+      #if ENABLE_SERIAL_DEBUG >= 2
+        SERIAL_PORT_MONITOR.print(F("displayData():"));
         dateTime.printTo(SERIAL_PORT_MONITOR);
         SERIAL_PORT_MONITOR.println();
       #endif
