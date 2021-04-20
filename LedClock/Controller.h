@@ -74,9 +74,9 @@ class Controller {
 
       switch ((Mode) mMode) {
         case Mode::kViewHourMinute:
-          mMode = Mode::kViewMinuteSecond;
+          mMode = Mode::kViewSecond;
           break;
-        case Mode::kViewMinuteSecond:
+        case Mode::kViewSecond:
           mMode = Mode::kViewYear;
           break;
         case Mode::kViewYear:
@@ -99,6 +99,9 @@ class Controller {
           mMode = Mode::kChangeMinute;
           break;
         case Mode::kChangeMinute:
+          mMode = Mode::kChangeSecond;
+          break;
+        case Mode::kChangeSecond:
           mMode = Mode::kChangeYear;
           break;
         case Mode::kChangeYear:
@@ -128,10 +131,10 @@ class Controller {
           mMode = Mode::kChangeHour;
           break;
 
-        case Mode::kViewMinuteSecond:
+        case Mode::kViewSecond:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = Mode::kChangeMinute;
+          mMode = Mode::kChangeSecond;
           break;
 
         case Mode::kViewYear:
@@ -181,6 +184,11 @@ class Controller {
           mMode = Mode::kViewHourMinute;
           break;
 
+        case Mode::kChangeSecond:
+          saveDateTime();
+          mMode = Mode::kViewSecond;
+          break;
+
         case Mode::kChangeBrightness:
           preserveClockInfo(mClockInfo);
           mMode = Mode::kViewBrightness;
@@ -206,6 +214,12 @@ class Controller {
           mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(
               mChangingClockInfo.dateTime);
+          break;
+
+        case Mode::kChangeSecond:
+          mSuppressBlink = true;
+          mSecondFieldCleared = true;
+          mChangingClockInfo.dateTime.second(0);
           break;
 
         case Mode::kChangeYear:

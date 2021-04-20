@@ -91,8 +91,9 @@ class Presenter {
           displayHourMinute(dateTime);
           break;
 
-        case Mode::kViewMinuteSecond:
-          displayMinuteSecond(dateTime);
+        case Mode::kViewSecond:
+        case Mode::kChangeSecond:
+          displaySecond(dateTime);
           break;
 
         case Mode::kViewYear:
@@ -143,11 +144,17 @@ class Presenter {
       mClockWriter.writeColon(true);
     }
 
-    void displayMinuteSecond(const ZonedDateTime& dateTime) {
+    void displaySecond(const ZonedDateTime& dateTime) {
       mClockWriter.writeCharAt(0, ClockWriter::kCharSpace);
       mClockWriter.writeCharAt(1, ClockWriter::kCharSpace);
-      mClockWriter.writeDec2At(2, dateTime.second());
-      mClockWriter.writeColon(true);
+
+      if (shouldShowFor(Mode::kChangeSecond)) {
+        mClockWriter.writeDec2At(2, dateTime.second());
+        mClockWriter.writeColon(true);
+      } else {
+        mClockWriter.writeCharAt(2, ClockWriter::kCharSpace);
+        mClockWriter.writeCharAt(3, ClockWriter::kCharSpace);
+      }
     }
 
     void displayYear(const ZonedDateTime& dateTime) {

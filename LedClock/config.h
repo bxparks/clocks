@@ -114,7 +114,7 @@ enum class Mode : uint8_t {
 
   kViewDateTime,
   kViewHourMinute,
-  kViewMinuteSecond,
+  kViewSecond,
   kViewYear,
   kViewMonth,
   kViewDay,
