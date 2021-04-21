@@ -13,18 +13,19 @@ Supported boards are:
 #include "config.h"
 #include <Wire.h>
 #include <AceSegment.h>
-#if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
-#include <digitalWriteFast.h>
-#include <ace_segment/hw/SwSpiFastInterface.h>
-#include <ace_segment/hw/SwWireFastInterface.h>
-#include <ace_segment/scanning/LedMatrixDirectFast.h>
-#endif
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
 #include <AceUtilsCrcEeprom.h>
 #include <SSD1306AsciiWire.h>
 #include "Controller.h"
+
+#if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
+#include <digitalWriteFast.h>
+#include <ace_segment/hw/SwSpiFastInterface.h>
+#include <ace_segment/hw/SwWireFastInterface.h>
+#include <ace_segment/scanning/LedMatrixDirectFast.h>
+#endif
 
 using namespace ace_segment;
 using namespace ace_button;
@@ -121,16 +122,20 @@ static ExtendedZoneManager<CACHE_SIZE> zoneManager(
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   DS3231Clock dsClock;
-  SystemClockCoroutine systemClock(&dsClock, &dsClock);
+  SYSTEM_CLOCK systemClock(&dsClock /*ref*/, &dsClock /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   NtpClock ntpClock;
-  SystemClockCoroutine systemClock(&ntpClock, nullptr);
+  SYSTEM_CLOCK systemClock(&ntpClock /*ref*/, nullptr /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
   DS3231Clock dsClock;
   NtpClock ntpClock;
-  SystemClockCoroutine systemClock(&ntpClock, &dsClock);
+  SYSTEM_CLOCK systemClock(&ntpClock /*ref*/, &dsClock /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
-  SystemClockCoroutine systemClock(nullptr /*sync*/, nullptr /*backup*/);
+  SYSTEM_CLOCK systemClock(nullptr /*ref*/, nullptr /*backup*/);
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  Stm32F1Clock stm32F1Clock;
+  SYSTEM_CLOCK systemClock(
+      &stm32F1Clock /*ref*/, &stm32F1Clock /*backup*/, 60 /*syncPeriod*/);
 #else
   #error Unknown time keeper option
 #endif
@@ -150,7 +155,6 @@ void setupClocks() {
 #endif
 
   systemClock.setup();
-  systemClock.setupCoroutine(F("clock"));
   if (systemClock.getNow() == ace_time::LocalDate::kInvalidEpochSeconds) {
     systemClock.setNow(0);
   }
@@ -176,12 +180,6 @@ const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
   const uint8_t LATCH_PIN = 10; // ST_CP on 74HC595
   const uint8_t DATA_PIN = MOSI; // DS on 74HC595
   const uint8_t CLOCK_PIN = SCK; // SH_CP on 74HC595
-#endif
-
-#if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-  const uint8_t CLK_PIN = 10;
-  const uint8_t DIO_PIN = 9;
-  const uint16_t BIT_DELAY = 100;
 #endif
 
 // The chain of resources.
@@ -267,21 +265,21 @@ const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
 #endif
 
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_SCANNING
-  ScanningModule<LedMatrix, NUM_DIGITS, 1> module(
+  ScanningModule<LedMatrix, NUM_DIGITS, 1> ledModule(
       ledMatrix, FRAMES_PER_SECOND);
-  LedDisplay display(module);
+  LedDisplay display(ledModule);
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-  #if TM1637_DRIVER_TYPE == TM1637_DRIVER_TYPE_NORMAL
-    using WireInterface = SwWireInterface
+  #if TM1637_INTERFACE_TYPE == TM1637_INTERFACE_TYPE_NORMAL
+    using WireInterface = SwWireInterface;
     WireInterface wireInterface(CLK_PIN, DIO_PIN, BIT_DELAY);
-    Tm1637Module<WireInterface, 4> module(wireInterface);
+    Tm1637Module<WireInterface, 4> ledModule(wireInterface);
   #else
     using WireInterface = SwWireFastInterface<CLK_PIN, DIO_PIN, BIT_DELAY>;
     WireInterface wireInterface;
-    Tm1637Module<WireInterface, 4> module(wireInterface);
+    Tm1637Module<WireInterface, 4> ledModule(wireInterface);
   #endif
-  LedDisplay display(module);
+  LedDisplay display(ledModule);
 
 #else
   #error Unknown LED_DISPLAY_TYPE
@@ -300,25 +298,25 @@ void setupAceSegment() {
 
   #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
     wireInterface.begin();
-    module.begin();
+    ledModule.begin();
   #else
     ledMatrix.begin();
-    module.begin();
+    ledModule.begin();
   #endif
 }
 
 #if USE_INTERRUPT == 1
   // interrupt handler for timer 2
   ISR(TIMER2_COMPA_vect) {
-    module.renderFieldNow();
+    ledModule.renderFieldNow();
   }
 #else
   COROUTINE(renderLed) {
     COROUTINE_LOOP() {
     #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_SCANNING
-      module.renderFieldWhenReady();
+      ledModule.renderFieldWhenReady();
     #else
-      module.flushIncremental();
+      ledModule.flushIncremental();
     #endif
       COROUTINE_YIELD();
     }
@@ -329,8 +327,8 @@ void setupRenderingInterrupt() {
 #if USE_INTERRUPT == 1
   // set up Timer 2
   uint8_t timerCompareValue =
-      (long) F_CPU / 1024 / module.getFieldsPerSecond() - 1;
-  #if ENABLE_SERIAL_DEBUG == 1
+      (long) F_CPU / 1024 / ledModule.getFieldsPerSecond() - 1;
+  #if ENABLE_SERIAL_DEBUG >= 1
     Serial.print(F("Timer 2, Compare A: "));
     Serial.println(timerCompareValue);
   #endif
@@ -356,7 +354,7 @@ Controller controller(systemClock, crcEeprom, presenter, zoneManager,
     DISPLAY_ZONE);
 
 //------------------------------------------------------------------
-// Render the Clock periodically.
+// Update the Presenter Clock periodically.
 //------------------------------------------------------------------
 
 // The RTC has a resolution of only 1s, so we need to poll it fast enough to
@@ -364,7 +362,7 @@ Controller controller(systemClock, crcEeprom, presenter, zoneManager,
 // code says that controller.display() runs as fast as or faster than 1ms for
 // all DISPLAY_TYPEs. So we can set this to 100ms without worrying about too
 // much overhead.
-COROUTINE(displayClock) {
+COROUTINE(updateClock) {
   COROUTINE_LOOP() {
     controller.update();
     COROUTINE_DELAY(100);
@@ -435,6 +433,19 @@ void setupAceButton() {
   changeButtonConfig.setRepeatPressInterval(150);
 }
 
+// Read the buttons in a coroutine with a 5-10ms delay because if analogRead()
+// is used on an ESP8266 to read buttons in a resistor ladder, the WiFi
+// becomes disconnected after 5-10 seconds. See
+// https://github.com/esp8266/Arduino/issues/1634 and
+// https://github.com/esp8266/Arduino/issues/5083.
+COROUTINE(checkButtons) {
+  COROUTINE_LOOP() {
+    modeButton.check();
+    changeButton.check();
+    COROUTINE_DELAY(5);
+  }
+}
+
 //------------------------------------------------------------------
 // Main setup and loop
 //------------------------------------------------------------------
@@ -451,7 +462,7 @@ void setup() {
   TXLED0; // LED off
 #endif
 
-#if ENABLE_SERIAL_DEBUG == 1
+#if ENABLE_SERIAL_DEBUG >= 1
   Serial.begin(115200); // ESP8266 default of 74880 not supported on Linux
   while (!Serial); // Wait until Serial is ready - Leonardo/Micro
   Serial.println(F("setup(): begin"));
@@ -470,15 +481,19 @@ void setup() {
   setupRenderingInterrupt();
   controller.setup();
 
-#if ENABLE_SERIAL_DEBUG == 1
+#if ENABLE_SERIAL_DEBUG >= 1
   Serial.println(F("setup(): end"));
 #endif
 }
 
 void loop() {
+  checkButtons.runCoroutine();
+  updateClock.runCoroutine();
   renderLed.runCoroutine();
-  displayClock.runCoroutine();
 
-  modeButton.check();
-  changeButton.check();
+#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
+  systemClock.loop();
+#elif SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_COROUTINE
+  systemClock.runCoroutine();
+#endif
 }
