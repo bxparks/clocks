@@ -131,29 +131,29 @@ class Presenter {
       if (shouldShowFor(Mode::kChangeHour)) {
         mClockWriter.writeDec2At(0, dateTime.hour());
       } else {
-        mClockWriter.writeCharAt(0, ClockWriter::kCharSpace);
-        mClockWriter.writeCharAt(1, ClockWriter::kCharSpace);
+        mClockWriter.writeChars2At(
+            0, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       }
 
       if (shouldShowFor(Mode::kChangeMinute)) {
         mClockWriter.writeDec2At(2, dateTime.minute());
       } else {
-        mClockWriter.writeCharAt(2, ClockWriter::kCharSpace);
-        mClockWriter.writeCharAt(3, ClockWriter::kCharSpace);
+        mClockWriter.writeChars2At(
+            2, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       }
       mClockWriter.writeColon(true);
     }
 
     void displaySecond(const ZonedDateTime& dateTime) {
-      mClockWriter.writeCharAt(0, ClockWriter::kCharSpace);
-      mClockWriter.writeCharAt(1, ClockWriter::kCharSpace);
+      mClockWriter.writeChars2At(
+          0, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
 
       if (shouldShowFor(Mode::kChangeSecond)) {
         mClockWriter.writeDec2At(2, dateTime.second());
         mClockWriter.writeColon(true);
       } else {
-        mClockWriter.writeCharAt(2, ClockWriter::kCharSpace);
-        mClockWriter.writeCharAt(3, ClockWriter::kCharSpace);
+        mClockWriter.writeChars2At(
+            2, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       }
     }
 
@@ -167,25 +167,25 @@ class Presenter {
     }
 
     void displayMonth(const ZonedDateTime& dateTime) {
-      mClockWriter.writeCharAt(0, ClockWriter::kCharSpace);
-      mClockWriter.writeCharAt(1, ClockWriter::kCharSpace);
+      mClockWriter.writeChars2At(
+          0, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       if (shouldShowFor(Mode::kChangeMonth)) {
         mClockWriter.writeDec2At(2, dateTime.month());
       } else {
-        mClockWriter.writeCharAt(2, ClockWriter::kCharSpace);
-        mClockWriter.writeCharAt(3, ClockWriter::kCharSpace);
+        mClockWriter.writeChars2At(
+            2, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       }
       mClockWriter.writeColon(false);
     }
 
     void displayDay(const ZonedDateTime& dateTime) {
-      mClockWriter.writeCharAt(0, ClockWriter::kCharSpace);
-      mClockWriter.writeCharAt(1, ClockWriter::kCharSpace);
+      mClockWriter.writeChars2At(
+          0, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       if (shouldShowFor(Mode::kChangeDay)) {
         mClockWriter.writeDec2At(2, dateTime.day());
       } else  {
-        mClockWriter.writeCharAt(2, ClockWriter::kCharSpace);
-        mClockWriter.writeCharAt(3, ClockWriter::kCharSpace);
+        mClockWriter.writeChars2At(
+            2, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       }
       mClockWriter.writeColon(false);
     }
@@ -203,8 +203,8 @@ class Presenter {
         // duplicating the code here.
         mNumberWriter.writeUnsignedDecimal2At(2, mRenderingInfo.brightness);
       } else {
-        mDisplay.writePatternAt(2, 0);
-        mDisplay.writePatternAt(3, 0);
+        mClockWriter.writeChars2At(
+            2, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       }
     }
 
