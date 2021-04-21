@@ -548,7 +548,7 @@ void setupAceButton() {
   buttonConfig.setRepeatPressInterval(150);
 }
 
-// Read the buttons in a coroutine with a 10ms delay because if analogRead()
+// Read the buttons in a coroutine with a 5-10ms delay because if analogRead()
 // is used on an ESP8266 to read buttons in a resistor ladder, the WiFi
 // becomes disconnected after 5-10 seconds. See
 // https://github.com/esp8266/Arduino/issues/1634 and
