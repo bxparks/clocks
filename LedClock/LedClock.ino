@@ -373,64 +373,110 @@ COROUTINE(updateClock) {
 // Configure AceButton.
 //------------------------------------------------------------------
 
-ButtonConfig modeButtonConfig;
-AceButton modeButton(&modeButtonConfig);
+#if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
 
-ButtonConfig changeButtonConfig;
-AceButton changeButton(&changeButtonConfig);
+  ButtonConfig buttonConfig;
+  AceButton modeButton(&buttonConfig, MODE_BUTTON_PIN);
+  AceButton changeButton(&buttonConfig, CHANGE_BUTTON_PIN);
 
-void handleModeButton(AceButton* /* button */, uint8_t eventType,
+#elif BUTTON_TYPE == BUTTON_TYPE_ANALOG
+
+  AceButton modeButton((uint8_t) MODE_BUTTON_PIN);
+  AceButton changeButton((uint8_t) CHANGE_BUTTON_PIN);
+  AceButton* const BUTTONS[] = {&modeButton, &changeButton};
+
+  #if ANALOG_BUTTON_COUNT == 2
+    #if ANALOG_BITS == 8
+      const uint16_t LEVELS[] = {0, 128, 255};
+    #elif ANALOG_BITS == 10
+      const uint16_t LEVELS[] = {0, 512, 1023};
+    #else
+      #error Unknown number of ADC bits
+    #endif
+  #elif ANALOG_BUTTON_COUNT == 4
+    #if ANALOG_BITS == 8
+      const uint16_t LEVELS[] = {
+        0 /*short to ground*/,
+        82 /*32%, 4.7k*/,
+        128 /*50%, 10k*/,
+        210 /*82%, 47k*/,
+        255 /*100%, open*/
+      };
+    #elif ANALOG_BITS == 10
+      const uint16_t LEVELS[] = {
+        0 /*short to ground*/,
+        327 /*32%, 4.7k*/,
+        512 /*50%, 10k*/,
+        844 /*82%, 47k*/,
+        1023 /*100%, open*/
+      };
+    #else
+      #error Unknown number of ADC bits
+    #endif
+  #else
+    #error Unknown ANALOG_BUTTON_COUNT
+  #endif
+
+  LadderButtonConfig buttonConfig(
+      ANALOG_BUTTON_PIN,
+      sizeof(LEVELS) / sizeof(LEVELS[0]),
+      LEVELS,
+      sizeof(BUTTONS) / sizeof(BUTTONS[0]),
+      BUTTONS
+  );
+
+#else
+
+  #error Unknown BUTTON_TYPE
+
+#endif
+
+void handleButtonEvent(AceButton* button, uint8_t eventType,
     uint8_t /* buttonState */) {
+  uint8_t pin = button->getPin();
+
   if (ENABLE_SERIAL_DEBUG >= 2) {
-    SERIAL_PORT_MONITOR.print(F("handleModeButton(): eventType="));
+    SERIAL_PORT_MONITOR.print(F("handleButtonEvent(): eventType="));
     SERIAL_PORT_MONITOR.println(eventType);
   }
 
-  switch (eventType) {
-    case AceButton::kEventReleased:
-      controller.modeButtonPress();
-      break;
-    case AceButton::kEventLongPressed:
-      controller.modeButtonLongPress();
-      break;
-  }
-}
+  if (pin == MODE_BUTTON_PIN) {
+    switch (eventType) {
+      case AceButton::kEventReleased:
+        controller.modeButtonPress();
+        break;
+      case AceButton::kEventLongPressed:
+        controller.modeButtonLongPress();
+        break;
+    }
 
-void handleChangeButton(AceButton* /* button */, uint8_t eventType,
-    uint8_t /* buttonState */) {
-  if (ENABLE_SERIAL_DEBUG >= 2) {
-    SERIAL_PORT_MONITOR.print(F("handleChangeButton(): eventType="));
-    SERIAL_PORT_MONITOR.println(eventType);
-  }
-
-  switch (eventType) {
-    case AceButton::kEventPressed:
-      controller.changeButtonPress();
-      break;
-    case AceButton::kEventReleased:
-      controller.changeButtonRelease();
-      break;
-    case AceButton::kEventRepeatPressed:
-      controller.changeButtonRepeatPress();
-      break;
+  } else if (pin == CHANGE_BUTTON_PIN) {
+    switch (eventType) {
+      case AceButton::kEventPressed:
+        controller.changeButtonPress();
+        break;
+      case AceButton::kEventReleased:
+      case AceButton::kEventLongReleased:
+        controller.changeButtonRelease();
+        break;
+      case AceButton::kEventRepeatPressed:
+        controller.changeButtonRepeatPress();
+        break;
+    }
   }
 }
 
 void setupAceButton() {
+#if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
   pinMode(MODE_BUTTON_PIN, INPUT_PULLUP);
   pinMode(CHANGE_BUTTON_PIN, INPUT_PULLUP);
+#endif
 
-  modeButton.init(MODE_BUTTON_PIN);
-  changeButton.init(CHANGE_BUTTON_PIN);
-
-  modeButtonConfig.setEventHandler(handleModeButton);
-  modeButtonConfig.setFeature(ButtonConfig::kFeatureLongPress);
-  modeButtonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
-
-  changeButtonConfig.setEventHandler(handleChangeButton);
-  changeButtonConfig.setFeature(ButtonConfig::kFeatureLongPress);
-  changeButtonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);
-  changeButtonConfig.setRepeatPressInterval(150);
+  buttonConfig.setEventHandler(handleButtonEvent);
+  buttonConfig.setFeature(ButtonConfig::kFeatureLongPress);
+  buttonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
+  buttonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);
+  buttonConfig.setRepeatPressInterval(150);
 }
 
 // Read the buttons in a coroutine with a 5-10ms delay because if analogRead()
@@ -440,8 +486,12 @@ void setupAceButton() {
 // https://github.com/esp8266/Arduino/issues/5083.
 COROUTINE(checkButtons) {
   COROUTINE_LOOP() {
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
     modeButton.check();
     changeButton.check();
+  #else
+    buttonConfig.checkButtons();
+  #endif
     COROUTINE_DELAY(5);
   }
 }
