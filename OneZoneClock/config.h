@@ -231,9 +231,9 @@
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define ANALOG_BUTTON_COUNT 2
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_COUNT 2
   #define ANALOG_BUTTON_PIN A0
   #define ANALOG_BITS 10
 
@@ -258,9 +258,9 @@
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define ANALOG_BUTTON_COUNT 4
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 2
+  #define ANALOG_BUTTON_COUNT 4
   #define ANALOG_BUTTON_PIN A0
   #define ANALOG_BITS 10
 
