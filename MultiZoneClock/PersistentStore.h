@@ -7,18 +7,60 @@
 #if ENABLE_EEPROM
 
 #include <AceUtilsCrcEeprom.h>
-using ace_utils::crc_eeprom::IEepromAdapter;
+using ace_utils::crc_eeprom::EepromInterface;
 using ace_utils::crc_eeprom::CrcEeprom;
 
-/** A thin layer around a CrcEeprom object to handle controllers w/o EEPROM. */
+#if defined(EPOXY_DUINO)
+  #include <EpoxyEepromEsp.h>
+  using ace_utils::crc_eeprom::EspStyleEeprom;
+
+#elif defined(ESP32) || defined(ESP8266)
+  #include <EEPROM.h>
+  using ace_utils::crc_eeprom::EspStyleEeprom;
+
+#elif defined(ARDUINO_ARCH_AVR)
+  #include <EEPROM.h>
+  using ace_utils::crc_eeprom::AvrStyleEeprom;
+
+#elif defined(ARDUINO_ARCH_STM32)
+  #include <AceUtilsBufferedEepromStm32.h>
+  using ace_utils::crc_eeprom::EspStyleEeprom;
+
+#else
+  #error Unsupported platform for EEPROM
+
+#endif
+
+/**
+ * A abstraction that knows how to store a StoreInfo object into a platform's
+ * EEPROM, using the CrcEeprom class to validate its CRC. This class knows how
+ * to wrap and configure different collaborating objects on different platforms.
+ */
 class PersistentStore {
   public:
-    PersistentStore(IEepromAdapter& eepromAdapter)
-      : mCrcEeprom(eepromAdapter, 0x03c4711f /*random contextId*/)
+    PersistentStore() :
+      #if defined(EPOXY_DUINO)
+        mEepromInterface(EpoxyEepromEspInstance),
+      #elif defined(ESP32) || defined(ESP8266) 
+        mEepromInterface(EEPROM),
+      #elif defined(ARDUINO_ARCH_AVR)
+        mEepromInterface(EEPROM),
+      #elif defined(ARDUINO_ARCH_STM32)
+        mEepromInterface(BufferedEEPROM),
+      #endif
+        mCrcEeprom(mEepromInterface, 0x03c4711f /*random contextId*/)
     {}
 
     void setup() {
-      mCrcEeprom.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
+    #if defined(EPOXY_DUINO)
+      EpoxyEepromEspInstance.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
+    #elif defined(ESP32) || defined(ESP8266)
+      EEPROM.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
+    #elif defined(ARDUINO_ARCH_AVR)
+      // no setup required
+    #elif defined(ARDUINO_ARCH_STM32)
+      BufferedEEPROM.begin();
+    #endif
     }
 
     bool readStoredInfo(StoredInfo& storedInfo) const {
@@ -32,6 +74,16 @@ class PersistentStore {
   private:
     static const uint16_t kStoredInfoEepromAddress = 0;
 
+  #if defined(EPOXY_DUINO)
+    EspStyleEeprom<EpoxyEepromEsp> mEepromInterface;
+  #elif defined(ESP32) || defined(ESP8266) 
+    EspStyleEeprom<EEPROMClass> mEepromInterface;
+  #elif defined(ARDUINO_ARCH_AVR)
+    AvrStyleEeprom<EEPROMClass> mEepromInterface;
+  #elif defined(ARDUINO_ARCH_STM32)
+    EspStyleEeprom<BufferedEEPROMClass> mEepromInterface;
+  #endif
+
     CrcEeprom mCrcEeprom;
 };
 
@@ -40,9 +92,7 @@ class PersistentStore {
 /** A thin layer around a CrcEeprom object to handle controllers w/o EEPROM. */
 class PersistentStore {
   public:
-    PersistentStore(IEepromAdapter& eepromAdapter) {
-      (void) eepromAdapter; // disable compiler warning
-    }
+    PersistentStore() = default;
 
     void setup() {}
 

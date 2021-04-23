@@ -32,29 +32,44 @@ using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
+using ace_utils::crc_eeprom::AvrStyleEeprom;
+using ace_utils::crc_eeprom::EspStyleEeprom;
 using ace_utils::crc_eeprom::CrcEeprom;
-using ace_utils::crc_eeprom::AvrEepromAdapter;
-using ace_utils::crc_eeprom::EspEepromAdapter;
 
 //------------------------------------------------------------------
 // Configure CrcEeprom.
 //------------------------------------------------------------------
 
-const int EEPROM_SIZE = CrcEeprom::toSavedSize(sizeof(StoredInfo));
-
-#if defined(ESP32) || defined(ESP8266) || defined(EPOXY_DUINO)
+#if defined(EPOXY_DUINO)
+  #include <EpoxyEepromEsp.h>
+  EspStyleEeprom<EpoxyEepromEsp> eepromInterface(EpoxyEepromEspInstance);
+#elif defined(ESP32) || defined(ESP8266) 
   #include <EEPROM.h>
-  EspEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
+  EspStyleEeprom<EEPROMClass> eepromInterface(EEPROM);
 #elif defined(ARDUINO_ARCH_AVR)
   #include <EEPROM.h>
-  AvrEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
+  AvrStyleEeprom<EEPROMClass> eepromInterface(EEPROM);
 #elif defined(ARDUINO_ARCH_STM32)
-  #include <AceUtilsStm32BufferedEeprom.h>
-  EspEepromAdapter<BufferedEEPROMClass> eepromAdapter(BufferedEEPROM);
+  #include <AceUtilsBufferedEepromStm32.h>
+  EspStyleEeprom<BufferedEEPROMClass> eepromInterface(BufferedEEPROM);
 #else
   #error No EEPROM
 #endif
-CrcEeprom crcEeprom(eepromAdapter, CrcEeprom::toContextId('l', 'c', 'l', 'k'));
+
+CrcEeprom crcEeprom(
+    eepromInterface, CrcEeprom::toContextId('l', 'c', 'l', 'k'));
+
+void setupEeprom() {
+#if defined(EPOXY_DUINO)
+  EpoxyEepromEspInstance.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
+#elif defined(ESP32) || defined(ESP8266)
+  EEPROM.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
+#elif defined(ARDUINO_ARCH_AVR)
+  // no setup required
+#elif defined(ARDUINO_ARCH_STM32)
+  BufferedEEPROM.begin();
+#endif
+}
 
 //-----------------------------------------------------------------------------
 // Configure time zones and ZoneManager.
@@ -524,7 +539,7 @@ void setup() {
   Wire.setClock(400000L);
 #endif
 
-  crcEeprom.begin(EEPROM_SIZE);
+  setupEeprom();
   setupAceButton();
   setupClocks();
   setupAceSegment();

@@ -36,31 +36,44 @@ using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using ace_utils::mode_group::ModeGroup;
-using ace_utils::crc_eeprom::AvrEepromAdapter;
-using ace_utils::crc_eeprom::EspEepromAdapter;
+using ace_utils::crc_eeprom::AvrStyleEeprom;
+using ace_utils::crc_eeprom::EspStyleEeprom;
 using ace_utils::crc_eeprom::CrcEeprom;
 
 //----------------------------------------------------------------------------
 // Configure CrcEeprom.
 //----------------------------------------------------------------------------
 
-#if defined(ESP32) || defined(ESP8266) || defined(EPOXY_DUINO)
+#if defined(EPOXY_DUINO)
+  #include <EpoxyEepromEsp.h>
+  EspStyleEeprom<EpoxyEepromEsp> eepromInterface(EpoxyEepromEspInstance);
+#elif defined(ESP32) || defined(ESP8266) 
   #include <EEPROM.h>
-  EspEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
+  EspStyleEeprom<EEPROMClass> eepromInterface(EEPROM);
 #elif defined(ARDUINO_ARCH_AVR)
   #include <EEPROM.h>
-  AvrEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
+  AvrStyleEeprom<EEPROMClass> eepromInterface(EEPROM);
 #elif defined(ARDUINO_ARCH_STM32)
-  #include <AceUtilsStm32BufferedEeprom.h>
-  EspEepromAdapter<BufferedEEPROMClass> eepromAdapter(BufferedEEPROM);
+  #include <AceUtilsBufferedEepromStm32.h>
+  EspStyleEeprom<BufferedEEPROMClass> eepromInterface(BufferedEEPROM);
 #else
   #error EEPROM unsupported
 #endif
 
-// Needed by ESP8266 and ESP32 chips. Has no effect on other chips.
-const int EEPROM_SIZE = CrcEeprom::toSavedSize(sizeof(StoredInfo));
+CrcEeprom crcEeprom(eepromInterface, 0x10186c40 /*random contextId*/);
 
-CrcEeprom crcEeprom(eepromAdapter, 0x10186c40 /*random contextId*/);
+void setupEeprom() {
+#if defined(EPOXY_DUINO)
+  EpoxyEepromEspInstance.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
+#elif defined(ESP32) || defined(ESP8266)
+  EEPROM.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
+#elif defined(ARDUINO_ARCH_AVR)
+  // no setup required
+#elif defined(ARDUINO_ARCH_STM32)
+  BufferedEEPROM.begin();
+#endif
+}
+
 
 //----------------------------------------------------------------------------
 // Configure various Clocks.
@@ -366,8 +379,8 @@ void setup() {
 
   Wire.begin();
   Wire.setClock(400000L);
-  crcEeprom.begin(EEPROM_SIZE);
 
+  setupEeprom();
   setupAceButton();
   setupOled();
 

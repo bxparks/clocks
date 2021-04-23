@@ -44,8 +44,6 @@ using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_utils::mode_group::ModeGroup;
-using ace_utils::crc_eeprom::AvrEepromAdapter;
-using ace_utils::crc_eeprom::EspEepromAdapter;
 
 //-----------------------------------------------------------------------------
 // Configure time zones and ZoneManager.
@@ -327,21 +325,7 @@ const ModeGroup ROOT_MODE_GROUP = {
 // Create persistent store.
 //-----------------------------------------------------------------------------
 
-#if defined(ESP32) || defined(ESP8266) || defined(EPOXY_DUINO)
-  #include <EEPROM.h>
-  EspEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
-  PersistentStore persistentStore(eepromAdapter);
-#elif defined(ARDUINO_ARCH_AVR)
-  #include <EEPROM.h>
-  AvrEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
-  PersistentStore persistentStore(eepromAdapter);
-#elif defined(ARDUINO_ARCH_STM32)
-  #include <AceUtilsStm32BufferedEeprom.h>
-  EspEepromAdapter<BufferedEEPROMClass> eepromAdapter(BufferedEEPROM);
-  PersistentStore persistentStore(eepromAdapter);
-#else
-  PersistentStore persistentStore;
-#endif
+PersistentStore persistentStore;
 
 void setupPersistentStore() {
   persistentStore.setup();
@@ -600,11 +584,11 @@ if (ENABLE_SERIAL_DEBUG >= 1) {
   Wire.begin();
   Wire.setClock(400000L);
 
+  setupPersistentStore();
   setupAceButton();
   setupClocks();
   setupDisplay();
   setupPresenter();
-  setupPersistentStore();
 
   // Hold down the Mode button to perform factory reset.
   bool isModePressedDuringBoot = modeButton.isPressedRaw();

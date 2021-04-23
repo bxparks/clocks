@@ -53,14 +53,11 @@
 #include "config.h"
 #include "Controller.h"
 #include "PersistentStore.h"
-#include <AceUtilsCrcEeprom.h>
 
 using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
 using namespace ace_utils::cli;
-using ace_utils::crc_eeprom::AvrEepromAdapter;
-using ace_utils::crc_eeprom::EspEepromAdapter;
 
 //---------------------------------------------------------------------------
 // Configure RTC and Clock
@@ -98,29 +95,11 @@ using ace_utils::crc_eeprom::EspEepromAdapter;
 // Create persistent store.
 //-----------------------------------------------------------------------------
 
-#if ENABLE_EEPROM
-  #if defined(ESP32) || defined(ESP8266)
-    #include <EEPROM.h>
-    EspEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
-    PersistentStore persistentStore(eepromAdapter);
-  #elif defined(ARDUINO_ARCH_AVR)
-    #include <EEPROM.h>
-    AvrEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
-    PersistentStore persistentStore(eepromAdapter);
-  #elif defined(ARDUINO_ARCH_STM32)
-    #include <AceUtilsStm32BufferedEeprom.h>
-    EspEepromAdapter<BufferedEEPROMClass> eepromAdapter(BufferedEEPROM);
-    PersistentStore persistentStore(eepromAdapter);
-  #elif defined(EPOXY_DUINO)
-    #include <EEPROM.h>
-    EspEepromAdapter<EEPROMClass> eepromAdapter(EEPROM);
-    PersistentStore persistentStore(eepromAdapter);
-  #else
-    PersistentStore persistentStore;
-  #endif
-#else
-  PersistentStore persistentStore;
-#endif
+PersistentStore persistentStore;
+
+void setupPersistentStore() {
+  persistentStore.setup();
+}
 
 //---------------------------------------------------------------------------
 // Create a controller retrieves or modifies the underlying clock.
@@ -462,7 +441,7 @@ void setup() {
 #endif
 
   Serial.println(F("Setting up PersistentStore"));
-  persistentStore.setup();
+  setupPersistentStore();
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   Serial.println(F("Setting up DS3231Clock"));
