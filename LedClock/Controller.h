@@ -343,6 +343,7 @@ class Controller {
 
     /** Save the current UTC dateTime to the RTC. */
     void saveDateTime() {
+      mChangingClockInfo.dateTime.normalize();
       acetime_t epochSeconds = mChangingClockInfo.dateTime.toEpochSeconds();
       if (ENABLE_SERIAL_DEBUG >= 1) {
         Serial.print(F("saveDateTime(): epochSeconds:"));

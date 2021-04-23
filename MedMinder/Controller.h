@@ -253,6 +253,7 @@ class Controller {
     }
 
     void saveDateTime() {
+      mChangingClockInfo.dateTime.normalize();
       mClock.setNow(mChangingClockInfo.dateTime.toEpochSeconds());
     }
 

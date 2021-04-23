@@ -626,6 +626,7 @@ class Controller {
 
     /** Save the changed dateTime to the SystemClock. */
     void saveDateTime() {
+      mChangingClockInfo.dateTime.normalize();
       mClock.setNow(mChangingClockInfo.dateTime.toEpochSeconds());
     }
 
