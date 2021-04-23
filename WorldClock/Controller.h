@@ -480,7 +480,7 @@ class Controller {
 
     /** Save the current UTC ZonedDateTime to the RTC. */
     void saveDateTime() {
-      mChangingClockInfo.dateTime.normalize();
+      mChangingDateTime.normalize();
       mClock.setNow(mChangingDateTime.toEpochSeconds());
     }
 
