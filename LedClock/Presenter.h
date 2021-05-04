@@ -21,7 +21,7 @@ class Presenter {
         mClockWriter(display),
         mNumberWriter(display),
         mCharWriter(display),
-        mStringWriter(mCharWriter)
+        mStringWriter(display)
     {}
 
     void display() {
@@ -111,11 +111,12 @@ class Presenter {
           displayDay(dateTime);
           break;
 
-        case Mode::kViewWeekday:
-          mStringWriter.writeStringAt(
-              0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()),
-              true /* padRight */);
+        case Mode::kViewWeekday: {
+          uint8_t written = mStringWriter.writeStringAt(
+              0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));
+          mStringWriter.clearToEnd(written);
           break;
+        }
 
         case Mode::kViewBrightness:
         case Mode::kChangeBrightness:

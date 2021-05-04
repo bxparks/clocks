@@ -1,13 +1,12 @@
 /*
 A simple digital clock using:
   * a DS3231 RTC chip
-  * a 7-segment LED display, OR an SSD1306 OLED display
+  * a 7-segment LED display
   * 2 push buttons
 
 Supported boards are:
-  * Arduino Nano
-  * Arduino Pro Mini
-  * Arduino Leonardo (Pro Micro clone)
+  * SparkFun Pro Micro w/ Led Modules
+  * ESP8266 dev board w/ Led Modules
 */
 
 #include "config.h"
@@ -22,9 +21,9 @@ Supported boards are:
 
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
-#include <ace_segment/hw/SwSpiFastInterface.h>
-#include <ace_segment/hw/SwWireFastInterface.h>
-#include <ace_segment/scanning/LedMatrixDirectFast4.h>
+#include <ace_segment/hw/SoftSpiFastInterface.h>
+#include <ace_segment/hw/SoftWireFastInterface.h>
+#include <ace_segment/direct/DirectFast4Module.h>
 #endif
 
 using namespace ace_segment;
@@ -183,141 +182,113 @@ void setupClocks() {
 #define USE_INTERRUPT 0
 
 const uint8_t FRAMES_PER_SECOND = 60;
-const uint8_t NUM_SUBFIELDS = 16;
-const uint8_t NUM_DIGITS = 4;
-const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
-
-#if LED_MATRIX_MODE == LED_MATRIX_MODE_DIRECT
-  // 4 digits, resistors on segments on Pro Micro.
-  const uint8_t NUM_SEGMENTS = 8;
-  const uint8_t SEGMENT_PINS[NUM_SEGMENTS] = {8, 9, 10, 16, 14, 18, 19, 15};
-#else
-  const uint8_t LATCH_PIN = 10; // ST_CP on 74HC595
-  const uint8_t DATA_PIN = MOSI; // DS on 74HC595
-  const uint8_t CLOCK_PIN = SCK; // SH_CP on 74HC595
-#endif
 
 // The chain of resources.
-#if LED_MATRIX_MODE == LED_MATRIX_MODE_DIRECT
-  // Common Anode, with transitions on Group pins
-  using LedMatrix = LedMatrixDirect<>;
-  LedMatrix ledMatrix(
-      LedMatrix::kActiveLowPattern /*elementOnPattern*/,
-      LedMatrix::kActiveLowPattern /*groupOnPattern*/,
-      NUM_SEGMENTS,
-      SEGMENT_PINS,
-      NUM_DIGITS,
-      DIGIT_PINS);
-#elif LED_MATRIX_MODE == LED_MATRIX_MODE_DIRECT_FAST
-  // Common Anode, with transitions on Group pins
-  using LedMatrix = LedMatrixDirectFast4<
-    8, 9, 10, 16, 14, 18, 19, 15,
-    4, 5, 6, 7
-  >;
-  LedMatrix ledMatrix(
-      LedMatrix::kActiveLowPattern /*elementOnPattern*/,
-      LedMatrix::kActiveLowPattern /*groupOnPattern*/);
-#elif LED_MATRIX_MODE == LED_MATRIX_MODE_PARIAL_SW_SPI
-  // Common Cathode, with transistors on Group pins
-  SwSpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  using LedMatrix = LedMatrixSingleShiftRegister<SwSpiInterface>;
-  LedMatrix ledMatrix(
-      spiInterface,
-      LedMatrix::kActiveHighPattern /*elementOnPattern*/,
-      LedMatrix::kActiveHighPattern /*groupOnPattern*/,
-      NUM_DIGITS,
-      DIGIT_PINS):
-#elif LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_SW_SPI_FAST
-  // Common Cathode, with transistors on Group pins
-  using SpiInterface = SwSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
-  SpiInterface spiInterface;
-  using LedMatrix = LedMatrixSingleShiftRegister<SpiInterface>;
-  LedMatrix ledMatrix(
-      spiInterface,
-      LedMatrix::kActiveHighPattern /*elementOnPattern*/,
-      LedMatrix::kActiveHighPattern /*groupOnPattern*/,
-      NUM_DIGITS,
-      DIGIT_PINS);
-#elif LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_HW_SPI
-  // Common Cathode, with transistors on Group pins
-  HwSpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  using LedMatrix = LedMatrixSingleShiftRegister<HwSpiInterface>;
-  LedMatrix ledMatrix(
-      spiInterface,
-      LedMatrix::kActiveHighPattern /*elementOnPattern*/,
-      LedMatrix::kActiveHighPattern /*groupOnPattern*/,
-      NUM_DIGITS,
-      DIGIT_PINS);
-#elif LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI
-  // Common Anode, with transistors on Group pins
-  SwSpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  using LedMatrix = LedMatrixDualShiftRegister<SwSpiInterface>;
-  LedMatrix ledMatrix(
-      spiInterface,
-      LedMatrix::kActiveLowPattern /*elementOnPattern*/);
-      LedMatrix::kActiveLowPattern /*groupOnPattern*/,
-#elif LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI_FAST
-  // Common Anode, with transistors on Group pins
-  using SpiInterface = SwSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
-  SpiInterface spiInterface;
-  using LedMatrix = LedMatrixDualShiftRegister<SpiInterface>;
-  LedMatrix ledMatrix(
-      spiInterface,
-      LedMatrix::kActiveLowPattern /*elementOnPattern*/,
-      LedMatrix::kActiveLowPattern /*groupOnPattern*/);
-#elif LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_HW_SPI
-  // Common Anode, with transistors on Group pins
-  HwSpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  using LedMatrix = LedMatrixDualShiftRegister<HwSpiInterface>;
-  LedMatrix ledMatrix(
-      spiInterface,
-      LedMatrix::kActiveLowPattern /*elementOnPattern*/,
-      LedMatrix::kActiveLowPattern /*groupOnPattern*/);
-#elif LED_MATRIX_MODE == LED_MATRIX_MODE_NONE
-  // Do nothing
-#else
-  #error Unsupported LED_MATRIX_MODE
-#endif
-
-#if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_SCANNING
-  ScanningModule<LedMatrix, NUM_DIGITS, 1> ledModule(
-      ledMatrix, FRAMES_PER_SECOND);
-  LedDisplay display(ledModule);
-
-#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-  #if TM1637_INTERFACE_TYPE == TM1637_INTERFACE_TYPE_NORMAL
-    using WireInterface = SwWireInterface;
+#if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+  const uint8_t NUM_DIGITS = 4;
+  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+    using WireInterface = SoftWireInterface;
     WireInterface wireInterface(CLK_PIN, DIO_PIN, BIT_DELAY);
-    Tm1637Module<WireInterface, 4> ledModule(wireInterface);
+    Tm1637Module<WireInterface, NUM_DIGITS> ledModule(wireInterface);
   #else
-    using WireInterface = SwWireFastInterface<CLK_PIN, DIO_PIN, BIT_DELAY>;
+    using WireInterface = SoftWireFastInterface<CLK_PIN, DIO_PIN, BIT_DELAY>;
     WireInterface wireInterface;
-    Tm1637Module<WireInterface, 4> ledModule(wireInterface);
+    Tm1637Module<WireInterface, NUM_DIGITS> ledModule(wireInterface);
   #endif
-  LedDisplay display(ledModule);
+
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
+  const uint8_t NUM_DIGITS = 8;
+  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+    using SpiInterface = SoftSpiInterface;
+    SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  #else
+    using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+    SpiInterface spiInterface;
+  #endif
+  Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
+      spiInterface, kEightDigitRemapArray);
+
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
+  // Common Anode, with transitions on Group pins
+  const uint8_t NUM_DIGITS = 4;
+  const uint8_t NUM_SEGMENTS = 8;
+  const uint8_t SEGMENT_PINS[NUM_SEGMENTS] = {8, 9, 10, 16, 14, 18, 19, 15};
+  const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
+  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+    DirectModule<NUM_DIGITS> ledModule(
+        LedMatrixBase::kActiveLowPattern /*segmentOnPattern*/,
+        LedMatrixBase::kActiveLowPattern /*digitOnPattern*/,
+        FRAMES_PER_SECOND,
+        SEGMENT_PINS,
+        DIGIT_PINS);
+  #else
+    DirectFast4Module<
+        8, 9, 10, 16, 14, 18, 19, 15, // segment pins
+        4, 5, 6, 7, // digit pins
+        NUM_DIGITS
+    > ledModule(
+        LedMatrixBase::kActiveLowPattern /*segmentOnPattern*/,
+        LedMatrixBase::kActiveLowPattern /*digitOnPattern*/,
+        FRAMES_PER_SECOND);
+
+  #endif
+
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_SINGLE
+  // Common Cathode, with transistors on Group pins
+  const uint8_t NUM_DIGITS = 4;
+  const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
+  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+    using SpiInterface = SoftSpiInterface;
+    SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  #else
+    using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+    SpiInterface spiInterface;
+  #endif
+  SingleHc595Module<SpiInterface, NUM_DIGITS> ledModule(
+      spiInterface,
+      LedMatrixBase::kActiveHighPattern /*segmentOnPattern*/,
+      LedMatrixBase::kActiveHighPattern /*digitOnPattern*/,
+      FRAMES_PER_SECOND,
+      DIGIT_PINS
+  );
+
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
+  // Common Anode, with transistors on Group pins
+  const uint8_t NUM_DIGITS = 4;
+  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+    using SpiInterface = SoftSpiInterface;
+    SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  #else
+    using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+    SpiInterface spiInterface;
+  #endif
+  DualHc595Module<SpiInterface, NUM_DIGITS> ledModule(
+      spiInterface,
+      LedMatrixBase::kActiveLowPattern /*segmentOnPattern*/,
+      LedMatrixBase::kActiveLowPattern /*digitOnPattern*/,
+      FRAMES_PER_SECOND
+  );
 
 #else
   #error Unknown LED_DISPLAY_TYPE
+
 #endif
+
+LedDisplay display(ledModule);
 
 // Setup the various resources.
 void setupAceSegment() {
-  #if LED_MATRIX_MODE == LED_MATRIX_MODE_PARIAL_SW_SPI \
-      || LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_HW_SPI \
-      || LED_MATRIX_MODE == LED_MATRIX_MODE_SINGLE_SW_SPI_FAST \
-      || LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI \
-      || LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_HW_SPI \
-      || LED_MATRIX_MODE == LED_MATRIX_MODE_DUAL_SW_SPI_FAST
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_SINGLE \
+      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL \
+      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
     spiInterface.begin();
-  #endif
-
-  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
     wireInterface.begin();
-    ledModule.begin();
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
   #else
-    ledMatrix.begin();
-    ledModule.begin();
+    #error Unknown LED_DISPLAY_TYPE
   #endif
+  ledModule.begin();
 }
 
 #if USE_INTERRUPT == 1
@@ -328,11 +299,16 @@ void setupAceSegment() {
 #else
   COROUTINE(renderLed) {
     COROUTINE_LOOP() {
-    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_SCANNING
+    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT \
+        || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_SINGLE \
+        || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
       ledModule.renderFieldWhenReady();
-    #else
+    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
       ledModule.flushIncremental();
+    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
+      ledModule.flush();
     #endif
+
       COROUTINE_YIELD();
     }
   }
