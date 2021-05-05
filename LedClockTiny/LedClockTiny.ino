@@ -22,7 +22,6 @@ Supported boards are:
 #include <digitalWriteFast.h>
 #include <ace_segment/hw/SoftSpiFastInterface.h>
 #include <ace_segment/hw/SoftWireFastInterface.h>
-#include <ace_segment/direct/DirectFast4Module.h>
 #endif
 
 using namespace ace_segment;
@@ -207,50 +206,6 @@ const uint8_t FRAMES_PER_SECOND = 60;
   Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface, kDigitRemapArray8);
 
-#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
-  // Common Anode, with transitions on Group pins
-  const uint8_t NUM_DIGITS = 4;
-  const uint8_t NUM_SEGMENTS = 8;
-  const uint8_t SEGMENT_PINS[NUM_SEGMENTS] = {8, 9, 10, 16, 14, 18, 19, 15};
-  const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    DirectModule<NUM_DIGITS> ledModule(
-        LedMatrixBase::kActiveLowPattern /*segmentOnPattern*/,
-        LedMatrixBase::kActiveLowPattern /*digitOnPattern*/,
-        FRAMES_PER_SECOND,
-        SEGMENT_PINS,
-        DIGIT_PINS);
-  #else
-    DirectFast4Module<
-        8, 9, 10, 16, 14, 18, 19, 15, // segment pins
-        4, 5, 6, 7, // digit pins
-        NUM_DIGITS
-    > ledModule(
-        LedMatrixBase::kActiveLowPattern /*segmentOnPattern*/,
-        LedMatrixBase::kActiveLowPattern /*digitOnPattern*/,
-        FRAMES_PER_SECOND);
-
-  #endif
-
-#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_SINGLE
-  // Common Cathode, with transistors on Group pins
-  const uint8_t NUM_DIGITS = 4;
-  const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    using SpiInterface = SoftSpiInterface;
-    SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  #else
-    using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
-    SpiInterface spiInterface;
-  #endif
-  SingleHc595Module<SpiInterface, NUM_DIGITS> ledModule(
-      spiInterface,
-      LedMatrixBase::kActiveHighPattern /*segmentOnPattern*/,
-      LedMatrixBase::kActiveHighPattern /*digitOnPattern*/,
-      FRAMES_PER_SECOND,
-      DIGIT_PINS
-  );
-
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
   // Common Anode, with transistors on Group pins
   const uint8_t NUM_DIGITS = 4;
@@ -277,13 +232,11 @@ LedDisplay display(ledModule);
 
 // Setup the various resources.
 void setupAceSegment() {
-  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_SINGLE \
-      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL \
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL \
       || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
     spiInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
     wireInterface.begin();
-  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
   #else
     #error Unknown LED_DISPLAY_TYPE
   #endif
@@ -298,9 +251,7 @@ void setupAceSegment() {
 #else
   COROUTINE(renderLed) {
     COROUTINE_LOOP() {
-    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT \
-        || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_SINGLE \
-        || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
+    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
       ledModule.renderFieldWhenReady();
     #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
       ledModule.flushIncremental();
