@@ -6,12 +6,16 @@ A simple digital clock using:
   * 2 push buttons
 
 Memory size (flash/ram) on Pro Micro:
-  * Initial fork: 23352/1268
-  * Remove ZoneManager and ZonedDateTime: 13102/641
-  * Remove CrcEeprom: 12160/616
-  * ATtiny85: Sketch uses 7734 bytes (94%) of program storage space. Maximum
-    is 8192 bytes. Global variables use 305 bytes (59%) of dynamic memory,
-    leaving 207 bytes for local variables. Maximum is 512 bytes.
+  * Initial fork:
+      * Pro Micro: 23352/1268
+  * Remove ZoneManager and ZonedDateTime:
+      * Pro Micro: 13102/641
+  * Remove CrcEeprom:
+      * Pro Micro: 12160/616
+      * ATtiny85: 7734/305
+    * Remove COROUTINE(renderLed)
+      * Pro Micro: 12040/585
+      * ATtiny85: 7612/274
 */
 
 #include "config.h"
@@ -44,9 +48,6 @@ DS3231 ds3231;
 //------------------------------------------------------------------
 // Configure LED display using AceSegment.
 //------------------------------------------------------------------
-
-// Use polling or interrupt for AceSegment
-#define USE_INTERRUPT 0
 
 const uint8_t FRAMES_PER_SECOND = 60;
 
@@ -110,49 +111,6 @@ void setupAceSegment() {
     #error Unknown LED_DISPLAY_TYPE
   #endif
   ledModule.begin();
-}
-
-#if USE_INTERRUPT == 1
-  // interrupt handler for timer 2
-  ISR(TIMER2_COMPA_vect) {
-    ledModule.renderFieldNow();
-  }
-#else
-  COROUTINE(renderLed) {
-    COROUTINE_LOOP() {
-    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
-      ledModule.renderFieldWhenReady();
-    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-      ledModule.flushIncremental();
-    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
-      ledModule.flush();
-    #endif
-
-      COROUTINE_YIELD();
-    }
-  }
-#endif
-
-void setupRenderingInterrupt() {
-#if USE_INTERRUPT == 1
-  // set up Timer 2
-  uint8_t timerCompareValue =
-      (long) F_CPU / 1024 / ledModule.getFieldsPerSecond() - 1;
-  #if ENABLE_SERIAL_DEBUG >= 1
-    Serial.print(F("Timer 2, Compare A: "));
-    Serial.println(timerCompareValue);
-  #endif
-
-  noInterrupts();
-  TCNT2  = 0;	// Initialize counter value to 0
-  TCCR2A = 0;
-  TCCR2B = 0;
-  TCCR2A |= bit(WGM21); // CTC
-  TCCR2B |= bit(CS22) | bit(CS21) | bit(CS20); // prescale 1024
-  TIMSK2 |= bit(OCIE2A); // interrupt on Compare A Match
-  OCR2A =  timerCompareValue;
-  interrupts();
-#endif
 }
 
 //------------------------------------------------------------------
@@ -335,7 +293,6 @@ void setup() {
 
   setupAceButton();
   setupAceSegment();
-  setupRenderingInterrupt();
   controller.setup();
 
 #if ENABLE_SERIAL_DEBUG >= 1
@@ -346,5 +303,12 @@ void setup() {
 void loop() {
   checkButtons.runCoroutine();
   updateClock.runCoroutine();
-  renderLed.runCoroutine();
+
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
+    ledModule.renderFieldWhenReady();
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+    ledModule.flushIncremental();
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
+    ledModule.flush();
+  #endif
 }
