@@ -9,6 +9,9 @@ Memory size (flash/ram) on Pro Micro:
   * Initial fork: 23352/1268
   * Remove ZoneManager and ZonedDateTime: 13102/641
   * Remove CrcEeprom: 12160/616
+  * ATtiny85: Sketch uses 7734 bytes (94%) of program storage space. Maximum
+    is 8192 bytes. Global variables use 305 bytes (59%) of dynamic memory,
+    leaving 207 bytes for local variables. Maximum is 512 bytes.
 */
 
 #include "config.h"
@@ -19,7 +22,8 @@ Memory size (flash/ram) on Pro Micro:
 #include <AceTime.h>
 #include "Controller.h"
 
-#if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
+#if (defined(ARDUINO_ARCH_AVR) && ! defined(ARDUINO_AVR_ATTINYX5)) \
+    || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
 #include <ace_segment/hw/SoftSpiFastInterface.h>
 #include <ace_segment/hw/SoftWireFastInterface.h>
