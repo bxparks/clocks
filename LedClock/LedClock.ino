@@ -16,7 +16,6 @@ Supported boards are:
 #include <AceRoutine.h>
 #include <AceTime.h>
 #include <AceUtilsCrcEeprom.h>
-#include <SSD1306AsciiWire.h>
 #include "Controller.h"
 
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
