@@ -206,7 +206,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
     SpiInterface spiInterface;
   #endif
   Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
-      spiInterface, kEightDigitRemapArray);
+      spiInterface, kDigitRemapArray8);
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
   // Common Anode, with transitions on Group pins

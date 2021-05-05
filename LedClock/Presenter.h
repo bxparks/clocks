@@ -21,7 +21,7 @@ class Presenter {
         mClockWriter(display),
         mNumberWriter(display),
         mCharWriter(display),
-        mStringWriter(display)
+        mStringWriter(mCharWriter)
     {}
 
     void display() {
