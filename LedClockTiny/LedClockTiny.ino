@@ -21,13 +21,16 @@ Memory size (flash/ram) on Pro Micro:
       * Pro Micro: 11800/556
       * ATtiny85: 7370/245
       * Saves about 250 bytes
+  * Remove COROUTINE(updateClock)
+      * Pro Micro: 10868/515
+      * ATtiny85: 6456/204
+      * Saves about 900 bytes (!)
 */
 
 #include "config.h"
 #include <Wire.h>
 #include <AceSegment.h>
 #include <AceButton.h>
-#include <AceRoutine.h>
 #include <AceTime.h>
 #include "Controller.h"
 
@@ -40,7 +43,6 @@ Memory size (flash/ram) on Pro Micro:
 
 using namespace ace_segment;
 using namespace ace_button;
-using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
 
@@ -144,10 +146,13 @@ Controller controller(ds3231, presenter);
 // code says that controller.display() runs as fast as or faster than 1ms for
 // all DISPLAY_TYPEs. So we can set this to 100ms without worrying about too
 // much overhead.
-COROUTINE(updateClock) {
-  COROUTINE_LOOP() {
+void updateClock() {
+  static uint16_t lastRunMillis;
+
+  uint16_t nowMillis = millis();
+  if (nowMillis - lastRunMillis >= 200) {
+    lastRunMillis = nowMillis;
     controller.update();
-    COROUTINE_DELAY(200);
   }
 }
 
@@ -261,9 +266,9 @@ void setupAceButton() {
   buttonConfig.setRepeatPressInterval(150);
 }
 
-// Read the buttons in a coroutine with a 5-10ms delay because if analogRead()
-// is used on an ESP8266 to read buttons in a resistor ladder, the WiFi
-// becomes disconnected after 5-10 seconds. See
+// Read the buttons at most every 5 ms delay because if analogRead() is used on
+// an ESP8266 to read buttons in a resistor ladder, the WiFi becomes
+// disconnected after 5-10 seconds. See
 // https://github.com/esp8266/Arduino/issues/1634 and
 // https://github.com/esp8266/Arduino/issues/5083.
 void checkButtons() {
@@ -320,6 +325,6 @@ void setup() {
 
 void loop() {
   checkButtons();
-  updateClock.runCoroutine();
+  updateClock();
   renderLed();
 }

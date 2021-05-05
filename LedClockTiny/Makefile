@@ -3,5 +3,5 @@
 
 APP_NAME := LedClockTiny
 ARDUINO_LIBS := EpoxyMockDigitalWriteFast AceCommon AceButton AceTime \
-	AceRoutine AceSegment AUnit
+	AceSegment AUnit
 include ../../EpoxyDuino/EpoxyDuino.mk
