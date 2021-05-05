@@ -24,7 +24,7 @@
 #define TIME_ZONE_TYPE_MANUAL 0
 #define TIME_ZONE_TYPE_BASIC 1
 #define TIME_ZONE_TYPE_EXTENDED 2
-#define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
+#define TIME_ZONE_TYPE TIME_ZONE_TYPE_MANUAL
 
 // Options that determine the source of time.
 #define TIME_SOURCE_TYPE_NONE 0
@@ -187,14 +187,12 @@
 enum class Mode : uint8_t {
   kUnknown = 0, // uninitialized
 
-  kViewDateTime,
   kViewHourMinute,
   kViewSecond,
   kViewYear,
   kViewMonth,
   kViewDay,
   kViewWeekday,
-  kViewTimeZone,
   kViewBrightness,
 
   kChangeYear,
@@ -204,10 +202,7 @@ enum class Mode : uint8_t {
   kChangeMinute,
   kChangeSecond,
 
-  kChangeTimeZoneOffset,
-  kChangeTimeZoneDst,
   kChangeHourMode,
-
   kChangeBrightness,
 };
 

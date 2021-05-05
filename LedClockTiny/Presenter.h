@@ -7,7 +7,7 @@
 #include "RenderingInfo.h"
 
 using ace_time::DateStrings;
-using ace_time::ZonedDateTime;
+using ace_time::hw::HardwareDateTime;
 using ace_segment::LedDisplay;
 using ace_segment::ClockWriter;
 using ace_segment::NumberWriter;
@@ -42,7 +42,6 @@ class Presenter {
       mRenderingInfo.blinkShowState = blinkShowState;
       mRenderingInfo.hourMode = clockInfo.hourMode;
       mRenderingInfo.brightness = clockInfo.brightness;
-      mRenderingInfo.timeZoneData = clockInfo.timeZoneData;
       mRenderingInfo.dateTime = clockInfo.dateTime;
     }
 
@@ -77,7 +76,7 @@ class Presenter {
     void clearDisplay() { mDisplay.clear(); }
 
     void displayData() {
-      const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
+      const HardwareDateTime& dateTime = mRenderingInfo.dateTime;
       #if ENABLE_SERIAL_DEBUG >= 2
         SERIAL_PORT_MONITOR.print(F("displayData():"));
         dateTime.printTo(SERIAL_PORT_MONITOR);
@@ -113,7 +112,7 @@ class Presenter {
 
         case Mode::kViewWeekday: {
           uint8_t written = mStringWriter.writeStringAt(
-              0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));
+              0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek));
           mStringWriter.clearToEnd(written);
           break;
         }
@@ -128,16 +127,16 @@ class Presenter {
       }
     }
 
-    void displayHourMinute(const ZonedDateTime& dateTime) {
+    void displayHourMinute(const HardwareDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeHour)) {
-        mClockWriter.writeDec2At(0, dateTime.hour());
+        mClockWriter.writeDec2At(0, dateTime.hour);
       } else {
         mClockWriter.writeChars2At(
             0, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       }
 
       if (shouldShowFor(Mode::kChangeMinute)) {
-        mClockWriter.writeDec2At(2, dateTime.minute());
+        mClockWriter.writeDec2At(2, dateTime.minute);
       } else {
         mClockWriter.writeChars2At(
             2, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
@@ -145,12 +144,12 @@ class Presenter {
       mClockWriter.writeColon(true);
     }
 
-    void displaySecond(const ZonedDateTime& dateTime) {
+    void displaySecond(const HardwareDateTime& dateTime) {
       mClockWriter.writeChars2At(
           0, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
 
       if (shouldShowFor(Mode::kChangeSecond)) {
-        mClockWriter.writeDec2At(2, dateTime.second());
+        mClockWriter.writeDec2At(2, dateTime.second);
         mClockWriter.writeColon(true);
       } else {
         mClockWriter.writeChars2At(
@@ -158,20 +157,20 @@ class Presenter {
       }
     }
 
-    void displayYear(const ZonedDateTime& dateTime) {
+    void displayYear(const HardwareDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeYear)) {
-        mClockWriter.writeDec4At(0, dateTime.year());
+        mClockWriter.writeDec4At(0, dateTime.year + 2000);
       } else {
         clearDisplay();
       }
       mClockWriter.writeColon(false);
     }
 
-    void displayMonth(const ZonedDateTime& dateTime) {
+    void displayMonth(const HardwareDateTime& dateTime) {
       mClockWriter.writeChars2At(
           0, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       if (shouldShowFor(Mode::kChangeMonth)) {
-        mClockWriter.writeDec2At(2, dateTime.month());
+        mClockWriter.writeDec2At(2, dateTime.month);
       } else {
         mClockWriter.writeChars2At(
             2, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
@@ -179,11 +178,11 @@ class Presenter {
       mClockWriter.writeColon(false);
     }
 
-    void displayDay(const ZonedDateTime& dateTime) {
+    void displayDay(const HardwareDateTime& dateTime) {
       mClockWriter.writeChars2At(
           0, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       if (shouldShowFor(Mode::kChangeDay)) {
-        mClockWriter.writeDec2At(2, dateTime.day());
+        mClockWriter.writeDec2At(2, dateTime.day);
       } else  {
         mClockWriter.writeChars2At(
             2, ClockWriter::kCharSpace, ClockWriter::kCharSpace);

@@ -18,11 +18,8 @@ struct ClockInfo {
   /** Brightness, 1 - 7 for Tm1636Display; 1 - SUBFIELDS for ScanningDisplay. */
   uint8_t brightness = 1;
 
-  /** Desired timeZoneData. */
-  ace_time::TimeZoneData timeZoneData;
-
   /** DateTime from the TimeKeeper. */
-  ace_time::ZonedDateTime dateTime;
+  ace_time::hw::HardwareDateTime dateTime;
 };
 
 #endif

@@ -13,8 +13,7 @@ struct RenderingInfo {
   bool blinkShowState = true; // true if blinking info should be shown
   uint8_t hourMode = 0; // 12/24 mode
   uint8_t brightness = 1;
-  ace_time::TimeZoneData timeZoneData;
-  ace_time::ZonedDateTime dateTime; // seconds from AceTime epoch
+  ace_time::hw::HardwareDateTime dateTime;
 };
 
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
@@ -22,7 +21,6 @@ inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
       && a.blinkShowState == b.blinkShowState
       && a.hourMode == b.hourMode
       && a.brightness == b.brightness
-      && a.timeZoneData == b.timeZoneData
       && a.dateTime == b.dateTime;
 }
 

@@ -1,12 +1,13 @@
 /*
 A simple digital clock using:
+  * SparkFun Pro Micro
   * a DS3231 RTC chip
-  * a 7-segment LED display
+  * a TM1637 7-segment LED display
   * 2 push buttons
 
-Supported boards are:
-  * SparkFun Pro Micro w/ Led Modules
-  * ESP8266 dev board w/ Led Modules
+Memory size (flash/ram) on Pro Micro:
+  * Initial fork: 23352/1268
+  * Remove ZoneManager and ZonedDateTime: 13102/641
 */
 
 #include "config.h"
@@ -68,109 +69,11 @@ void setupEeprom() {
 #endif
 }
 
-//-----------------------------------------------------------------------------
-// Configure time zones and ZoneManager.
-//-----------------------------------------------------------------------------
-
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-
-static ManualZoneManager zoneManager;
-
-#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-
-static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
-  &zonedb::kZoneAmerica_Los_Angeles,
-  &zonedb::kZoneAmerica_Denver,
-  &zonedb::kZoneAmerica_Chicago,
-  &zonedb::kZoneAmerica_New_York,
-};
-
-static const uint16_t ZONE_REGISTRY_SIZE =
-    sizeof(ZONE_REGISTRY) / sizeof(basic::ZoneInfo*);
-
-// Only 1 displayed at any given time, need 2 for conversions.
-static const uint16_t CACHE_SIZE = 1 + 1;
-static BasicZoneManager<CACHE_SIZE> zoneManager(
-    ZONE_REGISTRY_SIZE, ZONE_REGISTRY);
-
-#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
-
-static const extended::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
-  &zonedbx::kZoneAmerica_Los_Angeles,
-  &zonedbx::kZoneAmerica_Denver,
-  &zonedbx::kZoneAmerica_Chicago,
-  &zonedbx::kZoneAmerica_New_York,
-};
-
-static const uint16_t ZONE_REGISTRY_SIZE =
-    sizeof(ZONE_REGISTRY) / sizeof(extended::ZoneInfo*);
-
-// Only 1 displayed at any given time, need 2 for conversions.
-static const uint16_t CACHE_SIZE = 1 + 1;
-static ExtendedZoneManager<CACHE_SIZE> zoneManager(
-    ZONE_REGISTRY_SIZE, ZONE_REGISTRY);
-
-#endif
-
-//-----------------------------------------------------------------------------
-// Create initial display timezone. Normally, these will be replaced by
-// the information retrieved from the EEPROM by the Controller.
-//-----------------------------------------------------------------------------
-
-#if TIME_ZONE_TYPE == TIME_ZONE_MANUAL
-
-  const TimeZoneData DISPLAY_ZONE = {-8*60, 0} /*-08:00*/;
-
-#else
-
-  // zoneIds are identical in zonedb:: and zonedbx::
-  const TimeZoneData DISPLAY_ZONE = {zonedb::kZoneIdAmerica_Los_Angeles};
-
-#endif
-
 //------------------------------------------------------------------
 // Configure various Clocks
 //------------------------------------------------------------------
 
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  DS3231Clock dsClock;
-  SYSTEM_CLOCK systemClock(&dsClock /*ref*/, &dsClock /*backup*/);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  NtpClock ntpClock;
-  SYSTEM_CLOCK systemClock(&ntpClock /*ref*/, nullptr /*backup*/);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  DS3231Clock dsClock;
-  NtpClock ntpClock;
-  SYSTEM_CLOCK systemClock(&ntpClock /*ref*/, &dsClock /*backup*/);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
-  SYSTEM_CLOCK systemClock(nullptr /*ref*/, nullptr /*backup*/);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
-  Stm32F1Clock stm32F1Clock;
-  SYSTEM_CLOCK systemClock(
-      &stm32F1Clock /*ref*/, &stm32F1Clock /*backup*/, 60 /*syncPeriod*/);
-#else
-  #error Unknown time keeper option
-#endif
-
-void setupClocks() {
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  dsClock.setup();
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
-  stmClock.setup();
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
-  stm32F1Clock.setup();
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  dsClock.setup();
-  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
-#endif
-
-  systemClock.setup();
-  if (systemClock.getNow() == ace_time::LocalDate::kInvalidEpochSeconds) {
-    systemClock.setNow(0);
-  }
-}
+DS3231 ds3231;
 
 //------------------------------------------------------------------
 // Configure LED display using AceSegment.
@@ -291,8 +194,7 @@ void setupRenderingInterrupt() {
 //------------------------------------------------------------------
 
 Presenter presenter(display);
-Controller controller(systemClock, crcEeprom, presenter, zoneManager,
-    DISPLAY_ZONE);
+Controller controller(ds3231, crcEeprom, presenter);
 
 //------------------------------------------------------------------
 // Update the Presenter Clock periodically.
@@ -306,7 +208,7 @@ Controller controller(systemClock, crcEeprom, presenter, zoneManager,
 COROUTINE(updateClock) {
   COROUTINE_LOOP() {
     controller.update();
-    COROUTINE_DELAY(100);
+    COROUTINE_DELAY(200);
   }
 }
 
@@ -467,7 +369,6 @@ void setup() {
 
   setupEeprom();
   setupAceButton();
-  setupClocks();
   setupAceSegment();
   setupRenderingInterrupt();
   controller.setup();
@@ -481,10 +382,4 @@ void loop() {
   checkButtons.runCoroutine();
   updateClock.runCoroutine();
   renderLed.runCoroutine();
-
-#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
-  systemClock.loop();
-#elif SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_COROUTINE
-  systemClock.runCoroutine();
-#endif
 }

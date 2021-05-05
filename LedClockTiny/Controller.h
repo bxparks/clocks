@@ -12,29 +12,24 @@
 
 using namespace ace_segment;
 using namespace ace_time;
-using ace_time::clock::Clock;
+using ace_time::hw::DS3231;
 using ace_utils::crc_eeprom::CrcEeprom;
 using ace_common::incrementModOffset;
+using ace_common::incrementMod;
 
 class Controller {
   public:
     static const uint16_t kStoredInfoEepromAddress = 0;
 
-    static const int16_t kDefaultOffsetMinutes = -8*60; // UTC-08:00
-
     /** Constructor. */
     Controller(
-        Clock& clock,
+        DS3231& clock,
         CrcEeprom& crcEeprom,
-        Presenter& presenter,
-        ZoneManager& zoneManager,
-        TimeZoneData initialTimeZoneData
+        Presenter& presenter
     ) :
         mClock(clock),
         mCrcEeprom(crcEeprom),
-        mPresenter(presenter),
-        mZoneManager(zoneManager),
-        mInitialTimeZoneData(initialTimeZoneData)
+        mPresenter(presenter)
     {
       mMode = Mode::kViewHourMinute;
     }
@@ -207,34 +202,35 @@ class Controller {
       switch ((Mode) mMode) {
         case Mode::kChangeHour:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
+          incrementMod(mChangingClockInfo.dateTime.hour, (uint8_t) 24);
           break;
 
         case Mode::kChangeMinute:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementMinute(
-              mChangingClockInfo.dateTime);
+          incrementMod(mChangingClockInfo.dateTime.minute, (uint8_t) 60);
           break;
 
         case Mode::kChangeSecond:
           mSuppressBlink = true;
           mSecondFieldCleared = true;
-          mChangingClockInfo.dateTime.second(0);
+          mChangingClockInfo.dateTime.second = 0;
           break;
 
         case Mode::kChangeYear:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
+          incrementMod(mChangingClockInfo.dateTime.year, (uint8_t) 100);
           break;
 
         case Mode::kChangeMonth:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
+          incrementModOffset(mChangingClockInfo.dateTime.month, (uint8_t) 12,
+              (uint8_t) 1);
           break;
 
         case Mode::kChangeDay:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
+          incrementModOffset(mChangingClockInfo.dateTime.day, (uint8_t) 31,
+              (uint8_t) 1);
           break;
 
         case Mode::kChangeBrightness:
@@ -271,7 +267,6 @@ class Controller {
         case Mode::kChangeHour:
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
-        case Mode::kChangeTimeZoneOffset:
         case Mode::kChangeBrightness:
           mSuppressBlink = false;
           break;
@@ -283,8 +278,7 @@ class Controller {
 
   private:
     void updateDateTime() {
-      TimeZone tz = mZoneManager.createForTimeZoneData(mClockInfo.timeZoneData);
-      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(mClock.getNow(), tz);
+      mClock.readDateTime(&mClockInfo.dateTime);
 
       // If in CHANGE mode, and the 'second' field has not been cleared, update
       // the displayed time with the current second.
@@ -296,7 +290,7 @@ class Controller {
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
           if (!mSecondFieldCleared) {
-            mChangingClockInfo.dateTime.second(mClockInfo.dateTime.second());
+            mChangingClockInfo.dateTime.second = mClockInfo.dateTime.second;
           }
           break;
 
@@ -327,8 +321,6 @@ class Controller {
         case Mode::kChangeHour:
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
-        case Mode::kChangeTimeZoneOffset:
-        case Mode::kChangeTimeZoneDst:
         case Mode::kChangeHourMode:
           clockInfo = &mChangingClockInfo;
           break;
@@ -343,17 +335,14 @@ class Controller {
 
     /** Save the current UTC dateTime to the RTC. */
     void saveDateTime() {
-      mChangingClockInfo.dateTime.normalize();
-      acetime_t epochSeconds = mChangingClockInfo.dateTime.toEpochSeconds();
       if (ENABLE_SERIAL_DEBUG >= 1) {
-        Serial.print(F("saveDateTime(): epochSeconds:"));
-        Serial.println(epochSeconds);
-
+        Serial.print(F("saveDateTime(): hardwareClock:"));
         mChangingClockInfo.dateTime.printTo(Serial);
         Serial.println();
       }
 
-      mClock.setNow(epochSeconds);
+      mClockInfo.dateTime = mChangingClockInfo.dateTime;
+      mClock.setDateTime(mChangingClockInfo.dateTime);
     }
 
     /** Save the time zone from Changing to current. */
@@ -367,13 +356,11 @@ class Controller {
         ClockInfo& clockInfo, const StoredInfo& storedInfo) {
       clockInfo.hourMode = storedInfo.hourMode;
       clockInfo.brightness = storedInfo.brightness;
-      clockInfo.timeZoneData = storedInfo.timeZoneData;
     }
 
     /** Set up the initial ClockInfo states. */
     void setupClockInfo() {
       mClockInfo.hourMode = ClockInfo::kTwentyFour;
-      mClockInfo.timeZoneData = mInitialTimeZoneData;
     }
 
     /** Save the clock info into EEPROM. */
@@ -391,15 +378,12 @@ class Controller {
         StoredInfo& storedInfo, const ClockInfo& clockInfo) {
       storedInfo.hourMode = clockInfo.hourMode;
       storedInfo.brightness = clockInfo.brightness;
-      storedInfo.timeZoneData = clockInfo.timeZoneData;
     }
 
   private:
-    Clock& mClock;
+    DS3231& mClock;
     CrcEeprom& mCrcEeprom;
     Presenter& mPresenter;
-    ZoneManager& mZoneManager;
-    TimeZoneData mInitialTimeZoneData;
 
     ClockInfo mClockInfo; // current clock
     ClockInfo mChangingClockInfo; // the target clock
