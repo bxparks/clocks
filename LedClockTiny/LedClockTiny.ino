@@ -5,6 +5,12 @@ A simple digital clock using:
   * a TM1637 7-segment LED display
   * 2 push buttons
 
+Missing features compared to LedClock:
+  * no timezone support, no DST shifts
+  * no persistent settings to EEPROM
+  * no ability to set dayOfWeek (need additional code)
+  * not compatible with digitalWriteFast
+
 Memory size (flash/ram) on Pro Micro:
   * Initial fork:
       * Pro Micro: 23352/1268
@@ -34,8 +40,7 @@ Memory size (flash/ram) on Pro Micro:
 #include <AceTime.h>
 #include "Controller.h"
 
-#if (defined(ARDUINO_ARCH_AVR) && ! defined(ARDUINO_AVR_ATTINYX5)) \
-    || defined(EPOXY_DUINO)
+#if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
 #include <ace_segment/hw/SoftSpiFastInterface.h>
 #include <ace_segment/hw/SoftWireFastInterface.h>
