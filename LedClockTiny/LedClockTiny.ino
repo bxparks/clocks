@@ -13,9 +13,14 @@ Memory size (flash/ram) on Pro Micro:
   * Remove CrcEeprom:
       * Pro Micro: 12160/616
       * ATtiny85: 7734/305
-    * Remove COROUTINE(renderLed)
+  * Remove COROUTINE(renderLed)
       * Pro Micro: 12040/585
       * ATtiny85: 7612/274
+      * Saves about 120 bytes
+  * Remove COROUTINE(checkButtons)
+      * Pro Micro: 11800/556
+      * ATtiny85: 7370/245
+      * Saves about 250 bytes
 */
 
 #include "config.h"
@@ -111,6 +116,16 @@ void setupAceSegment() {
     #error Unknown LED_DISPLAY_TYPE
   #endif
   ledModule.begin();
+}
+
+void renderLed() {
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
+    ledModule.renderFieldWhenReady();
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+    ledModule.flushIncremental();
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
+    ledModule.flush();
+  #endif
 }
 
 //------------------------------------------------------------------
@@ -251,15 +266,18 @@ void setupAceButton() {
 // becomes disconnected after 5-10 seconds. See
 // https://github.com/esp8266/Arduino/issues/1634 and
 // https://github.com/esp8266/Arduino/issues/5083.
-COROUTINE(checkButtons) {
-  COROUTINE_LOOP() {
+void checkButtons() {
+  static uint16_t lastRunMillis;
+
+  uint16_t nowMillis = millis();
+  if (nowMillis - lastRunMillis >= 5) {
+    lastRunMillis = nowMillis;
   #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
     modeButton.check();
     changeButton.check();
   #else
     buttonConfig.checkButtons();
   #endif
-    COROUTINE_DELAY(5);
   }
 }
 
@@ -301,14 +319,7 @@ void setup() {
 }
 
 void loop() {
-  checkButtons.runCoroutine();
+  checkButtons();
   updateClock.runCoroutine();
-
-  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
-    ledModule.renderFieldWhenReady();
-  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-    ledModule.flushIncremental();
-  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
-    ledModule.flush();
-  #endif
+  renderLed();
 }
