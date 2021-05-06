@@ -12,9 +12,9 @@ using namespace ace_time::clock;
 
 class Controller {
   public:
-    Controller(PersistentStore& persistentStore, SystemClock& systemClock):
-        mPersistentStore(persistentStore),
-        mSystemClock(systemClock)
+    Controller(SystemClock& systemClock, PersistentStore& persistentStore) :
+        mSystemClock(systemClock),
+        mPersistentStore(persistentStore)
       #if ENABLE_TIME_ZONE_TYPE_BASIC
         , mBasicZoneManager(kBasicZoneRegistrySize, kBasicZoneRegistry)
       #endif
@@ -183,8 +183,8 @@ class Controller {
       validateAndSaveTimeZone();
     }
 
-    PersistentStore& mPersistentStore;
     SystemClock& mSystemClock;
+    PersistentStore& mPersistentStore;
 
   #if ENABLE_TIME_ZONE_TYPE_BASIC
     BasicZoneManager<1> mBasicZoneManager;

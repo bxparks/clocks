@@ -1,6 +1,8 @@
 #ifndef COMMAND_LINE_CLOCK_CONFIG_H
 #define COMMAND_LINE_CLOCK_CONFIG_H
 
+#include <stdint.h> // uint8_t
+
 //---------------------------------------------------------------------------
 // Configuration parameters.
 //---------------------------------------------------------------------------

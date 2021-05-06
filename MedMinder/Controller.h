@@ -1,21 +1,19 @@
 #ifndef MED_MINDER_CONTROLLER_H
 #define MED_MINDER_CONTROLLER_H
 
+#include "config.h"
 #include <AceCommon.h> // incrementMod
 #include <AceTime.h>
-#include <AceUtilsCrcEeprom.h>
 #include <AceUtilsModeGroup.h>
 #include <SSD1306AsciiWire.h>
-#include "config.h"
-#include "RenderingInfo.h"
-#include "StoredInfo.h"
-#include "Presenter.h"
 #include "ClockInfo.h"
+#include "StoredInfo.h"
+#include "PersistentStore.h"
+#include "Presenter.h"
 
 using ace_common::incrementMod;
 using namespace ace_time;
 using namespace ace_time::clock;
-using ace_utils::crc_eeprom::CrcEeprom;
 using ace_utils::mode_group::ModeGroup;
 using ace_utils::mode_group::ModeNavigator;
 
@@ -28,8 +26,6 @@ using ace_utils::mode_group::ModeNavigator;
  */
 class Controller {
   public:
-    static const uint16_t kStoredInfoEepromAddress = 0;
-
     static const int16_t kDefaultOffsetMinutes = -8*60; // UTC-08:00
 
     // Number of minutes to use for a DST offset.
@@ -38,12 +34,12 @@ class Controller {
     /** Constructor. */
     Controller(
         SystemClock& clock,
-        CrcEeprom& crcEeprom,
+        PersistentStore& persistentStore,
         ModeGroup const* rootModeGroup,
         Presenter& presenter
     ) :
         mClock(clock),
-        mCrcEeprom(crcEeprom),
+        mPersistentStore(persistentStore),
         mPresenter(presenter),
         mNavigator(rootModeGroup)
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
@@ -57,8 +53,7 @@ class Controller {
 
       // Restore state from EEPROM if valid.
       StoredInfo storedInfo;
-      bool isValid = mCrcEeprom.readWithCrc(
-          kStoredInfoEepromAddress, storedInfo);
+      bool isValid = mPersistentStore.readStoredInfo(storedInfo);
       if (isValid) {
         if (ENABLE_SERIAL_DEBUG == 1) {
           SERIAL_PORT_MONITOR.println(F("setup(): valid StoredInfo"));
@@ -418,7 +413,7 @@ class Controller {
       storedInfo.timeZoneData = mClockInfo.timeZone.toTimeZoneData();
       storedInfo.medStartTime = mClockInfo.medStartTime;
       storedInfo.medInterval = mClockInfo.medInterval;
-      mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, storedInfo);
+      mPersistentStore.writeStoredInfo(storedInfo);
     }
 
     void updateDateTime() {
@@ -582,7 +577,7 @@ class Controller {
     static const uint16_t kZoneRegistrySize;
 
     SystemClock& mClock;
-    CrcEeprom& mCrcEeprom;
+    PersistentStore& mPersistentStore;
     Presenter& mPresenter;
     ModeNavigator mNavigator;
   #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC

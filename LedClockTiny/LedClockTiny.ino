@@ -39,6 +39,10 @@ Memory size (flash/ram) on Pro Micro:
   * Add ability to change dayOfWeek
       * Pro Micro: 11888/540
       * ATtiny85: 7016/226
+  * Convert CrcEeprom into templatized class, and remove virtual functions.
+      * Pro Micro: 10926/518
+      * ATtiny85: 6064/204
+      * Saves about 950 bytes.
 */
 
 #include "config.h"

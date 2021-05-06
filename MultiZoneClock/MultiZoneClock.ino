@@ -395,7 +395,10 @@ const ModeGroup ROOT_MODE_GROUP = {
 // Create persistent store.
 //-----------------------------------------------------------------------------
 
- PersistentStore persistentStore;
+const uint32_t kContextId = 0x03c4711f; // random contextId
+const uint16_t kStoredInfoEepromAddress = 0;
+
+PersistentStore persistentStore(kContextId, kStoredInfoEepromAddress);
 
 void setupPersistentStore() {
   persistentStore.setup();

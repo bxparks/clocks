@@ -10,14 +10,6 @@ struct StoredInfo {
   /** TimeZone serialization. */
   ace_time::TimeZoneData timeZoneData;
 
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  static const uint8_t kSsidMaxLength = 33; // 32 + NUL terminator
-  static const uint8_t kPasswordMaxLength = 64; // 63 + NUL terminator
-
-  char ssid[kSsidMaxLength];
-  char password[kPasswordMaxLength];
-#endif
-
 };
 
 #endif

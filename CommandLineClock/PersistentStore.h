@@ -7,28 +7,21 @@
 #if ENABLE_EEPROM
 
 #include <AceUtilsCrcEeprom.h>
-using ace_utils::crc_eeprom::EepromInterface;
-using ace_utils::crc_eeprom::CrcEeprom;
 
 #if defined(EPOXY_DUINO)
   #include <EpoxyEepromEsp.h>
-  using ace_utils::crc_eeprom::EspStyleEeprom;
-
-#elif defined(ESP32) || defined(ESP8266)
-  #include <EEPROM.h>
-  using ace_utils::crc_eeprom::EspStyleEeprom;
-
+  using ace_utils::crc_eeprom::CrcEepromEsp;
 #elif defined(ARDUINO_ARCH_AVR)
   #include <EEPROM.h>
-  using ace_utils::crc_eeprom::AvrStyleEeprom;
-
+  using ace_utils::crc_eeprom::CrcEepromAvr;
+#elif defined(ESP32) || defined(ESP8266)
+  #include <EEPROM.h>
+  using ace_utils::crc_eeprom::CrcEepromEsp;
 #elif defined(ARDUINO_ARCH_STM32)
   #include <AceUtilsBufferedEepromStm32.h>
-  using ace_utils::crc_eeprom::EspStyleEeprom;
-
+  using ace_utils::crc_eeprom::CrcEepromEsp;
 #else
   #error Unsupported platform for EEPROM
-
 #endif
 
 /**
@@ -38,59 +31,53 @@ using ace_utils::crc_eeprom::CrcEeprom;
  */
 class PersistentStore {
   public:
-    PersistentStore() :
+    PersistentStore(uint32_t contextId, uint16_t address = 0) :
+      mAddress(address),
       #if defined(EPOXY_DUINO)
-        mEepromInterface(EpoxyEepromEspInstance),
-      #elif defined(ESP32) || defined(ESP8266) 
-        mEepromInterface(EEPROM),
+        mCrcEeprom(EpoxyEepromEspInstance, contextId)
       #elif defined(ARDUINO_ARCH_AVR)
-        mEepromInterface(EEPROM),
+        mCrcEeprom(EEPROM, contextId)
+      #elif defined(ESP32) || defined(ESP8266)
+        mCrcEeprom(EEPROM, contextId)
       #elif defined(ARDUINO_ARCH_STM32)
-        mEepromInterface(BufferedEEPROM),
+        mCrcEeprom(BufferedEEPROM, contextId)
       #endif
-        mCrcEeprom(mEepromInterface, CrcEeprom::toContextId('c', 'c', 'l', 'k'))
     {}
 
     void setup() {
     #if defined(EPOXY_DUINO)
-      EpoxyEepromEspInstance.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
-    #elif defined(ESP32) || defined(ESP8266)
-      EEPROM.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
+      EpoxyEepromEspInstance.begin(
+          ace_utils::crc_eeprom::toSavedSize(sizeof(StoredInfo)));
     #elif defined(ARDUINO_ARCH_AVR)
       // no setup required
+    #elif defined(ESP32) || defined(ESP8266)
+      EEPROM.begin(
+          ace_utils::crc_eeprom::toSavedSize(sizeof(StoredInfo)));
     #elif defined(ARDUINO_ARCH_STM32)
       BufferedEEPROM.begin();
     #endif
     }
 
     bool readStoredInfo(StoredInfo& storedInfo) const {
-      bool isValid = mCrcEeprom.readWithCrc(
-          kStoredInfoEepromAddress, storedInfo);
-      #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-        storedInfo.ssid[StoredInfo::kSsidMaxLength - 1] = '\0';
-        storedInfo.password[StoredInfo::kPasswordMaxLength - 1] = '\0';
-      #endif
-      return isValid;
+      return mCrcEeprom.readWithCrc(mAddress, storedInfo);
     }
 
     uint16_t writeStoredInfo(const StoredInfo& storedInfo) {
-      return mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, storedInfo);
+      return mCrcEeprom.writeWithCrc(mAddress, storedInfo);
     }
 
   private:
-    static const uint16_t kStoredInfoEepromAddress = 0;
+    uint16_t const mAddress;
 
   #if defined(EPOXY_DUINO)
-    EspStyleEeprom<EpoxyEepromEsp> mEepromInterface;
-  #elif defined(ESP32) || defined(ESP8266) 
-    EspStyleEeprom<EEPROMClass> mEepromInterface;
+    CrcEepromEsp<EpoxyEepromEsp> mCrcEeprom;
   #elif defined(ARDUINO_ARCH_AVR)
-    AvrStyleEeprom<EEPROMClass> mEepromInterface;
+    CrcEepromAvr<EEPROMClass> mCrcEeprom;
+  #elif defined(ESP32) || defined(ESP8266)
+    CrcEepromEsp<EEPROMClass> mCrcEeprom;
   #elif defined(ARDUINO_ARCH_STM32)
-    EspStyleEeprom<BufferedEEPROMClass> mEepromInterface;
+    CrcEepromEsp<BufferedEEPROMClass> mCrcEeprom;
   #endif
-
-    CrcEeprom mCrcEeprom;
 };
 
 #else
@@ -98,19 +85,13 @@ class PersistentStore {
 /** A thin layer around a CrcEeprom object to handle controllers w/o EEPROM. */
 class PersistentStore {
   public:
-    PersistentStore() = default;
+    PersistentStore(uint32_t, uint16_t) {}
 
     void setup() {}
 
-    bool readStoredInfo(StoredInfo& storedInfo) const {
-      (void) storedInfo; // disable compiler warning
-      return false;
-    }
+    bool readStoredInfo(StoredInfo&) const { return false; }
 
-    uint16_t writeStoredInfo(const StoredInfo& storedInfo) {
-      (void) storedInfo; // disable compiler warning
-      return 0;
-    }
+    uint16_t writeStoredInfo(const StoredInfo&) { return 0; }
 };
 
 #endif // ENABLE_EEPROM

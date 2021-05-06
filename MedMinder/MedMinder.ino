@@ -52,7 +52,6 @@
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
-#include <AceUtilsCrcEeprom.h>
 #include <AceUtilsModeGroup.h>
 
 #include "config.h"
@@ -61,49 +60,25 @@
   #include <EnableInterrupt.h>
 #endif
 #include "Presenter.h"
+#include "PersistentStore.h"
 #include "Controller.h"
 
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using ace_utils::mode_group::ModeGroup;
-using ace_utils::crc_eeprom::AvrStyleEeprom;
-using ace_utils::crc_eeprom::EspStyleEeprom;
-using ace_utils::crc_eeprom::CrcEeprom;
 
 //------------------------------------------------------------------
-// Configure CrcEeprom.
+// Configure PersistentStore
 //------------------------------------------------------------------
 
-#if defined(EPOXY_DUINO)
-  #include <EpoxyEepromEsp.h>
-  EspStyleEeprom<EpoxyEepromEsp> eepromInterface(EpoxyEepromEspInstance);
-#elif defined(ESP32) || defined(ESP8266) 
-  #include <EEPROM.h>
-  EspStyleEeprom<EEPROMClass> eepromInterface(EEPROM);
-#elif defined(ARDUINO_ARCH_AVR)
-  #include <EEPROM.h>
-  AvrStyleEeprom<EEPROMClass> eepromInterface(EEPROM);
-#elif defined(ARDUINO_ARCH_STM32)
-  #include <AceUtilsBufferedEepromStm32.h>
-  EspStyleEeprom<BufferedEEPROMClass> eepromInterface(BufferedEEPROM);
-#else
-  #error EEPROM unsupported
-#endif
+const uint32_t kContextId = 0x9b2ddeca; // random contextId
+const uint16_t kStoredInfoEepromAddress = 0;
 
-CrcEeprom crcEeprom(
-    eepromInterface, CrcEeprom::toContextId('m', 'e', 'd', 'm'));
+PersistentStore persistentStore(kContextId, kStoredInfoEepromAddress);
 
-void setupEeprom() {
-#if defined(EPOXY_DUINO)
-  EpoxyEepromEspInstance.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
-#elif defined(ESP32) || defined(ESP8266)
-  EEPROM.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
-#elif defined(ARDUINO_ARCH_AVR)
-  // no setup required
-#elif defined(ARDUINO_ARCH_STM32)
-  BufferedEEPROM.begin();
-#endif
+void setupPersistentStore() {
+  persistentStore.setup();
 }
 
 //------------------------------------------------------------------
@@ -262,7 +237,8 @@ void setupOled() {
 //------------------------------------------------------------------
 
 Presenter presenter(oled);
-Controller controller(systemClock, crcEeprom, &ROOT_MODE_GROUP, presenter);
+Controller controller(
+    systemClock, persistentStore, &ROOT_MODE_GROUP, presenter);
 
 void setupController() {
   controller.setup();
@@ -460,7 +436,7 @@ void setup() {
   Wire.begin();
   Wire.setClock(400000L);
 
-  setupEeprom();
+  setupPersistentStore();
   setupClocks();
   setupAceButton();
   setupOled();
