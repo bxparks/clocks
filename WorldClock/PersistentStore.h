@@ -1,5 +1,5 @@
-#ifndef ONE_ZONE_CLOCK_PERSISTENT_STORE_H
-#define ONE_ZONE_CLOCK_PERSISTENT_STORE_H
+#ifndef WORLD_CLOCK_PERSISTENT_STORE_H
+#define WORLD_CLOCK_PERSISTENT_STORE_H
 
 #include "config.h"
 #include "StoredInfo.h"

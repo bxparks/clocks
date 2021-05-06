@@ -1,6 +1,8 @@
 #ifndef MED_MINDER_CONFIG_H
 #define MED_MINDER_CONFIG_H
 
+#include <stdint.h> // uint8_t
+
 //------------------------------------------------------------------
 // Compile-time selectors and options
 //------------------------------------------------------------------

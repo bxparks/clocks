@@ -1,5 +1,5 @@
-#ifndef ONE_ZONE_CLOCK_PERSISTENT_STORE_H
-#define ONE_ZONE_CLOCK_PERSISTENT_STORE_H
+#ifndef LED_CLOCK_TINY_PERSISTENT_STORE_H
+#define LED_CLOCK_TINY_PERSISTENT_STORE_H
 
 #include "config.h"
 #include "StoredInfo.h"
@@ -59,11 +59,11 @@ class PersistentStore {
     }
 
     bool readStoredInfo(StoredInfo& storedInfo) const {
-      return mCrcEeprom.readWithCrc(mAddress, storedInfo);
+      return mCrcEeprom.readWithCrc(kStoredInfoEepromAddress, storedInfo);
     }
 
     uint16_t writeStoredInfo(const StoredInfo& storedInfo) {
-      return mCrcEeprom.writeWithCrc(mAddress, storedInfo);
+      return mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, storedInfo);
     }
 
   private:

@@ -4,7 +4,6 @@
 #include <AceCommon.h> // incrementModOffset()
 #include <AceTime.h>
 #include <AceSegment.h>
-#include <AceUtilsCrcEeprom.h>
 #include "config.h"
 #include "ClockInfo.h"
 #include "Presenter.h"
@@ -13,25 +12,22 @@
 using namespace ace_segment;
 using namespace ace_time;
 using ace_time::clock::Clock;
-using ace_utils::crc_eeprom::CrcEeprom;
 using ace_common::incrementModOffset;
 
 class Controller {
   public:
-    static const uint16_t kStoredInfoEepromAddress = 0;
-
     static const int16_t kDefaultOffsetMinutes = -8*60; // UTC-08:00
 
     /** Constructor. */
     Controller(
         Clock& clock,
-        CrcEeprom& crcEeprom,
+        PersistentStore& persistentStore,
         Presenter& presenter,
         ZoneManager& zoneManager,
         TimeZoneData initialTimeZoneData
     ) :
         mClock(clock),
-        mCrcEeprom(crcEeprom),
+        mPersistentStore(persistentStore),
         mPresenter(presenter),
         mZoneManager(zoneManager),
         mInitialTimeZoneData(initialTimeZoneData)
@@ -42,8 +38,7 @@ class Controller {
     void setup() {
       // Restore from EEPROM to retrieve time zone.
       StoredInfo storedInfo;
-      bool isValid = mCrcEeprom.readWithCrc(
-          kStoredInfoEepromAddress, storedInfo);
+      bool isValid = mPersistentStore.readStoredInfo(storedInfo);
 
       if (isValid) {
         clockInfoFromStoredInfo(mClockInfo, storedInfo);
@@ -383,7 +378,7 @@ class Controller {
       }
       StoredInfo storedInfo;
       storedInfoFromClockInfo(storedInfo, clockInfo);
-      mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, storedInfo);
+      mPersistentStore.writeStoredInfo(storedInfo);
     }
 
     /** Convert ClockInfo to StoredInfo. */
@@ -396,7 +391,7 @@ class Controller {
 
   private:
     Clock& mClock;
-    CrcEeprom& mCrcEeprom;
+    PersistentStore& mPersistentStore;
     Presenter& mPresenter;
     ZoneManager& mZoneManager;
     TimeZoneData mInitialTimeZoneData;

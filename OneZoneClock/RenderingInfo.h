@@ -8,7 +8,7 @@
 /**
  * Data used by the Presenter (the "View") to determine what has changed and
  * what needs to be displayed.
- */ 
+ */
 struct RenderingInfo {
   Mode mode = Mode::kUnknown; // display mode
   bool blinkShowState; // true if blinking info should be shown

@@ -37,7 +37,6 @@
 #endif
 #include "PersistentStore.h"
 #include "Controller.h"
-#include <AceUtilsCrcEeprom.h>
 
 using namespace ace_button;
 using namespace ace_routine;
@@ -325,7 +324,10 @@ const ModeGroup ROOT_MODE_GROUP = {
 // Create persistent store.
 //-----------------------------------------------------------------------------
 
-PersistentStore persistentStore;
+const uint32_t kContextId = 0xc42b2661; // random contextId
+const uint16_t kStoredInfoEepromAddress = 0;
+
+PersistentStore persistentStore(kContextId, kStoredInfoEepromAddress);
 
 void setupPersistentStore() {
   persistentStore.setup();
@@ -335,7 +337,7 @@ void setupPersistentStore() {
 // Create controller.
 //------------------------------------------------------------------
 
-Controller controller(persistentStore, systemClock, presenter, zoneManager,
+Controller controller(systemClock, persistentStore, presenter, zoneManager,
   DISPLAY_ZONE, &ROOT_MODE_GROUP);
 
 void setupController(bool factoryReset) {

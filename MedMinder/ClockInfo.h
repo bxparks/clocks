@@ -19,7 +19,7 @@ struct ClockInfo {
    * ChangingClockInfo.medInterval field is overloaded to hold the TimePeriod
    * corresponding to "time until next med" information.
    */
-  TimePeriod medInterval;
+  ace_time::TimePeriod medInterval;
 };
 
 #endif

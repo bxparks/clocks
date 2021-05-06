@@ -4,31 +4,28 @@
 #include <AceCommon.h> // incrementModOffset()
 #include <AceTime.h>
 #include <AceSegment.h>
-#include <AceUtilsCrcEeprom.h>
 #include "config.h"
 #include "ClockInfo.h"
 #include "Presenter.h"
 #include "StoredInfo.h"
+#include "PersistentStore.h"
 
 using namespace ace_segment;
 using namespace ace_time;
 using ace_time::hw::DS3231;
-using ace_utils::crc_eeprom::CrcEeprom;
 using ace_common::incrementModOffset;
 using ace_common::incrementMod;
 
 class Controller {
   public:
-    static const uint16_t kStoredInfoEepromAddress = 0;
-
     /** Constructor. */
     Controller(
         DS3231& clock,
-        CrcEeprom& crcEeprom,
+        PersistentStore& persistentStore,
         Presenter& presenter
     ) :
         mClock(clock),
-        mCrcEeprom(crcEeprom),
+        mPersistentStore(persistentStore),
         mPresenter(presenter)
     {
       mMode = Mode::kViewHourMinute;
@@ -37,8 +34,7 @@ class Controller {
     void setup() {
       // Restore from EEPROM to retrieve time zone.
       StoredInfo storedInfo;
-      bool isValid = mCrcEeprom.readWithCrc(
-          kStoredInfoEepromAddress, storedInfo);
+      bool isValid = mPersistentStore.readStoredInfo(storedInfo);
 
       if (isValid) {
         clockInfoFromStoredInfo(mClockInfo, storedInfo);
@@ -389,7 +385,7 @@ class Controller {
       }
       StoredInfo storedInfo;
       storedInfoFromClockInfo(storedInfo, clockInfo);
-      mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, storedInfo);
+      mPersistentStore.writeStoredInfo(storedInfo);
     }
 
     /** Convert ClockInfo to StoredInfo. */
@@ -401,7 +397,7 @@ class Controller {
 
   private:
     DS3231& mClock;
-    CrcEeprom& mCrcEeprom;
+    PersistentStore& mPersistentStore;
     Presenter& mPresenter;
 
     ClockInfo mClockInfo; // current clock

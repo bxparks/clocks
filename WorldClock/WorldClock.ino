@@ -26,54 +26,29 @@
 #include <AceRoutine.h>
 #include <AceTime.h>
 #include <AceCommon.h>
-#include <AceUtilsCrcEeprom.h>
 #include <AceUtilsModeGroup.h>
 #include <SSD1306AsciiSpi.h>
 #include "ClockInfo.h"
 #include "Controller.h"
+#include "PersistentStore.h"
 
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using ace_utils::mode_group::ModeGroup;
-using ace_utils::crc_eeprom::AvrStyleEeprom;
-using ace_utils::crc_eeprom::EspStyleEeprom;
-using ace_utils::crc_eeprom::CrcEeprom;
 
 //----------------------------------------------------------------------------
-// Configure CrcEeprom.
+// Configure PersistentStore
 //----------------------------------------------------------------------------
 
-#if defined(EPOXY_DUINO)
-  #include <EpoxyEepromEsp.h>
-  EspStyleEeprom<EpoxyEepromEsp> eepromInterface(EpoxyEepromEspInstance);
-#elif defined(ESP32) || defined(ESP8266) 
-  #include <EEPROM.h>
-  EspStyleEeprom<EEPROMClass> eepromInterface(EEPROM);
-#elif defined(ARDUINO_ARCH_AVR)
-  #include <EEPROM.h>
-  AvrStyleEeprom<EEPROMClass> eepromInterface(EEPROM);
-#elif defined(ARDUINO_ARCH_STM32)
-  #include <AceUtilsBufferedEepromStm32.h>
-  EspStyleEeprom<BufferedEEPROMClass> eepromInterface(BufferedEEPROM);
-#else
-  #error EEPROM unsupported
-#endif
+const uint32_t kContextId = 0x8f01000b; // random contextId
+const uint16_t kStoredInfoEepromAddress = 0;
 
-CrcEeprom crcEeprom(eepromInterface, 0x10186c40 /*random contextId*/);
+PersistentStore persistentStore(kContextId, kStoredInfoEepromAddress);
 
-void setupEeprom() {
-#if defined(EPOXY_DUINO)
-  EpoxyEepromEspInstance.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
-#elif defined(ESP32) || defined(ESP8266)
-  EEPROM.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
-#elif defined(ARDUINO_ARCH_AVR)
-  // no setup required
-#elif defined(ARDUINO_ARCH_STM32)
-  BufferedEEPROM.begin();
-#endif
+void setupPersistentStore() {
+  persistentStore.setup();
 }
-
 
 //----------------------------------------------------------------------------
 // Configure various Clocks.
@@ -254,7 +229,7 @@ const ModeGroup ROOT_MODE_GROUP = {
 //----------------------------------------------------------------------------
 
 Controller controller(
-    systemClock, crcEeprom, &ROOT_MODE_GROUP,
+    systemClock, persistentStore, &ROOT_MODE_GROUP,
     presenter0, presenter1, presenter2,
     tz0, tz1, tz2,
     "SFO", "PHL", "LHR"
@@ -380,7 +355,7 @@ void setup() {
   Wire.begin();
   Wire.setClock(400000L);
 
-  setupEeprom();
+  setupPersistentStore();
   setupAceButton();
   setupOled();
 

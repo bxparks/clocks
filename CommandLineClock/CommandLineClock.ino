@@ -91,11 +91,34 @@ using namespace ace_utils::cli;
   #error Unknown clock option
 #endif
 
+void setupClocks() {
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+  dsClock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
+  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
+  stmClock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  stm32F1Clock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
+  dsClock.setup();
+  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
+#endif
+
+  systemClock.setup();
+  if (systemClock.getNow() == ace_time::LocalDate::kInvalidEpochSeconds) {
+    systemClock.setNow(0);
+  }
+}
+
 //-----------------------------------------------------------------------------
 // Create persistent store.
 //-----------------------------------------------------------------------------
 
-PersistentStore persistentStore;
+const uint32_t kContextId = 0xd86f1c73; // random contextId
+const uint16_t kStoredInfoEepromAddress = 0;
+
+PersistentStore persistentStore(kContextId, kStoredInfoEepromAddress);
 
 void setupPersistentStore() {
   persistentStore.setup();
@@ -105,7 +128,7 @@ void setupPersistentStore() {
 // Create a controller retrieves or modifies the underlying clock.
 //---------------------------------------------------------------------------
 
-Controller controller(persistentStore, systemClock);
+Controller controller(systemClock, persistentStore);
 
 //---------------------------------------------------------------------------
 // AceRoutine CLI commands

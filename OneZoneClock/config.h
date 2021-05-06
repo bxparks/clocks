@@ -136,6 +136,29 @@
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
 
+#elif defined(AUNITER_LED_CLOCK)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Pro Micro has just enough memory for Basic TimeZone w/ 4 timezones.
+  // In certain configurations, it does not have enough memory, in which case
+  // the Manual timezones must be used.
+  #undef TIME_ZONE_TYPE
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
+
+  // Button parameters
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN A2
+  #define CHANGE_BUTTON_PIN A3
+
+  // Display type
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_REMAP true
+
 #elif defined(AUNITER_MINI_MINDER)
   // Defined by auniter.ini
   //#define WIFI_SSID

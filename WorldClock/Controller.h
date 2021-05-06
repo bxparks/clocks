@@ -8,12 +8,12 @@
 #include <AceUtilsModeGroup.h>
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
+#include "PersistentStore.h"
 #include "Presenter.h"
 
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_common::incrementMod;
-using ace_utils::crc_eeprom::CrcEeprom;
 using ace_utils::mode_group::ModeGroup;
 using ace_utils::mode_group::ModeNavigator;
 
@@ -25,8 +25,6 @@ using ace_utils::mode_group::ModeNavigator;
  */
 class Controller {
   public:
-    static const uint16_t kStoredInfoEepromAddress = 0;
-
     /**
      * Constructor.
      * @param clock source of the current time
@@ -35,7 +33,7 @@ class Controller {
      */
     Controller(
         Clock& clock,
-        CrcEeprom& crcEeprom,
+        PersistentStore& persistentStore,
         const ModeGroup* rootModeGroup,
         Presenter& presenter0,
         Presenter& presenter1,
@@ -48,7 +46,7 @@ class Controller {
         const char* name2
     ) :
         mClock(clock),
-        mCrcEeprom(crcEeprom),
+        mPersistentStore(persistentStore),
         mNavigator(rootModeGroup),
         mPresenter0(presenter0),
         mPresenter1(presenter1),
@@ -495,7 +493,7 @@ class Controller {
     void preserveClockInfo() {
       StoredInfo storedInfo;
       storedInfoFromClockInfo(storedInfo);
-      mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, storedInfo);
+      mPersistentStore.writeStoredInfo(storedInfo);
     }
 
     /** Restore from EEPROM. If that fails, set initial states. */
@@ -509,7 +507,7 @@ class Controller {
         }
         isValid = false;
       } else {
-        isValid = mCrcEeprom.readWithCrc(kStoredInfoEepromAddress, storedInfo);
+        isValid = mPersistentStore.readStoredInfo(storedInfo);
         if (ENABLE_SERIAL_DEBUG == 1) {
           if (! isValid) {
             SERIAL_PORT_MONITOR.println(F(
@@ -597,7 +595,7 @@ class Controller {
     Controller& operator=(const Controller&) = delete;
 
     Clock& mClock;
-    CrcEeprom& mCrcEeprom;
+    PersistentStore& mPersistentStore;
     ModeNavigator mNavigator;
 
     Presenter& mPresenter0;

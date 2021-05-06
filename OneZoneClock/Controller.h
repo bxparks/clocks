@@ -26,8 +26,6 @@ using ace_utils::mode_group::ModeNavigator;
  */
 class Controller {
   public:
-    static const uint16_t kStoredInfoEepromAddress = 0;
-
     static const int16_t kDefaultOffsetMinutes = -8*60; // UTC-08:00
 
     // Number of minutes to use for a DST offset.
@@ -35,8 +33,8 @@ class Controller {
 
     /**
      * Constructor.
-     * @param persistentStore stores objects into the EEPROM with CRC
      * @param clock source of the current time
+     * @param persistentStore stores objects into the EEPROM with CRC
      * @param presenter renders the date and time info to the screen
      * @param zoneManager optional zoneManager for TIME_ZONE_TYPE_BASIC or
      *        TIME_ZONE_TYPE_EXTENDED
@@ -44,15 +42,15 @@ class Controller {
      * @param rootModeGroup poniter to the top level ModeGroup object
      */
     Controller(
-        PersistentStore& persistentStore,
         SystemClock& clock,
+        PersistentStore& persistentStore,
         Presenter& presenter,
         ZoneManager& zoneManager,
         TimeZoneData initialTimeZoneData,
         ModeGroup const* rootModeGroup
     ) :
-        mPersistentStore(persistentStore),
         mClock(clock),
+        mPersistentStore(persistentStore),
         mPresenter(presenter),
         mZoneManager(zoneManager),
         mInitialTimeZoneData(initialTimeZoneData),
@@ -603,8 +601,8 @@ class Controller {
     }
 
   private:
-    PersistentStore& mPersistentStore;
     SystemClock& mClock;
+    PersistentStore& mPersistentStore;
     Presenter& mPresenter;
     ZoneManager& mZoneManager;
     TimeZoneData mInitialTimeZoneData;
