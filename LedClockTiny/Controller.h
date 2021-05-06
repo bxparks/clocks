@@ -4,31 +4,49 @@
 #include <AceCommon.h> // incrementModOffset()
 #include <AceTime.h>
 #include <AceSegment.h>
+#include <AceUtilsCrcEeprom.h>
 #include "config.h"
 #include "ClockInfo.h"
 #include "Presenter.h"
+#include "StoredInfo.h"
 
 using namespace ace_segment;
 using namespace ace_time;
 using ace_time::hw::DS3231;
+using ace_utils::crc_eeprom::CrcEeprom;
 using ace_common::incrementModOffset;
 using ace_common::incrementMod;
 
 class Controller {
   public:
+    static const uint16_t kStoredInfoEepromAddress = 0;
+
     /** Constructor. */
     Controller(
         DS3231& clock,
+        CrcEeprom& crcEeprom,
         Presenter& presenter
     ) :
         mClock(clock),
+        mCrcEeprom(crcEeprom),
         mPresenter(presenter)
     {
       mMode = Mode::kViewHourMinute;
     }
 
     void setup() {
-      mClockInfo.hourMode = ClockInfo::kTwentyFour;
+      // Restore from EEPROM to retrieve time zone.
+      StoredInfo storedInfo;
+      bool isValid = mCrcEeprom.readWithCrc(
+          kStoredInfoEepromAddress, storedInfo);
+
+      if (isValid) {
+        clockInfoFromStoredInfo(mClockInfo, storedInfo);
+      } else {
+        setupClockInfo();
+        preserveClockInfo(mClockInfo);
+      }
+
       updateDateTime();
     }
 
@@ -167,6 +185,7 @@ class Controller {
           break;
 
         case Mode::kChangeBrightness:
+          preserveClockInfo(mClockInfo);
           mMode = Mode::kViewBrightness;
           break;
 
@@ -326,8 +345,44 @@ class Controller {
       mClock.setDateTime(mChangingClockInfo.dateTime);
     }
 
+    /** Save the time zone from Changing to current. */
+    void saveClockInfo() {
+      mClockInfo = mChangingClockInfo;
+      preserveClockInfo(mClockInfo);
+    }
+
+    /** Convert StoredInfo to ClockInfo. */
+    static void clockInfoFromStoredInfo(
+        ClockInfo& clockInfo, const StoredInfo& storedInfo) {
+      clockInfo.hourMode = storedInfo.hourMode;
+      clockInfo.brightness = storedInfo.brightness;
+    }
+
+    /** Set up the initial ClockInfo states. */
+    void setupClockInfo() {
+      mClockInfo.hourMode = ClockInfo::kTwentyFour;
+    }
+
+    /** Save the clock info into EEPROM. */
+    void preserveClockInfo(const ClockInfo& clockInfo) {
+      if (ENABLE_SERIAL_DEBUG == 1) {
+        SERIAL_PORT_MONITOR.println(F("preserveClockInfo()"));
+      }
+      StoredInfo storedInfo;
+      storedInfoFromClockInfo(storedInfo, clockInfo);
+      mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, storedInfo);
+    }
+
+    /** Convert ClockInfo to StoredInfo. */
+    static void storedInfoFromClockInfo(
+        StoredInfo& storedInfo, const ClockInfo& clockInfo) {
+      storedInfo.hourMode = clockInfo.hourMode;
+      storedInfo.brightness = clockInfo.brightness;
+    }
+
   private:
     DS3231& mClock;
+    CrcEeprom& mCrcEeprom;
     Presenter& mPresenter;
 
     ClockInfo mClockInfo; // current clock

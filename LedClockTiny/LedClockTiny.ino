@@ -31,6 +31,11 @@ Memory size (flash/ram) on Pro Micro:
       * Pro Micro: 10868/515
       * ATtiny85: 6456/204
       * Saves about 900 bytes (!)
+  * Add back CrcEeprom
+      * Pro Micro: 11842/540
+      * ATtiny85: 6976/226
+      * Increase flash by 1000 bytes on Pro Micro, but only about 500 bytes on
+        ATtiny85.
 */
 
 #include "config.h"
@@ -38,6 +43,7 @@ Memory size (flash/ram) on Pro Micro:
 #include <AceSegment.h>
 #include <AceButton.h>
 #include <AceTime.h>
+#include <AceUtilsCrcEeprom.h>
 #include "Controller.h"
 
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
@@ -50,6 +56,44 @@ using namespace ace_segment;
 using namespace ace_button;
 using namespace ace_time;
 using namespace ace_time::clock;
+using ace_utils::crc_eeprom::AvrStyleEeprom;
+using ace_utils::crc_eeprom::EspStyleEeprom;
+using ace_utils::crc_eeprom::CrcEeprom;
+
+//------------------------------------------------------------------
+// Configure CrcEeprom.
+//------------------------------------------------------------------
+
+#if defined(EPOXY_DUINO)
+  #include <EpoxyEepromEsp.h>
+  EspStyleEeprom<EpoxyEepromEsp> eepromInterface(EpoxyEepromEspInstance);
+#elif defined(ESP32) || defined(ESP8266)
+  #include <EEPROM.h>
+  EspStyleEeprom<EEPROMClass> eepromInterface(EEPROM);
+#elif defined(ARDUINO_ARCH_AVR)
+  #include <EEPROM.h>
+  AvrStyleEeprom<EEPROMClass> eepromInterface(EEPROM);
+#elif defined(ARDUINO_ARCH_STM32)
+  #include <AceUtilsBufferedEepromStm32.h>
+  EspStyleEeprom<BufferedEEPROMClass> eepromInterface(BufferedEEPROM);
+#else
+  #error No EEPROM
+#endif
+
+CrcEeprom crcEeprom(
+    eepromInterface, CrcEeprom::toContextId('l', 'c', 'l', 'k'));
+
+void setupEeprom() {
+#if defined(EPOXY_DUINO)
+  EpoxyEepromEspInstance.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
+#elif defined(ESP32) || defined(ESP8266)
+  EEPROM.begin(CrcEeprom::toSavedSize(sizeof(StoredInfo)));
+#elif defined(ARDUINO_ARCH_AVR)
+  // no setup required
+#elif defined(ARDUINO_ARCH_STM32)
+  BufferedEEPROM.begin();
+#endif
+}
 
 //------------------------------------------------------------------
 // Configure various Clocks
@@ -140,7 +184,7 @@ void renderLed() {
 //------------------------------------------------------------------
 
 Presenter presenter(display);
-Controller controller(ds3231, presenter);
+Controller controller(ds3231, crcEeprom, presenter);
 
 //------------------------------------------------------------------
 // Update the Presenter Clock periodically.
@@ -319,6 +363,7 @@ void setup() {
   Wire.setClock(400000L);
 #endif
 
+  setupEeprom();
   setupAceButton();
   setupAceSegment();
   controller.setup();

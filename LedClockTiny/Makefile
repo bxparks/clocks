@@ -2,6 +2,10 @@
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 
 APP_NAME := LedClockTiny
-ARDUINO_LIBS := EpoxyMockDigitalWriteFast AceCommon AceButton AceTime \
-	AceSegment AUnit
+ARDUINO_LIBS := EpoxyEepromEsp EpoxyMockDigitalWriteFast \
+	AceCommon AceCRC AceButton AceTime AceUtils AceSegment AUnit
+MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
+
+more_clean:
+	rm -f epoxyeepromdata
