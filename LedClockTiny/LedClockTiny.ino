@@ -36,6 +36,9 @@ Memory size (flash/ram) on Pro Micro:
       * ATtiny85: 6976/226
       * Increase flash by 1000 bytes on Pro Micro, but only about 500 bytes on
         ATtiny85.
+  * Add ability to change dayOfWeek
+      * Pro Micro: 11888/540
+      * ATtiny85: 7016/226
 */
 
 #include "config.h"

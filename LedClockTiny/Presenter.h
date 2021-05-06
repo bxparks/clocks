@@ -110,12 +110,10 @@ class Presenter {
           displayDay(dateTime);
           break;
 
-        case Mode::kViewWeekday: {
-          uint8_t written = mStringWriter.writeStringAt(
-              0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek));
-          mStringWriter.clearToEnd(written);
+        case Mode::kViewWeekday:
+        case Mode::kChangeWeekday:
+          displayWeekday(dateTime);
           break;
-        }
 
         case Mode::kViewBrightness:
         case Mode::kChangeBrightness:
@@ -188,6 +186,16 @@ class Presenter {
             2, ClockWriter::kCharSpace, ClockWriter::kCharSpace);
       }
       mClockWriter.writeColon(false);
+    }
+
+    void displayWeekday(const HardwareDateTime& dateTime) {
+      if (shouldShowFor(Mode::kChangeWeekday)) {
+        uint8_t written = mStringWriter.writeStringAt(
+            0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek));
+        mStringWriter.clearToEnd(written);
+      } else {
+        clearDisplay();
+      }
     }
 
     void displayBrightness() {

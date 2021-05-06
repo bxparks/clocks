@@ -150,6 +150,12 @@ class Controller {
           mMode = Mode::kChangeDay;
           break;
 
+        case Mode::kViewWeekday:
+          mChangingClockInfo = mClockInfo;
+          mSecondFieldCleared = false;
+          mMode = Mode::kChangeWeekday;
+          break;
+
         case Mode::kViewBrightness:
           mMode = Mode::kChangeBrightness;
           break;
@@ -182,6 +188,11 @@ class Controller {
         case Mode::kChangeSecond:
           saveDateTime();
           mMode = Mode::kViewSecond;
+          break;
+
+        case Mode::kChangeWeekday:
+          saveDateTime();
+          mMode = Mode::kViewWeekday;
           break;
 
         case Mode::kChangeBrightness:
@@ -233,6 +244,12 @@ class Controller {
               (uint8_t) 1);
           break;
 
+        case Mode::kChangeWeekday:
+          mSuppressBlink = true;
+          incrementModOffset(mChangingClockInfo.dateTime.dayOfWeek, (uint8_t) 7,
+              (uint8_t) 1);
+          break;
+
         case Mode::kChangeBrightness:
           mSuppressBlink = true;
           incrementModOffset(mClockInfo.brightness, (uint8_t) 7, (uint8_t) 1);
@@ -267,6 +284,7 @@ class Controller {
         case Mode::kChangeHour:
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
+        case Mode::kChangeWeekday:
         case Mode::kChangeBrightness:
           mSuppressBlink = false;
           break;
@@ -322,6 +340,7 @@ class Controller {
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
         case Mode::kChangeHourMode:
+        case Mode::kChangeWeekday:
           clockInfo = &mChangingClockInfo;
           break;
 
