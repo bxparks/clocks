@@ -25,10 +25,4 @@ jobs:
         git clone https://github.com/greiman/SSD1306Ascii
 
     - name: Compile
-      run: |
-        make -C CommandLineClock
-        make -C LedClock
-        make -C MedMinder
-        make -C MultiZoneClock
-        make -C OneZoneClock
-        make -C WorldClock
+      run: make all
