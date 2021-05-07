@@ -54,6 +54,11 @@
   #define SYSTEM_CLOCK SystemClockCoroutine
 #endif
 
+// Define an environment when compiling/uploading using Arduino IDE.
+#if ! defined(AUNITER) && ! defined(EPOXY_DUINO)
+  #define AUNITER_ATTINY_TM1637
+#endif
+
 #if defined(EPOXY_DUINO)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN 2
@@ -66,18 +71,6 @@
   #define CLK_PIN 10
   #define DIO_PIN 9
   #define BIT_DELAY 100
-
-#elif ! defined(AUNITER)
-  #warning Arduino IDE detected. Check config parameters.
-
-  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
-  #define MODE_BUTTON_PIN 2
-  #define CHANGE_BUTTON_PIN 3
-
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
-
-  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_SCANNING
-  #define INTERFACE_TYPE INTERFACE_TYPE_FAST
 
 #elif defined(AUNITER_LED_CLOCK_HC595_DUAL)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -118,17 +111,24 @@
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
 
-#elif defined(AUNITER_LED_CLOCK_TINY_TM1637)
-  #define SERIAL_PORT_MONITOR Serial
-
-  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
-  #define MODE_BUTTON_PIN 2
-  #define CHANGE_BUTTON_PIN 0
+#elif defined(AUNITER_ATTINY_TM1637)
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_COUNT 2
+  #define ANALOG_BUTTON_PIN A0
+  // Resistor ladder must remain above 90% VCC because they are connected to
+  // the RESET button. We have 3 resistors (1k, 10k, 22k):
+  //    * 933: 10k/(11k+1k) = 90.9%
+  //    * 979: 22k/23k = 95.6%
+  //    * 1023: 100%, open
+  // Numbers then adjusted using LadderButtonCalibrator.
+  #define ANALOG_LEVELS {933, 980, 1024}
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_TM1637
-  #define INTERFACE_TYPE INTERFACE_TYPE_FAST
+  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
   #define CLK_PIN 3
   #define DIO_PIN 1
   #define BIT_DELAY 100
