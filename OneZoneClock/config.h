@@ -57,8 +57,9 @@
 
 // Button options: either digital buttons using ButtonConfig, 2 analog buttons
 // using LadderButtonConfig, or 4 analog buttons using LadderButtonConfig:
-//  * AVR: 8-bit analog pin
+//  * AVR: 10-bit analog pin
 //  * ESP8266: 10-bit analog pin
+//  * ESP32: 12-bit analog pin
 #define BUTTON_TYPE_DIGITAL 0
 #define BUTTON_TYPE_ANALOG 1
 
