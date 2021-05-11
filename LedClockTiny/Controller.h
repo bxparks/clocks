@@ -1,5 +1,5 @@
-#ifndef LED_CLOCK_CONTROLLER_H
-#define LED_CLOCK_CONTROLLER_H
+#ifndef LED_CLOCK_TINY_CONTROLLER_H
+#define LED_CLOCK_TINY_CONTROLLER_H
 
 #include <AceCommon.h> // incrementModOffset()
 #include <AceTime.h>

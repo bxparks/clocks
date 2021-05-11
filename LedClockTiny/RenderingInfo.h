@@ -1,5 +1,5 @@
-#ifndef LED_CLOCK_RENDERING_INFO_H
-#define LED_CLOCK_RENDERING_INFO_H
+#ifndef LED_CLOCK_TINY_RENDERING_INFO_H
+#define LED_CLOCK_TINY_RENDERING_INFO_H
 
 #include <AceTime.h>
 #include "config.h"

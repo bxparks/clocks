@@ -112,7 +112,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
     SpiInterface spiInterface;
   #endif
   Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
-      spiInterface, kDigitRemapArray8);
+      spiInterface, kDigitRemapArray8Max7219);
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
   // Common Anode, with transistors on Group pins
@@ -126,9 +126,11 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #endif
   DualHc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
-      LedMatrixBase::kActiveLowPattern /*segmentOnPattern*/,
-      LedMatrixBase::kActiveLowPattern /*digitOnPattern*/,
-      FRAMES_PER_SECOND
+      SEGMENT_ON_PATTERN,
+      DIGIT_ON_PATTERN,
+      FRAMES_PER_SECOND,
+      HC595_BYTE_ORDER,
+      REMAP_ARRAY
   );
 
 #else

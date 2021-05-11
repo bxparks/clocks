@@ -1,5 +1,5 @@
-#ifndef LED_CLOCK_PRESENTER_H
-#define LED_CLOCK_PRESENTER_H
+#ifndef LED_CLOCK_TINY_PRESENTER_H
+#define LED_CLOCK_TINY_PRESENTER_H
 
 #include <AceTime.h>
 #include <AceSegment.h>

@@ -1,5 +1,5 @@
-#ifndef LED_CLOCK_STORED_INFO_H
-#define LED_CLOCK_STORED_INFO_H
+#ifndef LED_CLOCK_TINY_STORED_INFO_H
+#define LED_CLOCK_TINY_STORED_INFO_H
 
 #include <stdint.h>
 #include <AceTime.h>
