@@ -180,7 +180,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
     SpiInterface spiInterface;
   #endif
   Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
-      spiInterface, kDigitRemapArray8);
+      spiInterface, kDigitRemapArray8Max7219);
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
   // Common Anode, with transitions on Group pins
@@ -238,9 +238,11 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #endif
   DualHc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
-      LedMatrixBase::kActiveLowPattern /*segmentOnPattern*/,
-      LedMatrixBase::kActiveLowPattern /*digitOnPattern*/,
-      FRAMES_PER_SECOND
+      SEGMENT_ON_PATTERN,
+      DIGIT_ON_PATTERN,
+      FRAMES_PER_SECOND,
+      HC595_BYTE_ORDER,
+      REMAP_ARRAY
   );
 
 #else
@@ -351,33 +353,15 @@ COROUTINE(updateClock) {
   AceButton* const BUTTONS[] = {&modeButton, &changeButton};
 
   #if ANALOG_BUTTON_COUNT == 2
-    #if ANALOG_BITS == 8
-      const uint16_t LEVELS[] = {0, 128, 255};
-    #elif ANALOG_BITS == 10
-      const uint16_t LEVELS[] = {0, 512, 1023};
-    #else
-      #error Unknown number of ADC bits
-    #endif
+    const uint16_t LEVELS[] = {0, 512, 1023};
   #elif ANALOG_BUTTON_COUNT == 4
-    #if ANALOG_BITS == 8
-      const uint16_t LEVELS[] = {
-        0 /*short to ground*/,
-        82 /*32%, 4.7k*/,
-        128 /*50%, 10k*/,
-        210 /*82%, 47k*/,
-        255 /*100%, open*/
-      };
-    #elif ANALOG_BITS == 10
-      const uint16_t LEVELS[] = {
-        0 /*short to ground*/,
-        327 /*32%, 4.7k*/,
-        512 /*50%, 10k*/,
-        844 /*82%, 47k*/,
-        1023 /*100%, open*/
-      };
-    #else
-      #error Unknown number of ADC bits
-    #endif
+    const uint16_t LEVELS[] = {
+      0 /*short to ground*/,
+      327 /*32%, 4.7k*/,
+      512 /*50%, 10k*/,
+      844 /*82%, 47k*/,
+      1023 /*100%, open*/
+    };
   #else
     #error Unknown ANALOG_BUTTON_COUNT
   #endif

@@ -14,8 +14,9 @@
 
 // Button options: either digital buttons using ButtonConfig, 2 analog buttons
 // using LadderButtonConfig, or 4 analog buttons using LadderButtonConfig:
-//  * AVR: 8-bit analog pin
+//  * AVR: 10-bit analog pin
 //  * ESP8266: 10-bit analog pin
+//  * ESP32: 12-bit analog pin
 #define BUTTON_TYPE_DIGITAL 0
 #define BUTTON_TYPE_ANALOG 1
 
@@ -81,7 +82,7 @@
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_SCANNING
   #define INTERFACE_TYPE INTERFACE_TYPE_FAST
 
-#elif defined(AUNITER_LED_CLOCK_DIRECT)
+#elif defined(AUNITER_MICRO_CUSTOM_DIRECT)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN A2
   #define CHANGE_BUTTON_PIN A3
@@ -91,7 +92,7 @@
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_DIRECT
   #define INTERFACE_TYPE INTERFACE_TYPE_FAST
 
-#elif defined(AUNITER_LED_CLOCK_HC595_SINGLE)
+#elif defined(AUNITER_MICRO_CUSTOM_SINGLE)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN A2
   #define CHANGE_BUTTON_PIN A3
@@ -104,7 +105,7 @@
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
 
-#elif defined(AUNITER_LED_CLOCK_HC595_DUAL)
+#elif defined(AUNITER_MICRO_CUSTOM_DUAL)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN A2
   #define CHANGE_BUTTON_PIN A3
@@ -116,8 +117,12 @@
   #define LATCH_PIN 10
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
+  #define HC595_BYTE_ORDER ace_segment::kByteOrderDigitHighSegmentLow
+  #define REMAP_ARRAY nullptr
+  #define SEGMENT_ON_PATTERN LedMatrixBase::kActiveLowPattern
+  #define DIGIT_ON_PATTERN LedMatrixBase::kActiveLowPattern
 
-#elif defined(AUNITER_LED_CLOCK_TM1637)
+#elif defined(AUNITER_MICRO_TM1637)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN A2
   #define CHANGE_BUTTON_PIN A3
@@ -126,11 +131,11 @@
 
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_TM1637
   #define INTERFACE_TYPE INTERFACE_TYPE_FAST
-  #define CLK_PIN 10
+  #define CLK_PIN A0
   #define DIO_PIN 9
   #define BIT_DELAY 100
 
-#elif defined(AUNITER_LED_CLOCK_MAX7219)
+#elif defined(AUNITER_MICRO_MAX7219)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN A2
   #define CHANGE_BUTTON_PIN A3
@@ -139,7 +144,25 @@
 
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_MAX7219
   #define INTERFACE_TYPE INTERFACE_TYPE_FAST
-  #define LATCH_PIN A0
+  #define LATCH_PIN 10
+  #define DATA_PIN MOSI
+  #define CLOCK_PIN SCK
+
+#elif defined(AUNITER_MICRO_HC595)
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN A2
+  #define CHANGE_BUTTON_PIN A3
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
+  #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
+  #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
+  #define SEGMENT_ON_PATTERN LedMatrixBase::kActiveLowPattern
+  #define DIGIT_ON_PATTERN LedMatrixBase::kActiveHighPattern
+
+  #define INTERFACE_TYPE INTERFACE_TYPE_FAST
+  #define LATCH_PIN 10
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
 
@@ -169,13 +192,30 @@
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
 
+#elif defined(AUNITER_STM32_HC595)
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN PA0
+  #define CHANGE_BUTTON_PIN PA1
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_STM32F1RTC
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
+  #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
+  #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
+  #define SEGMENT_ON_PATTERN LedMatrixBase::kActiveLowPattern
+  #define DIGIT_ON_PATTERN LedMatrixBase::kActiveHighPattern
+
+  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define LATCH_PIN SS
+  #define DATA_PIN MOSI
+  #define CLOCK_PIN SCK
+
 #elif defined(AUNITER_D1MINI_LARGE_TM1637)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 2
   #define ANALOG_BUTTON_COUNT 4
   #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BITS 10
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
@@ -191,7 +231,6 @@
   #define CHANGE_BUTTON_PIN 2
   #define ANALOG_BUTTON_COUNT 4
   #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BITS 10
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
@@ -201,6 +240,25 @@
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
 
+#elif defined(AUNITER_D1MINI_LARGE_HC595)
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 2
+  #define ANALOG_BUTTON_COUNT 4
+  #define ANALOG_BUTTON_PIN A0
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
+  #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
+  #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
+  #define SEGMENT_ON_PATTERN LedMatrixBase::kActiveLowPattern
+  #define DIGIT_ON_PATTERN LedMatrixBase::kActiveHighPattern
+
+  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define LATCH_PIN D8
+  #define DATA_PIN MOSI
+  #define CLOCK_PIN SCK
 #else
   #error Unknown AUNITER environment
 #endif
