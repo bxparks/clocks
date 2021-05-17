@@ -24,13 +24,19 @@ class Controller {
         PersistentStore& persistentStore,
         Presenter& presenter,
         ZoneManager& zoneManager,
-        TimeZoneData initialTimeZoneData
+        TimeZoneData initialTimeZoneData,
+        uint8_t brightnessLevels,
+        uint8_t brightnessMin,
+        uint8_t brightnessMax
     ) :
         mClock(clock),
         mPersistentStore(persistentStore),
         mPresenter(presenter),
         mZoneManager(zoneManager),
-        mInitialTimeZoneData(initialTimeZoneData)
+        mInitialTimeZoneData(initialTimeZoneData),
+        mBrightnessLevels(brightnessLevels),
+        mBrightnessMin(brightnessMin),
+        mBrightnessMax(brightnessMax)
     {
       mMode = Mode::kViewHourMinute;
     }
@@ -234,7 +240,11 @@ class Controller {
 
         case Mode::kChangeBrightness:
           mSuppressBlink = true;
-          incrementModOffset(mClockInfo.brightness, (uint8_t) 7, (uint8_t) 1);
+          incrementModOffset(
+              mClockInfo.brightness,
+              mBrightnessLevels,
+              mBrightnessMin);
+          mClockInfo.brightness = normalizeBrightness(mClockInfo.brightness);
           break;
 
         default:
@@ -358,10 +368,10 @@ class Controller {
     }
 
     /** Convert StoredInfo to ClockInfo. */
-    static void clockInfoFromStoredInfo(
+    void clockInfoFromStoredInfo(
         ClockInfo& clockInfo, const StoredInfo& storedInfo) {
       clockInfo.hourMode = storedInfo.hourMode;
-      clockInfo.brightness = storedInfo.brightness;
+      clockInfo.brightness = normalizeBrightness(storedInfo.brightness);
       clockInfo.timeZoneData = storedInfo.timeZoneData;
     }
 
@@ -389,12 +399,25 @@ class Controller {
       storedInfo.timeZoneData = clockInfo.timeZoneData;
     }
 
+    /** Normalize brightness, staying within bounds of the LED module. */
+    uint8_t normalizeBrightness(uint8_t brightness) {
+      if (brightness < mBrightnessMin) {
+        brightness = mBrightnessMin;
+      } else if (brightness > mBrightnessMax) {
+        brightness = mBrightnessMax;
+      }
+      return brightness;
+    }
+
   private:
     Clock& mClock;
     PersistentStore& mPersistentStore;
     Presenter& mPresenter;
     ZoneManager& mZoneManager;
     TimeZoneData mInitialTimeZoneData;
+    uint8_t const mBrightnessLevels;
+    uint8_t const mBrightnessMin;
+    uint8_t const mBrightnessMax;
 
     ClockInfo mClockInfo; // current clock
     ClockInfo mChangingClockInfo; // the target clock

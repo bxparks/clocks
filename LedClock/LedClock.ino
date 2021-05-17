@@ -169,6 +169,9 @@ const uint8_t FRAMES_PER_SECOND = 60;
     WireInterface wireInterface;
     Tm1637Module<WireInterface, NUM_DIGITS> ledModule(wireInterface);
   #endif
+  const uint8_t BRIGHTNESS_LEVELS = 7;
+  const uint8_t BRIGHTNESS_MIN = 1;
+  const uint8_t BRIGHTNESS_MAX = 7;
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
   const uint8_t NUM_DIGITS = 8;
@@ -181,6 +184,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #endif
   Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface, kDigitRemapArray8Max7219);
+
+  const uint8_t BRIGHTNESS_LEVELS = 16;
+  const uint8_t BRIGHTNESS_MIN = 0;
+  const uint8_t BRIGHTNESS_MAX = 15;
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
   // Common Anode, with transitions on Group pins
@@ -207,6 +214,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
 
   #endif
 
+  const uint8_t BRIGHTNESS_LEVELS = 1;
+  const uint8_t BRIGHTNESS_MIN = 1;
+  const uint8_t BRIGHTNESS_MAX = 1;
+
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_SINGLE
   // Common Cathode, with transistors on Group pins
   const uint8_t NUM_DIGITS = 4;
@@ -226,6 +237,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
       DIGIT_PINS
   );
 
+  const uint8_t BRIGHTNESS_LEVELS = 1;
+  const uint8_t BRIGHTNESS_MIN = 1;
+  const uint8_t BRIGHTNESS_MAX = 1;
+
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
   // Common Anode, with transistors on Group pins
   const uint8_t NUM_DIGITS = 4;
@@ -244,6 +259,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
       HC595_BYTE_ORDER,
       REMAP_ARRAY
   );
+
+  const uint8_t BRIGHTNESS_LEVELS = 1;
+  const uint8_t BRIGHTNESS_MIN = 1;
+  const uint8_t BRIGHTNESS_MAX = 1;
 
 #else
   #error Unknown LED_DISPLAY_TYPE
@@ -318,7 +337,7 @@ void setupRenderingInterrupt() {
 
 Presenter presenter(display);
 Controller controller(systemClock, persistentStore, presenter, zoneManager,
-    DISPLAY_ZONE);
+    DISPLAY_ZONE, BRIGHTNESS_LEVELS, BRIGHTNESS_MIN, BRIGHTNESS_MAX);
 
 //------------------------------------------------------------------
 // Update the Presenter Clock periodically.
