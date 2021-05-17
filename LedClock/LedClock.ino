@@ -189,6 +189,29 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t BRIGHTNESS_MIN = 0;
   const uint8_t BRIGHTNESS_MAX = 15;
 
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
+  // Common Anode, with transistors on Group pins
+  const uint8_t NUM_DIGITS = 8;
+  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+    using SpiInterface = SoftSpiInterface;
+    SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  #else
+    using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+    SpiInterface spiInterface;
+  #endif
+  Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
+      spiInterface,
+      LedMatrixBase::kActiveLowPattern,
+      LedMatrixBase::kActiveHighPattern,
+      FRAMES_PER_SECOND,
+      ace_segment::kByteOrderSegmentHighDigitLow,
+      ace_segment::kDigitRemapArray8Hc595
+  );
+
+  const uint8_t BRIGHTNESS_LEVELS = 1;
+  const uint8_t BRIGHTNESS_MIN = 1;
+  const uint8_t BRIGHTNESS_MAX = 1;
+
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
   // Common Anode, with transitions on Group pins
   const uint8_t NUM_DIGITS = 4;
@@ -218,7 +241,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t BRIGHTNESS_MIN = 1;
   const uint8_t BRIGHTNESS_MAX = 1;
 
-#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_SINGLE
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID
   // Common Cathode, with transistors on Group pins
   const uint8_t NUM_DIGITS = 4;
   const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
@@ -229,7 +252,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
     using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
   #endif
-  SingleHc595Module<SpiInterface, NUM_DIGITS> ledModule(
+  HybridModule<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
       LedMatrixBase::kActiveHighPattern /*segmentOnPattern*/,
       LedMatrixBase::kActiveHighPattern /*digitOnPattern*/,
@@ -241,7 +264,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t BRIGHTNESS_MIN = 1;
   const uint8_t BRIGHTNESS_MAX = 1;
 
-#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_FULL
   // Common Anode, with transistors on Group pins
   const uint8_t NUM_DIGITS = 4;
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
@@ -251,13 +274,13 @@ const uint8_t FRAMES_PER_SECOND = 60;
     using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
   #endif
-  DualHc595Module<SpiInterface, NUM_DIGITS> ledModule(
+  Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
-      SEGMENT_ON_PATTERN,
-      DIGIT_ON_PATTERN,
+      LedMatrixBase::kActiveLowPattern,
+      LedMatrixBase::kActiveLowPattern,
       FRAMES_PER_SECOND,
-      HC595_BYTE_ORDER,
-      REMAP_ARRAY
+      ace_segment::kByteOrderDigitHighSegmentLow,
+      nullptr /* remapArray */
   );
 
   const uint8_t BRIGHTNESS_LEVELS = 1;
@@ -273,8 +296,8 @@ LedDisplay display(ledModule);
 
 // Setup the various resources.
 void setupAceSegment() {
-  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_SINGLE \
-      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL \
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID \
+      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595 \
       || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
     spiInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
@@ -295,8 +318,8 @@ void setupAceSegment() {
   COROUTINE(renderLed) {
     COROUTINE_LOOP() {
     #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT \
-        || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_SINGLE \
-        || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
+        || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID \
+        || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
       ledModule.renderFieldWhenReady();
     #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
       ledModule.flushIncremental();

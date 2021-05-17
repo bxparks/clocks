@@ -39,9 +39,10 @@
 #define LED_DISPLAY_TYPE_SCANNING 0
 #define LED_DISPLAY_TYPE_TM1637 1
 #define LED_DISPLAY_TYPE_MAX7219 2
-#define LED_DISPLAY_TYPE_DIRECT 3
-#define LED_DISPLAY_TYPE_HC595_SINGLE 4
-#define LED_DISPLAY_TYPE_HC595_DUAL 5
+#define LED_DISPLAY_TYPE_HC595 3
+#define LED_DISPLAY_TYPE_DIRECT 4
+#define LED_DISPLAY_TYPE_HYBRID 5
+#define LED_DISPLAY_TYPE_FULL 6
 
 // Communication interface to the LED module (e.g. SoftSpi, SoftSpiFast, etc)
 #define INTERFACE_TYPE_NORMAL 0
@@ -99,7 +100,7 @@
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
-  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_SINGLE
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HYBRID
   #define INTERFACE_TYPE INTERFACE_TYPE_FAST
   #define LATCH_PIN 10
   #define DATA_PIN MOSI
@@ -112,15 +113,11 @@
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
-  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_FULL
   #define INTERFACE_TYPE INTERFACE_TYPE_FAST
   #define LATCH_PIN 10
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
-  #define HC595_BYTE_ORDER ace_segment::kByteOrderDigitHighSegmentLow
-  #define REMAP_ARRAY nullptr
-  #define SEGMENT_ON_PATTERN LedMatrixBase::kActiveLowPattern
-  #define DIGIT_ON_PATTERN LedMatrixBase::kActiveLowPattern
 
 #elif defined(AUNITER_MICRO_TM1637)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -155,12 +152,7 @@
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
-  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
-  #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
-  #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
-  #define SEGMENT_ON_PATTERN LedMatrixBase::kActiveLowPattern
-  #define DIGIT_ON_PATTERN LedMatrixBase::kActiveHighPattern
-
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595
   #define INTERFACE_TYPE INTERFACE_TYPE_FAST
   #define LATCH_PIN 10
   #define DATA_PIN MOSI
@@ -199,12 +191,7 @@
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_STM32F1RTC
 
-  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
-  #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
-  #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
-  #define SEGMENT_ON_PATTERN LedMatrixBase::kActiveLowPattern
-  #define DIGIT_ON_PATTERN LedMatrixBase::kActiveHighPattern
-
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595
   #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
   #define LATCH_PIN SS
   #define DATA_PIN MOSI
@@ -249,12 +236,7 @@
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
-  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
-  #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
-  #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
-  #define SEGMENT_ON_PATTERN LedMatrixBase::kActiveLowPattern
-  #define DIGIT_ON_PATTERN LedMatrixBase::kActiveHighPattern
-
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595
   #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
   #define LATCH_PIN D8
   #define DATA_PIN MOSI
