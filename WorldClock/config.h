@@ -11,6 +11,9 @@
 #define ENABLE_SERIAL_DEBUG 0
 #endif
 
+// PersistentStore
+#define ENABLE_EEPROM 1
+
 // Set to 1 to factory reset.
 #define FORCE_INITIALIZE 0
 

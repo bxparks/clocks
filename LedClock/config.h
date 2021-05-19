@@ -12,6 +12,9 @@
 #define ENABLE_SERIAL_DEBUG 0
 #endif
 
+// PersistentStore
+#define ENABLE_EEPROM 1
+
 // Button options: either digital buttons using ButtonConfig, 2 analog buttons
 // using LadderButtonConfig, or 4 analog buttons using LadderButtonConfig:
 //  * AVR: 10-bit analog pin

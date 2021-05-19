@@ -14,6 +14,9 @@
 #define ENABLE_SERIAL_DEBUG 0
 #endif
 
+// PersistentStore
+#define ENABLE_EEPROM 1
+
 // OLED address: 0X3C+SA0 - 0x3C or 0x3D
 #define OLED_I2C_ADDRESS 0x3C
 

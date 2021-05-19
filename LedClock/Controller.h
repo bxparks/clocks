@@ -45,6 +45,13 @@ class Controller {
       // Restore from EEPROM to retrieve time zone.
       StoredInfo storedInfo;
       bool isValid = mPersistentStore.readStoredInfo(storedInfo);
+    #if ENABLE_SERIAL_DEBUG >= 1
+      if (isValid) {
+        Serial.println(F("Controller.setup(): persistentStore valid"));
+      } else {
+        Serial.println(F("Controller.setup(): persistentStore NOT valid"));
+      }
+    #endif
 
       if (isValid) {
         clockInfoFromStoredInfo(mClockInfo, storedInfo);
@@ -371,7 +378,15 @@ class Controller {
     void clockInfoFromStoredInfo(
         ClockInfo& clockInfo, const StoredInfo& storedInfo) {
       clockInfo.hourMode = storedInfo.hourMode;
+    #if ENABLE_SERIAL_DEBUG >= 1
+      Serial.print(F("clockInfoFromStoredInfo(): storedInfo.brightness:"));
+      Serial.println(storedInfo.brightness);
+    #endif
       clockInfo.brightness = normalizeBrightness(storedInfo.brightness);
+    #if ENABLE_SERIAL_DEBUG >= 1
+      Serial.print(F("clockInfoFromStoredInfo(): clockInfo.brightness:"));
+      Serial.println(clockInfo.brightness);
+    #endif
       clockInfo.timeZoneData = storedInfo.timeZoneData;
     }
 
