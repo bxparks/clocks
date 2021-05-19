@@ -393,20 +393,7 @@ COROUTINE(updateClock) {
   AceButton modeButton((uint8_t) MODE_BUTTON_PIN);
   AceButton changeButton((uint8_t) CHANGE_BUTTON_PIN);
   AceButton* const BUTTONS[] = {&modeButton, &changeButton};
-
-  #if ANALOG_BUTTON_COUNT == 2
-    const uint16_t LEVELS[] = {0, 512, 1023};
-  #elif ANALOG_BUTTON_COUNT == 4
-    const uint16_t LEVELS[] = {
-      0 /*short to ground*/,
-      327 /*32%, 4.7k*/,
-      512 /*50%, 10k*/,
-      844 /*82%, 47k*/,
-      1023 /*100%, open*/
-    };
-  #else
-    #error Unknown ANALOG_BUTTON_COUNT
-  #endif
+  const uint16_t LEVELS[] = ANALOG_BUTTON_LEVELS;
 
   LadderButtonConfig buttonConfig(
       ANALOG_BUTTON_PIN,

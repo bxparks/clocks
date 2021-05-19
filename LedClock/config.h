@@ -201,8 +201,14 @@
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 2
-  #define ANALOG_BUTTON_COUNT 4
   #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*short to ground*/, \
+      327 /*32%, 4.7k*/, \
+      512 /*50%, 10k*/, \
+      844 /*82%, 47k*/, \
+      1023 /*100%, open*/ \
+    }
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
@@ -216,8 +222,14 @@
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 2
-  #define ANALOG_BUTTON_COUNT 4
   #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*short to ground*/, \
+      327 /*32%, 4.7k*/, \
+      512 /*50%, 10k*/, \
+      844 /*82%, 47k*/, \
+      1023 /*100%, open*/ \
+    }
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
@@ -231,8 +243,14 @@
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 2
-  #define ANALOG_BUTTON_COUNT 4
   #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*short to ground*/, \
+      327 /*32%, 4.7k*/, \
+      512 /*50%, 10k*/, \
+      844 /*82%, 47k*/, \
+      1023 /*100%, open*/ \
+    }
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
@@ -241,6 +259,64 @@
   #define LATCH_PIN D8
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
+
+#elif defined(AUNITER_ESP32_TM1637)
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_PIN A10
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*0% ground, 470*/, \
+      2048 /*50%, 10k*/, \
+      4096 /*100%, open*/ \
+    }
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_TM1637
+  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define CLK_PIN 14
+  #define DIO_PIN 13
+  #define BIT_DELAY 100
+
+#elif defined(AUNITER_ESP32_MAX7219)
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_PIN A10
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*0% ground, 470*/, \
+      2048 /*50%, 10k*/, \
+      4096 /*100%, open*/ \
+    }
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_MAX7219
+  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define LATCH_PIN 15
+  #define DATA_PIN 13
+  #define CLOCK_PIN 14
+
+#elif defined(AUNITER_ESP32_HC595)
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_PIN A10
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*0% ground, 470*/, \
+      2048 /*50%, 10k*/, \
+      4096 /*100%, open*/ \
+    }
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595
+  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define LATCH_PIN 15
+  #define DATA_PIN 13
+  #define CLOCK_PIN 14
+
 #else
   #error Unknown AUNITER environment
 #endif
