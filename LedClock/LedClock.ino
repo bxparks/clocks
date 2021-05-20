@@ -21,7 +21,7 @@ Supported boards are:
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
 #include <ace_segment/hw/SoftSpiFastInterface.h>
-#include <ace_segment/hw/SoftWireFastInterface.h>
+#include <ace_segment/hw/SoftTmiFastInterface.h>
 #include <ace_segment/direct/DirectFast4Module.h>
 #endif
 
@@ -161,13 +161,13 @@ const uint8_t FRAMES_PER_SECOND = 60;
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
   const uint8_t NUM_DIGITS = 4;
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    using WireInterface = SoftWireInterface;
-    WireInterface wireInterface(CLK_PIN, DIO_PIN, BIT_DELAY);
-    Tm1637Module<WireInterface, NUM_DIGITS> ledModule(wireInterface);
+    using TmiInterface = SoftTmiInterface;
+    TmiInterface tmiInterface(CLK_PIN, DIO_PIN, BIT_DELAY);
+    Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
   #else
-    using WireInterface = SoftWireFastInterface<CLK_PIN, DIO_PIN, BIT_DELAY>;
-    WireInterface wireInterface;
-    Tm1637Module<WireInterface, NUM_DIGITS> ledModule(wireInterface);
+    using TmiInterface = SoftTmiFastInterface<CLK_PIN, DIO_PIN, BIT_DELAY>;
+    TmiInterface tmiInterface;
+    Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
   #endif
   const uint8_t BRIGHTNESS_LEVELS = 7;
   const uint8_t BRIGHTNESS_MIN = 1;
@@ -301,7 +301,7 @@ void setupAceSegment() {
       || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
     spiInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-    wireInterface.begin();
+    tmiInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
   #else
     #error Unknown LED_DISPLAY_TYPE
