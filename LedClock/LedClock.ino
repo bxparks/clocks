@@ -201,8 +201,8 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #endif
   Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
-      LedMatrixBase::kActiveLowPattern,
-      LedMatrixBase::kActiveHighPattern,
+      kActiveLowPattern,
+      kActiveHighPattern,
       FRAMES_PER_SECOND,
       ace_segment::kByteOrderSegmentHighDigitLow,
       ace_segment::kDigitRemapArray8Hc595
@@ -220,8 +220,8 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
     DirectModule<NUM_DIGITS> ledModule(
-        LedMatrixBase::kActiveLowPattern /*segmentOnPattern*/,
-        LedMatrixBase::kActiveLowPattern /*digitOnPattern*/,
+        kActiveLowPattern /*segmentOnPattern*/,
+        kActiveLowPattern /*digitOnPattern*/,
         FRAMES_PER_SECOND,
         SEGMENT_PINS,
         DIGIT_PINS);
@@ -231,8 +231,8 @@ const uint8_t FRAMES_PER_SECOND = 60;
         4, 5, 6, 7, // digit pins
         NUM_DIGITS
     > ledModule(
-        LedMatrixBase::kActiveLowPattern /*segmentOnPattern*/,
-        LedMatrixBase::kActiveLowPattern /*digitOnPattern*/,
+        kActiveLowPattern /*segmentOnPattern*/,
+        kActiveLowPattern /*digitOnPattern*/,
         FRAMES_PER_SECOND);
 
   #endif
@@ -254,8 +254,8 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #endif
   HybridModule<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
-      LedMatrixBase::kActiveHighPattern /*segmentOnPattern*/,
-      LedMatrixBase::kActiveHighPattern /*digitOnPattern*/,
+      kActiveHighPattern /*segmentOnPattern*/,
+      kActiveHighPattern /*digitOnPattern*/,
       FRAMES_PER_SECOND,
       DIGIT_PINS
   );
@@ -276,8 +276,8 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #endif
   Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
-      LedMatrixBase::kActiveLowPattern,
-      LedMatrixBase::kActiveLowPattern,
+      kActiveLowPattern,
+      kActiveLowPattern,
       FRAMES_PER_SECOND,
       ace_segment::kByteOrderDigitHighSegmentLow,
       nullptr /* remapArray */

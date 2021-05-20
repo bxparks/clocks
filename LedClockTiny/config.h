@@ -112,8 +112,8 @@
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
   #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
   #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
-  #define SEGMENT_ON_PATTERN LedMatrixBase::kActiveLowPattern
-  #define DIGIT_ON_PATTERN LedMatrixBase::kActiveHighPattern
+  #define SEGMENT_ON_PATTERN kActiveLowPattern
+  #define DIGIT_ON_PATTERN kActiveHighPattern
 
   #define INTERFACE_TYPE INTERFACE_TYPE_FAST
   #define LATCH_PIN 10
@@ -183,8 +183,8 @@
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
   #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
   #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
-  #define SEGMENT_ON_PATTERN LedMatrixBase::kActiveLowPattern
-  #define DIGIT_ON_PATTERN LedMatrixBase::kActiveHighPattern
+  #define SEGMENT_ON_PATTERN kActiveLowPattern
+  #define DIGIT_ON_PATTERN kActiveHighPattern
 
   #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
   #define LATCH_PIN 4
