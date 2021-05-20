@@ -31,7 +31,7 @@
  */
 class PersistentStore {
   public:
-    PersistentStore(uint32_t contextId, uint16_t address = 0) :
+    PersistentStore(uint32_t contextId, uint16_t address) :
       mAddress(address),
       #if defined(EPOXY_DUINO)
         mCrcEeprom(EpoxyEepromEspInstance, contextId)
