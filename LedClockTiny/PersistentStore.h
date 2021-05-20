@@ -59,11 +59,11 @@ class PersistentStore {
     }
 
     bool readStoredInfo(StoredInfo& storedInfo) const {
-      return mCrcEeprom.readWithCrc(kStoredInfoEepromAddress, storedInfo);
+      return mCrcEeprom.readWithCrc(mAddress, storedInfo);
     }
 
     uint16_t writeStoredInfo(const StoredInfo& storedInfo) {
-      return mCrcEeprom.writeWithCrc(kStoredInfoEepromAddress, storedInfo);
+      return mCrcEeprom.writeWithCrc(mAddress, storedInfo);
     }
 
   private:
