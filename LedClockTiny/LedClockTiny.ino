@@ -126,7 +126,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
     using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
   #endif
-  DualHc595Module<SpiInterface, NUM_DIGITS> ledModule(
+  Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
       SEGMENT_ON_PATTERN,
       DIGIT_ON_PATTERN,
@@ -206,32 +206,7 @@ void updateClock() {
   AceButton modeButton((uint8_t) MODE_BUTTON_PIN);
   AceButton changeButton((uint8_t) CHANGE_BUTTON_PIN);
   AceButton* const BUTTONS[] = {&modeButton, &changeButton};
-
-  #if ANALOG_BUTTON_COUNT == 2
-    const uint16_t LEVELS[] = ANALOG_LEVELS;
-  #elif ANALOG_BUTTON_COUNT == 4
-    #if ANALOG_BITS == 8
-      const uint16_t LEVELS[] = {
-        0 /*short to ground*/,
-        82 /*32%, 4.7k*/,
-        128 /*50%, 10k*/,
-        210 /*82%, 47k*/,
-        255 /*100%, open*/
-      };
-    #elif ANALOG_BITS == 10
-      const uint16_t LEVELS[] = {
-        0 /*short to ground*/,
-        327 /*32%, 4.7k*/,
-        512 /*50%, 10k*/,
-        844 /*82%, 47k*/,
-        1023 /*100%, open*/
-      };
-    #else
-      #error Unknown number of ADC bits
-    #endif
-  #else
-    #error Unknown ANALOG_BUTTON_COUNT
-  #endif
+  const uint16_t LEVELS[] = ANALOG_BUTTON_LEVELS;
 
   LadderButtonConfig buttonConfig(
       ANALOG_BUTTON_PIN,
@@ -284,8 +259,8 @@ void handleButtonEvent(AceButton* button, uint8_t eventType,
 
 void setupAceButton() {
 #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
-  pinMode(MODE_BUTTON_PIN, INPUT_PULLUP);
-  pinMode(CHANGE_BUTTON_PIN, INPUT_PULLUP);
+  pinModeFast(MODE_BUTTON_PIN, INPUT_PULLUP);
+  pinModeFast(CHANGE_BUTTON_PIN, INPUT_PULLUP);
 #endif
 
   buttonConfig.setEventHandler(handleButtonEvent);

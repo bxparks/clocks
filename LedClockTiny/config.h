@@ -127,7 +127,6 @@
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 1
-  #define ANALOG_BUTTON_COUNT 2
   #define ANALOG_BUTTON_PIN A0
   // Resistor ladder must remain above 90% VCC because they are connected to
   // the RESET button. We have 3 resistors (1k, 10k, 22k):
@@ -135,12 +134,12 @@
   //    * 979: 22k/23k = 95.6%
   //    * 1023: 100%, open
   // Numbers then adjusted using LadderButtonCalibrator.
-  #define ANALOG_LEVELS {933, 980, 1024}
+  #define ANALOG_BUTTON_LEVELS {933, 980, 1024}
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_TM1637
-  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define INTERFACE_TYPE INTERFACE_TYPE_FAST
   #define CLK_PIN 3
   #define DIO_PIN 1
   #define BIT_DELAY 100
@@ -149,7 +148,6 @@
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 1
-  #define ANALOG_BUTTON_COUNT 2
   #define ANALOG_BUTTON_PIN A0
   // Resistor ladder must remain above 90% VCC because they are connected to
   // the RESET button. We have 3 resistors (1k, 10k, 22k):
@@ -157,12 +155,12 @@
   //    * 979: 22k/23k = 95.6%
   //    * 1023: 100%, open
   // Numbers then adjusted using LadderButtonCalibrator.
-  #define ANALOG_LEVELS {933, 980, 1024}
+  #define ANALOG_BUTTON_LEVELS {933, 980, 1024}
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_MAX7219
-  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define INTERFACE_TYPE INTERFACE_TYPE_FAST
   #define LATCH_PIN 4
   #define DATA_PIN 1
   #define CLOCK_PIN 3
@@ -171,7 +169,6 @@
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 1
-  #define ANALOG_BUTTON_COUNT 2
   #define ANALOG_BUTTON_PIN A0
   // Resistor ladder must remain above 90% VCC because they are connected to
   // the RESET button. We have 3 resistors (1k, 10k, 22k):
@@ -179,7 +176,7 @@
   //    * 979: 22k/23k = 95.6%
   //    * 1023: 100%, open
   // Numbers then adjusted using LadderButtonCalibrator.
-  #define ANALOG_LEVELS {933, 980, 1024}
+  #define ANALOG_BUTTON_LEVELS {933, 980, 1024}
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
@@ -189,7 +186,7 @@
   #define SEGMENT_ON_PATTERN kActiveLowPattern
   #define DIGIT_ON_PATTERN kActiveHighPattern
 
-  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define INTERFACE_TYPE INTERFACE_TYPE_FAST
   #define LATCH_PIN 4
   #define DATA_PIN 1
   #define CLOCK_PIN 3
