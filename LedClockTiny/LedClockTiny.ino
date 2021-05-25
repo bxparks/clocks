@@ -1,17 +1,19 @@
 /*
-A simple digital clock using:
-  * SparkFun Pro Micro
+A simplified version of LedClock to reduce flash memory size. Uses:
   * a DS3231 RTC chip
   * a TM1637 7-segment LED display
   * 2 push buttons
 
-Missing features compared to LedClock:
-  * no timezone support, no DST shifts
-  * no persistent settings to EEPROM
-  * no ability to set dayOfWeek (need additional code)
-  * not compatible with digitalWriteFast
+Support boards are:
+  * SparkFun Pro Micro
+  * ATtiny85
 
-Memory size (flash/ram) on Pro Micro:
+Differences compared to LedClock:
+  * no timezone support, no DST shifts
+  * dayOfWeek is set explicitly, instead of derived from yyyy-mm-dd
+
+Memory size (flash/ram):
+
   * Initial fork:
       * Pro Micro: 23352/1268
   * Remove ZoneManager and ZonedDateTime:
@@ -114,7 +116,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
   Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface, kDigitRemapArray8Max7219);
 
-#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
   // Common Anode, with transistors on Group pins
   const uint8_t NUM_DIGITS = 4;
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
@@ -142,7 +144,7 @@ LedDisplay display(ledModule);
 
 // Setup the various resources.
 void setupAceSegment() {
-  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL \
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595 \
       || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
     spiInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
@@ -154,7 +156,7 @@ void setupAceSegment() {
 }
 
 void renderLed() {
-  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595_DUAL
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
     ledModule.renderFieldWhenReady();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
     ledModule.flushIncremental();

@@ -5,8 +5,10 @@ A simple digital clock using:
   * 2 push buttons
 
 Supported boards are:
-  * SparkFun Pro Micro w/ Led Modules
-  * ESP8266 dev board w/ Led Modules
+  * SparkFun Pro Micro
+  * STM32 Blue Pill
+  * ESP8266 (e.g. NodeMCU or D1Mini)
+  * ESP32 (e.g. devkit v1)
 */
 
 #include "config.h"

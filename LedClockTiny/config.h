@@ -42,7 +42,10 @@
 #define LED_DISPLAY_TYPE_SCANNING 0
 #define LED_DISPLAY_TYPE_TM1637 1
 #define LED_DISPLAY_TYPE_MAX7219 2
-#define LED_DISPLAY_TYPE_HC595_DUAL 5
+#define LED_DISPLAY_TYPE_HC595 3
+#define LED_DISPLAY_TYPE_DIRECT 4
+#define LED_DISPLAY_TYPE_HYBRID 5
+#define LED_DISPLAY_TYPE_FULL 6
 
 // Communication interface to the LED module (e.g. SoftSpi, SoftSpiFast, etc)
 #define INTERFACE_TYPE_NORMAL 0
@@ -109,7 +112,7 @@
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
-  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595
   #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
   #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
   #define SEGMENT_ON_PATTERN kActiveLowPattern
@@ -180,7 +183,7 @@
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
-  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595_DUAL
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595
   #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
   #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
   #define SEGMENT_ON_PATTERN kActiveLowPattern
