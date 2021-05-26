@@ -13,7 +13,7 @@
 #endif
 
 // PersistentStore
-#define ENABLE_EEPROM 1
+#define ENABLE_EEPROM 0
 
 // Button options: either digital buttons using ButtonConfig, 2 analog buttons
 // using LadderButtonConfig, or 4 analog buttons using LadderButtonConfig:

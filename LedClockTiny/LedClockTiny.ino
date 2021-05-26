@@ -41,14 +41,11 @@ Memory size (flash/ram) for `au --cli verify attiny_tm1637`:
   * Add ability to change dayOfWeek
       * Pro Micro: 11888/540
       * ATtiny85: 7016/226
-  * Convert CrcEeprom into templatized class, and remove virtual functions.
-      * Pro Micro: 10926/518
-      * ATtiny85: 6064/204 (I think this was caused by a bug that disabled
-        CrcEeprom)
-      * Saves about 950 bytes.
   * Latest:
-      * Pro Micro: 11618/528
-      * ATtiny85: 7310/260
+      * Pro Micro: 11618/528 (EEPROM)
+      * Pro Micro: 10832/518 (no EEPROM)
+      * ATtiny85: 7310/260 (EEPROM)
+      * ATtiny85: 6366/250 (no EEPROM)
 */
 
 #include "config.h"
