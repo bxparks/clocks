@@ -12,7 +12,7 @@ Differences compared to LedClock:
   * no timezone support, no DST shifts
   * dayOfWeek is set explicitly, instead of derived from yyyy-mm-dd
 
-Memory size (flash/ram):
+Memory size (flash/ram) for `au --cli verify attiny_tm1637`:
 
   * Initial fork:
       * Pro Micro: 23352/1268
@@ -43,8 +43,12 @@ Memory size (flash/ram):
       * ATtiny85: 7016/226
   * Convert CrcEeprom into templatized class, and remove virtual functions.
       * Pro Micro: 10926/518
-      * ATtiny85: 6064/204
+      * ATtiny85: 6064/204 (I think this was caused by a bug that disabled
+        CrcEeprom)
       * Saves about 950 bytes.
+  * Latest:
+      * Pro Micro: 11618/528
+      * ATtiny85: 7310/260
 */
 
 #include "config.h"
