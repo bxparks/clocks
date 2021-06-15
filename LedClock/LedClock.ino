@@ -294,8 +294,6 @@ const uint8_t FRAMES_PER_SECOND = 60;
 
 #endif
 
-LedDisplay display(ledModule);
-
 // Setup the various resources.
 void setupAceSegment() {
   #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID \
@@ -360,7 +358,7 @@ void setupRenderingInterrupt() {
 // Create an appropriate controller/presenter pair.
 //------------------------------------------------------------------
 
-Presenter presenter(display);
+Presenter presenter(ledModule);
 Controller controller(systemClock, persistentStore, presenter, zoneManager,
     DISPLAY_ZONE, BRIGHTNESS_LEVELS, BRIGHTNESS_MIN, BRIGHTNESS_MAX);
 

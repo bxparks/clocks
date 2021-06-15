@@ -8,7 +8,8 @@
 
 using ace_time::DateStrings;
 using ace_time::ZonedDateTime;
-using ace_segment::LedDisplay;
+using ace_segment::LedModule;
+using ace_segment::PatternWriter;
 using ace_segment::ClockWriter;
 using ace_segment::NumberWriter;
 using ace_segment::CharWriter;
@@ -16,11 +17,11 @@ using ace_segment::StringWriter;
 
 class Presenter {
   public:
-    Presenter(LedDisplay& display):
-        mDisplay(display),
-        mClockWriter(display),
-        mNumberWriter(display),
-        mCharWriter(display),
+    Presenter(LedModule& ledModule):
+        mLedModule(ledModule),
+        mClockWriter(ledModule),
+        mNumberWriter(ledModule),
+        mCharWriter(ledModule),
         mStringWriter(mCharWriter)
     {}
 
@@ -70,11 +71,11 @@ class Presenter {
     void updateDisplaySettings() {
       if (mPrevRenderingInfo.mode == Mode::kUnknown ||
           mPrevRenderingInfo.brightness != mRenderingInfo.brightness) {
-        mDisplay.setBrightness(mRenderingInfo.brightness);
+        mLedModule.setBrightness(mRenderingInfo.brightness);
       }
     }
 
-    void clearDisplay() { mDisplay.clear(); }
+    void clearDisplay() { mClockWriter.clear(); }
 
     void displayData() {
       const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
@@ -214,7 +215,7 @@ class Presenter {
     Presenter(const Presenter&) = delete;
     Presenter& operator=(const Presenter&) = delete;
 
-    LedDisplay& mDisplay;
+    LedModule& mLedModule;
     ClockWriter mClockWriter;
     NumberWriter mNumberWriter;
     CharWriter mCharWriter;

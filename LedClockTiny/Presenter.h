@@ -8,7 +8,7 @@
 
 using ace_time::DateStrings;
 using ace_time::hw::HardwareDateTime;
-using ace_segment::LedDisplay;
+using ace_segment::LedModule;
 using ace_segment::ClockWriter;
 using ace_segment::NumberWriter;
 using ace_segment::CharWriter;
@@ -16,11 +16,11 @@ using ace_segment::StringWriter;
 
 class Presenter {
   public:
-    Presenter(LedDisplay& display):
-        mDisplay(display),
-        mClockWriter(display),
-        mNumberWriter(display),
-        mCharWriter(display),
+    Presenter(LedModule& ledModule):
+        mDisplay(ledModule),
+        mClockWriter(ledModule),
+        mNumberWriter(ledModule),
+        mCharWriter(ledModule),
         mStringWriter(mCharWriter)
     {}
 
@@ -73,7 +73,7 @@ class Presenter {
       }
     }
 
-    void clearDisplay() { mDisplay.clear(); }
+    void clearDisplay() { mClockWriter.clear(); }
 
     void displayData() {
       const HardwareDateTime& dateTime = mRenderingInfo.dateTime;
@@ -221,7 +221,7 @@ class Presenter {
     Presenter(const Presenter&) = delete;
     Presenter& operator=(const Presenter&) = delete;
 
-    LedDisplay& mDisplay;
+    LedModule& mDisplay;
     ClockWriter mClockWriter;
     NumberWriter mNumberWriter;
     CharWriter mCharWriter;
