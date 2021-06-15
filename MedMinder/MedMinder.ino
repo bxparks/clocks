@@ -449,7 +449,6 @@ void setup() {
 
   lastUserActionMillis = millis();
 
-  systemClock.setupCoroutine(F("systemClock"));
   CoroutineScheduler::setup();
 
   if (ENABLE_SERIAL_DEBUG) SERIAL_PORT_MONITOR.println(F("setup(): end"));

@@ -211,7 +211,6 @@ void setupClocks() {
   ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
 #endif
   systemClock.setup();
-  systemClock.setupCoroutine(F("clock"));
 }
 
 //-----------------------------------------------------------------------------

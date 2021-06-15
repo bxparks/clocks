@@ -148,9 +148,6 @@ void setupClocks() {
   if (systemClock.getNow() == ace_time::LocalDate::kInvalidEpochSeconds) {
     systemClock.setNow(0);
   }
-#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_COROUTINE
-  systemClock.setupCoroutine(F("clock"));
-#endif
 }
 
 //------------------------------------------------------------------
@@ -596,17 +593,21 @@ if (ENABLE_SERIAL_DEBUG >= 1) {
   bool isModePressedDuringBoot = modeButton.isPressedRaw();
   setupController(isModePressedDuringBoot);
 
-  CoroutineScheduler::setup();
-
   if (ENABLE_SERIAL_DEBUG >= 1) {
     SERIAL_PORT_MONITOR.println(F("setup(): end"));
   }
 }
 
 void loop() {
-  CoroutineScheduler::loop();
+  displayClock.runCoroutine();
+#if ENABLE_FPS_DEBUG
+  printFrameRate.runCoroutine();
+#endif
+  readButtons.runCoroutine();
 
 #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
   systemClock.loop();
+#else
+  systemClock.runCoroutine();
 #endif
 }

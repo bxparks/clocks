@@ -491,15 +491,6 @@ void setup() {
   wifiCommand.connect(SERIAL_PORT_MONITOR);
 #endif
 
-  // insert coroutines into the scheduler
-#if SYNC_TYPE == SYNC_TYPE_COROUTINE
-  Serial.println(F("Setting up SystemClock coroutine"));
-  systemClock.setupCoroutine(F("systemClock"));
-#endif
-
-  Serial.println(F("Setting up CommandManager"));
-  commandManager.setupCoroutine(F("commandManager"));
-
   Serial.println(F("Setting up CoroutineScheduler"));
   CoroutineScheduler::setup();
 
