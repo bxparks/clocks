@@ -164,10 +164,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t NUM_DIGITS = 4;
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
     using TmiInterface = SoftTmiInterface;
-    TmiInterface tmiInterface(CLK_PIN, DIO_PIN, BIT_DELAY);
+    TmiInterface tmiInterface(DIO_PIN, CLK_PIN, BIT_DELAY);
     Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
   #else
-    using TmiInterface = SoftTmiFastInterface<CLK_PIN, DIO_PIN, BIT_DELAY>;
+    using TmiInterface = SoftTmiFastInterface<DIO_PIN, CLK_PIN, BIT_DELAY>;
     TmiInterface tmiInterface;
     Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
   #endif
