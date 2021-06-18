@@ -117,6 +117,23 @@ const uint8_t FRAMES_PER_SECOND = 60;
   Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface, kDigitRemapArray8Max7219);
 
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
+  const uint8_t NUM_DIGITS = 4;
+  #if INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+    #include <Wire.h>
+    using WireInterface = TwoWireInterface<TwoWire>;
+    WireInterface wireInterface(Wire);
+  #elif INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
+    using WireInterface = SimpleWireInterface;
+    WireInterface wireInterface(SDA_PIN, SCL_PIN, BIT_DELAY);
+  #elif INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
+    using WireInterface = SimpleWireFastInterface<SDA_PIN, SCL_PIN, BIT_DELAY>;
+    WireInterface wireInterface;
+  #endif
+
+  Ht16k33Module<WireInterface, NUM_DIGITS> ledModule(
+      wireInterface, HT16K33_I2C_ADDRESS, true /* enableColon */);
+
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
   // Common Anode, with transistors on Group pins
   const uint8_t NUM_DIGITS = 4;
@@ -148,20 +165,32 @@ void setupAceSegment() {
     spiInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
     tmiInterface.begin();
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
+    wireInterface.begin();
   #else
     #error Unknown LED_DISPLAY_TYPE
   #endif
+
   ledModule.begin();
 }
 
 void renderLed() {
-  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
-    ledModule.renderFieldWhenReady();
-  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-    ledModule.flushIncremental();
-  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
-    ledModule.flush();
-  #endif
+  static uint16_t lastRunMillis;
+
+  uint16_t nowMillis = millis();
+  if (nowMillis - lastRunMillis >= 200) {
+    lastRunMillis = nowMillis;
+
+    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
+      ledModule.renderFieldWhenReady();
+    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+      ledModule.flushIncremental();
+    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
+      ledModule.flush();
+    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
+      ledModule.flush();
+    #endif
+  }
 }
 
 //------------------------------------------------------------------
@@ -312,9 +341,9 @@ void setup() {
 #endif
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
-    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
+    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH \
+    || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
   Wire.begin();
-  Wire.setClock(400000L);
 #endif
 
   setupPersistentStore();

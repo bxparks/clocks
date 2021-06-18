@@ -42,14 +42,20 @@
 #define LED_DISPLAY_TYPE_SCANNING 0
 #define LED_DISPLAY_TYPE_TM1637 1
 #define LED_DISPLAY_TYPE_MAX7219 2
-#define LED_DISPLAY_TYPE_HC595 3
-#define LED_DISPLAY_TYPE_DIRECT 4
-#define LED_DISPLAY_TYPE_HYBRID 5
-#define LED_DISPLAY_TYPE_FULL 6
+#define LED_DISPLAY_TYPE_HT16K33 3
+#define LED_DISPLAY_TYPE_HC595 4
+#define LED_DISPLAY_TYPE_DIRECT 5
+#define LED_DISPLAY_TYPE_HYBRID 6
+#define LED_DISPLAY_TYPE_FULL 7
 
-// Communication interface to the LED module (e.g. SoftSpi, SoftSpiFast, etc)
+// Communication interface to the LED module.
+// SPI options.
 #define INTERFACE_TYPE_NORMAL 0
 #define INTERFACE_TYPE_FAST 1
+// I2C options.
+#define INTERFACE_TYPE_TWO_WIRE 2
+#define INTERFACE_TYPE_SIMPLE_WIRE 3
+#define INTERFACE_TYPE_SIMPLE_WIRE_FAST 4
 
 // SystemClock
 #define SYSTEM_CLOCK_TYPE_LOOP 0
@@ -104,6 +110,20 @@
   #define LATCH_PIN 10
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
+
+#elif defined(AUNITER_MICRO_HT16K33)
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN A2
+  #define CHANGE_BUTTON_PIN A3
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HT16K33
+  #define INTERFACE_TYPE INTERFACE_TYPE_TWO_WIRE
+  #define HT16K33_I2C_ADDRESS 0x70
+  #define SDA_PIN SDA
+  #define SCL_PIN SCL
+  #define BIT_DELAY 4
 
 #elif defined(AUNITER_MICRO_HC595)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -164,6 +184,28 @@
   #define LATCH_PIN 4
   #define DATA_PIN 1
   #define CLOCK_PIN 3
+
+#elif defined(AUNITER_ATTINY_HT16K33)
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_PIN A0
+  // Resistor ladder must remain above 90% VCC because they are connected to
+  // the RESET button. We have 3 resistors (1k, 10k, 22k):
+  //    * 933: 10k/(11k+1k) = 90.9%
+  //    * 979: 22k/23k = 95.6%
+  //    * 1023: 100%, open
+  // Numbers then adjusted using LadderButtonCalibrator.
+  #define ANALOG_BUTTON_LEVELS {933, 980, 1024}
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HT16K33
+  #define INTERFACE_TYPE INTERFACE_TYPE_TWO_WIRE
+  #define HT16K33_I2C_ADDRESS 0x70
+  #define SDA_PIN SDA
+  #define SCL_PIN SCL
+  #define BIT_DELAY 4
 
 #elif defined(AUNITER_ATTINY_HC595)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
