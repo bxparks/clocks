@@ -24,6 +24,7 @@ Supported boards are:
 #include <digitalWriteFast.h>
 #include <ace_segment/hw/SoftSpiFastInterface.h>
 #include <ace_segment/hw/SoftTmiFastInterface.h>
+#include <ace_segment/hw/SimpleWireFastInterface.h>
 #include <ace_segment/direct/DirectFast4Module.h>
 #endif
 
@@ -154,9 +155,6 @@ void setupClocks() {
 // Configure LED display using AceSegment.
 //------------------------------------------------------------------
 
-// Use polling or interrupt for AceSegment
-#define USE_INTERRUPT 0
-
 const uint8_t FRAMES_PER_SECOND = 60;
 
 // The chain of resources.
@@ -165,12 +163,12 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
     using TmiInterface = SoftTmiInterface;
     TmiInterface tmiInterface(DIO_PIN, CLK_PIN, BIT_DELAY);
-    Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
   #else
     using TmiInterface = SoftTmiFastInterface<DIO_PIN, CLK_PIN, BIT_DELAY>;
     TmiInterface tmiInterface;
-    Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
   #endif
+
+  Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
   const uint8_t BRIGHTNESS_LEVELS = 7;
   const uint8_t BRIGHTNESS_MIN = 1;
   const uint8_t BRIGHTNESS_MAX = 7;
@@ -184,8 +182,30 @@ const uint8_t FRAMES_PER_SECOND = 60;
     using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
   #endif
+
   Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface, kDigitRemapArray8Max7219);
+
+  const uint8_t BRIGHTNESS_LEVELS = 16;
+  const uint8_t BRIGHTNESS_MIN = 0;
+  const uint8_t BRIGHTNESS_MAX = 15;
+
+#elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
+  const uint8_t NUM_DIGITS = 4;
+  #if INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+    #include <Wire.h>
+    using WireInterface = TwoWireInterface<TwoWire>;
+    WireInterface wireInterface(Wire);
+  #elif INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
+    using WireInterface = SimpleWireInterface;
+    WireInterface wireInterface(SDA_PIN, SCL_PIN, BIT_DELAY);
+  #elif INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
+    using WireInterface = SimpleWireFastInterface<SDA_PIN, SCL_PIN, BIT_DELAY>;
+    WireInterface wireInterface;
+  #endif
+
+  Ht16k33Module<WireInterface, NUM_DIGITS> ledModule(
+      wireInterface, HT16K33_I2C_ADDRESS, true /* enableColon */);
 
   const uint8_t BRIGHTNESS_LEVELS = 16;
   const uint8_t BRIGHTNESS_MIN = 0;
@@ -201,6 +221,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
     using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
   #endif
+
   Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
       kActiveLowPattern,
@@ -302,56 +323,37 @@ void setupAceSegment() {
     spiInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
     tmiInterface.begin();
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
+    wireInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
   #else
     #error Unknown LED_DISPLAY_TYPE
   #endif
+
   ledModule.begin();
 }
 
-#if USE_INTERRUPT == 1
-  // interrupt handler for timer 2
-  ISR(TIMER2_COMPA_vect) {
-    ledModule.renderFieldNow();
+COROUTINE(renderLed) {
+  COROUTINE_LOOP() {
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT \
+      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID \
+      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
+    ledModule.renderFieldWhenReady();
+    COROUTINE_YIELD();
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+    ledModule.flushIncremental();
+    COROUTINE_DELAY(20);
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
+    ledModule.flush();
+    COROUTINE_DELAY(100);
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
+    ledModule.flush();
+    COROUTINE_DELAY(100);
+  #endif
   }
-#else
-  COROUTINE(renderLed) {
-    COROUTINE_LOOP() {
-    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT \
-        || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID \
-        || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
-      ledModule.renderFieldWhenReady();
-    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-      ledModule.flushIncremental();
-    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
-      ledModule.flush();
-    #endif
-
-      COROUTINE_YIELD();
-    }
-  }
-#endif
+}
 
 void setupRenderingInterrupt() {
-#if USE_INTERRUPT == 1
-  // set up Timer 2
-  uint8_t timerCompareValue =
-      (long) F_CPU / 1024 / ledModule.getFieldsPerSecond() - 1;
-  #if ENABLE_SERIAL_DEBUG >= 1
-    Serial.print(F("Timer 2, Compare A: "));
-    Serial.println(timerCompareValue);
-  #endif
-
-  noInterrupts();
-  TCNT2  = 0;	// Initialize counter value to 0
-  TCCR2A = 0;
-  TCCR2B = 0;
-  TCCR2A |= bit(WGM21); // CTC
-  TCCR2B |= bit(CS22) | bit(CS21) | bit(CS20); // prescale 1024
-  TIMSK2 |= bit(OCIE2A); // interrupt on Compare A Match
-  OCR2A =  timerCompareValue;
-  interrupts();
-#endif
 }
 
 //------------------------------------------------------------------
@@ -497,9 +499,9 @@ void setup() {
 #endif
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
-    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
+    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH \
+    || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
   Wire.begin();
-  Wire.setClock(400000L);
 #endif
 
   setupPersistentStore();
