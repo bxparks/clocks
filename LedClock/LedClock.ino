@@ -12,7 +12,9 @@ Supported boards are:
 */
 
 #include "config.h"
-#include <Wire.h>
+#include <AceSPI.h>
+#include <AceTMI.h>
+#include <AceWire.h>
 #include <AceSegment.h>
 #include <AceButton.h>
 #include <AceRoutine.h>
@@ -22,9 +24,9 @@ Supported boards are:
 
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
-#include <ace_segment/hw/SoftSpiFastInterface.h>
-#include <ace_segment/hw/SoftTmiFastInterface.h>
-#include <ace_segment/hw/SimpleWireFastInterface.h>
+#include <ace_spi/SoftSpiFastInterface.h>
+#include <ace_tmi/SoftTmiFastInterface.h>
+#include <ace_wire/SimpleWireFastInterface.h>
 #include <ace_segment/direct/DirectFast4Module.h>
 #endif
 
@@ -33,6 +35,9 @@ using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
+using namespace ace_spi;
+using namespace ace_tmi;
+using namespace ace_wire;
 
 //------------------------------------------------------------------
 // Configure PersistentStore
@@ -112,12 +117,14 @@ static ExtendedZoneManager<CACHE_SIZE> zoneManager(
 //------------------------------------------------------------------
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+  #include <Wire.h>
   DS3231Clock dsClock;
   SYSTEM_CLOCK systemClock(&dsClock /*ref*/, &dsClock /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   NtpClock ntpClock;
   SYSTEM_CLOCK systemClock(&ntpClock /*ref*/, nullptr /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
+  #include <Wire.h>
   DS3231Clock dsClock;
   NtpClock ntpClock;
   SYSTEM_CLOCK systemClock(&ntpClock /*ref*/, &dsClock /*backup*/);

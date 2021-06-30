@@ -50,6 +50,9 @@ Memory size (flash/ram) for `au --cli verify attiny_tm1637`:
 
 #include "config.h"
 #include <Wire.h>
+#include <AceSPI.h>
+#include <AceTMI.h>
+#include <AceWire.h>
 #include <AceSegment.h>
 #include <AceButton.h>
 #include <AceTime.h>
@@ -58,14 +61,17 @@ Memory size (flash/ram) for `au --cli verify attiny_tm1637`:
 
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
-#include <ace_segment/hw/SoftSpiFastInterface.h>
-#include <ace_segment/hw/SoftTmiFastInterface.h>
+#include <ace_spi/SoftSpiFastInterface.h>
+#include <ace_tmi/SoftTmiFastInterface.h>
 #endif
 
 using namespace ace_segment;
 using namespace ace_button;
 using namespace ace_time;
 using namespace ace_time::clock;
+using namespace ace_spi;
+using namespace ace_tmi;
+using namespace ace_wire;
 
 //------------------------------------------------------------------
 // Configure PersistentStore
@@ -136,7 +142,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
   // Common Anode, with transistors on Group pins
-  const uint8_t NUM_DIGITS = 4;
+  const uint8_t NUM_DIGITS = 8;
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
     using SpiInterface = SoftSpiInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
@@ -175,15 +181,17 @@ void setupAceSegment() {
 }
 
 void renderLed() {
+#if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
+  ledModule.renderFieldWhenReady();
+
+#else
   static uint16_t lastRunMillis;
 
   uint16_t nowMillis = millis();
   if (nowMillis - lastRunMillis >= 200) {
     lastRunMillis = nowMillis;
 
-    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
-      ledModule.renderFieldWhenReady();
-    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
       ledModule.flushIncremental();
     #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
       ledModule.flush();
@@ -191,6 +199,7 @@ void renderLed() {
       ledModule.flush();
     #endif
   }
+#endif
 }
 
 //------------------------------------------------------------------
