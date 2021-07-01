@@ -214,7 +214,7 @@ void renderLed() {
   uint16_t nowMillis = millis();
   uint16_t elapsedMillis = nowMillis - lastRunMillis;
   #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-    if (elapsedMillis >= 20) {
+    if (elapsedMillis >= 5) {
       lastRunMillis = nowMillis;
       ledModule.flushIncremental();
     }
