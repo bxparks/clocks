@@ -232,6 +232,95 @@
   #define DATA_PIN 1
   #define CLOCK_PIN 3
 
+#elif defined(AUNITER_D1MINI_LARGE_TM1637)
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 2
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*short to ground*/, \
+      327 /*32%, 4.7k*/, \
+      512 /*50%, 10k*/, \
+      844 /*82%, 47k*/, \
+      1023 /*100%, open*/ \
+    }
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_TWO_WIRE
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_TM1637
+  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define CLK_PIN D5
+  #define DIO_PIN D7
+  #define BIT_DELAY 100
+
+#elif defined(AUNITER_D1MINI_LARGE_MAX7219)
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 2
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*short to ground*/, \
+      327 /*32%, 4.7k*/, \
+      512 /*50%, 10k*/, \
+      844 /*82%, 47k*/, \
+      1023 /*100%, open*/ \
+    }
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_TWO_WIRE
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_MAX7219
+  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define LATCH_PIN D8
+  #define DATA_PIN MOSI
+  #define CLOCK_PIN SCK
+
+#elif defined(AUNITER_D1MINI_LARGE_HT16K33)
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 2
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*short to ground*/, \
+      327 /*32%, 4.7k*/, \
+      512 /*50%, 10k*/, \
+      844 /*82%, 47k*/, \
+      1023 /*100%, open*/ \
+    }
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_WIRE
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HT16K33
+  #define INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_WIRE
+  #define HT16K33_I2C_ADDRESS 0x70
+  #define SDA_PIN SDA
+  #define SCL_PIN SCL
+  #define BIT_DELAY 4
+
+#elif defined(AUNITER_D1MINI_LARGE_HC595)
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 2
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*short to ground*/, \
+      327 /*32%, 4.7k*/, \
+      512 /*50%, 10k*/, \
+      844 /*82%, 47k*/, \
+      1023 /*100%, open*/ \
+    }
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_TWO_WIRE
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595
+  #define INTERFACE_TYPE INTERFACE_TYPE_NORMAL
+  #define LATCH_PIN D8
+  #define DATA_PIN MOSI
+  #define CLOCK_PIN SCK
+
 #else
   #error Unknown AUNITER environment
 #endif
