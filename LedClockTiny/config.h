@@ -138,11 +138,6 @@
   #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_TWO_WIRE
 
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595
-  #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
-  #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
-  #define SEGMENT_ON_PATTERN kActiveLowPattern
-  #define DIGIT_ON_PATTERN kActiveHighPattern
-
   #define INTERFACE_TYPE INTERFACE_TYPE_FAST
   #define LATCH_PIN 10
   #define DATA_PIN MOSI
@@ -232,11 +227,6 @@
   #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_TWO_WIRE
 
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595
-  #define HC595_BYTE_ORDER ace_segment::kByteOrderSegmentHighDigitLow
-  #define REMAP_ARRAY ace_segment::kDigitRemapArray8Hc595
-  #define SEGMENT_ON_PATTERN kActiveLowPattern
-  #define DIGIT_ON_PATTERN kActiveHighPattern
-
   #define INTERFACE_TYPE INTERFACE_TYPE_FAST
   #define LATCH_PIN 4
   #define DATA_PIN 1

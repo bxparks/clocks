@@ -172,11 +172,11 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #endif
   Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
-      SEGMENT_ON_PATTERN,
-      DIGIT_ON_PATTERN,
+      kActiveLowPattern /* segmentOnPattern */,
+      kActiveHighPattern /* digitOnPattern */,
       FRAMES_PER_SECOND,
-      HC595_BYTE_ORDER,
-      REMAP_ARRAY
+      ace_segment::kByteOrderSegmentHighDigitLow /* byteOrder */,
+      ace_segment::kDigitRemapArray8Hc595 /* remapArray */
   );
 
 #else
