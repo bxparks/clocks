@@ -109,6 +109,8 @@ using ace_time::hw::DS3231Module;
   using DS3231WireInterface = SimpleWireFastInterface<
       SDA_PIN, SCL_PIN, BIT_DELAY>;
   DS3231WireInterface ds3231WireInterface;
+#else
+  #error Unknown DS3231_INTERFACE_TYPE
 #endif
 DS3231Module<DS3231WireInterface> ds3231(ds3231WireInterface);
 
@@ -318,8 +320,13 @@ void handleButtonEvent(AceButton* button, uint8_t eventType,
 
 void setupAceButton() {
 #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
-  pinModeFast(MODE_BUTTON_PIN, INPUT_PULLUP);
-  pinModeFast(CHANGE_BUTTON_PIN, INPUT_PULLUP);
+  #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
+    pinModeFast(MODE_BUTTON_PIN, INPUT_PULLUP);
+    pinModeFast(CHANGE_BUTTON_PIN, INPUT_PULLUP);
+  #else
+    pinMode(MODE_BUTTON_PIN, INPUT_PULLUP);
+    pinMode(CHANGE_BUTTON_PIN, INPUT_PULLUP);
+  #endif
 #endif
 
   buttonConfig.setEventHandler(handleButtonEvent);
