@@ -157,6 +157,8 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #elif INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
     using WireInterface = SimpleWireFastInterface<SDA_PIN, SCL_PIN, BIT_DELAY>;
     WireInterface wireInterface;
+  #else
+    #error Unknown INTERFACE_TYPE
   #endif
 
   Ht16k33Module<WireInterface, NUM_DIGITS> ledModule(
@@ -210,15 +212,15 @@ void renderLed() {
   static uint16_t lastRunMillis;
 
   uint16_t nowMillis = millis();
-
+  uint16_t elapsedMillis = nowMillis - lastRunMillis;
   #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-    if (nowMillis - lastRunMillis >= 20) {
+    if (elapsedMillis >= 20) {
       lastRunMillis = nowMillis;
       ledModule.flushIncremental();
     }
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219 \
       || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
-    if (nowMillis - lastRunMillis >= 200) {
+    if (elapsedMillis >= 200) {
       lastRunMillis = nowMillis;
       ledModule.flush();
     }
@@ -246,7 +248,8 @@ void updateClock() {
   static uint16_t lastRunMillis;
 
   uint16_t nowMillis = millis();
-  if (nowMillis - lastRunMillis >= 200) {
+  uint16_t elapsedMillis = nowMillis - lastRunMillis;
+  if (elapsedMillis >= 200) {
     lastRunMillis = nowMillis;
     controller.update();
   }
@@ -345,7 +348,8 @@ void checkButtons() {
   static uint16_t lastRunMillis;
 
   uint16_t nowMillis = millis();
-  if (nowMillis - lastRunMillis >= 5) {
+  uint16_t elapsedMillis = nowMillis - lastRunMillis;
+  if (elapsedMillis >= 5) {
     lastRunMillis = nowMillis;
   #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
     modeButton.check();
