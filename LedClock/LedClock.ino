@@ -349,13 +349,15 @@ COROUTINE(renderLed) {
     COROUTINE_YIELD();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
     ledModule.flushIncremental();
-    COROUTINE_DELAY(20);
+    COROUTINE_DELAY(5);
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
     ledModule.flush();
     COROUTINE_DELAY(100);
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
     ledModule.flush();
     COROUTINE_DELAY(100);
+  #else
+    #error Unknown LED_DISPLAY_TYPE
   #endif
   }
 }

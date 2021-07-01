@@ -46,16 +46,22 @@ Memory size (flash/ram) for `au --cli verify attiny_tm1637`:
       * Pro Micro: 10832/518 (no EEPROM)
       * ATtiny85: 7310/260 (EEPROM)
       * ATtiny85: 6366/250 (no EEPROM)
+  * Remove <Wire.h> unless explicitly needed,
+    DS3231_INTERFACE_TYPE = SIMPLE_WIRE_FAST
+      * Pro Micro: 10776/438 (EEPROM)
+      * Pro Micro: 9996/428 (no EEPROM)
+      * ATtiny85: 6902/268 (EEPROM)
+      * ATtiny85: 5958/258 (no EEPROM)
 */
 
 #include "config.h"
-#include <Wire.h>
 #include <AceSPI.h>
 #include <AceTMI.h>
 #include <AceWire.h>
 #include <AceSegment.h>
 #include <AceButton.h>
 #include <AceTime.h>
+#include <ace_time/hw/DS3231Module.h>
 #include <AceUtilsCrcEeprom.h>
 #include "Controller.h"
 
@@ -63,6 +69,7 @@ Memory size (flash/ram) for `au --cli verify attiny_tm1637`:
 #include <digitalWriteFast.h>
 #include <ace_spi/SoftSpiFastInterface.h>
 #include <ace_tmi/SoftTmiFastInterface.h>
+#include <ace_wire/SimpleWireFastInterface.h>
 #endif
 
 using namespace ace_segment;
@@ -90,7 +97,22 @@ void setupPersistentStore() {
 // Configure various Clocks
 //------------------------------------------------------------------
 
-DS3231 ds3231;
+using ace_time::hw::DS3231Module;
+#if DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+  #include <Wire.h>
+  using DS3231WireInterface = TwoWireInterface<TwoWire>;
+  DS3231WireInterface ds3231WireInterface(Wire);
+#elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
+  using DS3231WireInterface = SimpleWireInterface;
+  DS3231WireInterface ds3231WireInterface(SDA_PIN, SCL_PIN, BIT_DELAY);
+#elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
+  using DS3231WireInterface = SimpleWireFastInterface<
+      SDA_PIN, SCL_PIN, BIT_DELAY>;
+  DS3231WireInterface ds3231WireInterface;
+#else
+  #error Unknown DS3231_INTERFACE_TYPE
+#endif
+DS3231Module<DS3231WireInterface> ds3231(ds3231WireInterface);
 
 //------------------------------------------------------------------
 // Configure LED display using AceSegment.
@@ -135,6 +157,8 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #elif INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
     using WireInterface = SimpleWireFastInterface<SDA_PIN, SCL_PIN, BIT_DELAY>;
     WireInterface wireInterface;
+  #else
+    #error Unknown INTERFACE_TYPE
   #endif
 
   Ht16k33Module<WireInterface, NUM_DIGITS> ledModule(
@@ -152,11 +176,11 @@ const uint8_t FRAMES_PER_SECOND = 60;
   #endif
   Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
-      SEGMENT_ON_PATTERN,
-      DIGIT_ON_PATTERN,
+      kActiveLowPattern /* segmentOnPattern */,
+      kActiveHighPattern /* digitOnPattern */,
       FRAMES_PER_SECOND,
-      HC595_BYTE_ORDER,
-      REMAP_ARRAY
+      ace_segment::kByteOrderSegmentHighDigitLow /* byteOrder */,
+      ace_segment::kDigitRemapArray8Hc595 /* remapArray */
   );
 
 #else
@@ -188,17 +212,19 @@ void renderLed() {
   static uint16_t lastRunMillis;
 
   uint16_t nowMillis = millis();
-  if (nowMillis - lastRunMillis >= 200) {
-    lastRunMillis = nowMillis;
-
-    #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+  uint16_t elapsedMillis = nowMillis - lastRunMillis;
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
+    if (elapsedMillis >= 5) {
+      lastRunMillis = nowMillis;
       ledModule.flushIncremental();
-    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
+    }
+  #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219 \
+      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
+    if (elapsedMillis >= 200) {
+      lastRunMillis = nowMillis;
       ledModule.flush();
-    #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
-      ledModule.flush();
-    #endif
-  }
+    }
+  #endif
 #endif
 }
 
@@ -222,7 +248,8 @@ void updateClock() {
   static uint16_t lastRunMillis;
 
   uint16_t nowMillis = millis();
-  if (nowMillis - lastRunMillis >= 200) {
+  uint16_t elapsedMillis = nowMillis - lastRunMillis;
+  if (elapsedMillis >= 200) {
     lastRunMillis = nowMillis;
     controller.update();
   }
@@ -296,8 +323,13 @@ void handleButtonEvent(AceButton* button, uint8_t eventType,
 
 void setupAceButton() {
 #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
-  pinModeFast(MODE_BUTTON_PIN, INPUT_PULLUP);
-  pinModeFast(CHANGE_BUTTON_PIN, INPUT_PULLUP);
+  #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
+    pinModeFast(MODE_BUTTON_PIN, INPUT_PULLUP);
+    pinModeFast(CHANGE_BUTTON_PIN, INPUT_PULLUP);
+  #else
+    pinMode(MODE_BUTTON_PIN, INPUT_PULLUP);
+    pinMode(CHANGE_BUTTON_PIN, INPUT_PULLUP);
+  #endif
 #endif
 
   buttonConfig.setEventHandler(handleButtonEvent);
@@ -316,7 +348,8 @@ void checkButtons() {
   static uint16_t lastRunMillis;
 
   uint16_t nowMillis = millis();
-  if (nowMillis - lastRunMillis >= 5) {
+  uint16_t elapsedMillis = nowMillis - lastRunMillis;
+  if (elapsedMillis >= 5) {
     lastRunMillis = nowMillis;
   #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
     modeButton.check();
@@ -349,9 +382,11 @@ void setup() {
   Serial.println(F("setup(): begin"));
 #endif
 
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
-    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH \
-    || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
+#if ((TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
+      || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH) \
+      && DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE) \
+    || (LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33 \
+      && INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE)
   Wire.begin();
 #endif
 
