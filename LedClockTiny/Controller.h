@@ -3,6 +3,7 @@
 
 #include <AceCommon.h> // incrementModOffset()
 #include <AceTime.h>
+#include <ace_time/hw/DS3231Module.h>
 #include <AceSegment.h>
 #include "config.h"
 #include "ClockInfo.h"
@@ -12,7 +13,7 @@
 
 using namespace ace_segment;
 using namespace ace_time;
-using ace_time::hw::DS3231;
+using ace_time::hw::DS3231Interface;
 using ace_common::incrementModOffset;
 using ace_common::incrementMod;
 
@@ -20,7 +21,7 @@ class Controller {
   public:
     /** Constructor. */
     Controller(
-        DS3231& clock,
+        DS3231Interface& clock,
         PersistentStore& persistentStore,
         Presenter& presenter
     ) :
@@ -396,7 +397,7 @@ class Controller {
     }
 
   private:
-    DS3231& mClock;
+    DS3231Interface& mClock;
     PersistentStore& mPersistentStore;
     Presenter& mPresenter;
 
