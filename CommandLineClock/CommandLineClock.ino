@@ -48,16 +48,18 @@
 
 #include <Wire.h>
 #include <AceRoutine.h>
-#include <AceUtilsCli.h>
+#include <AceUtils.h>
+#include <cli/cli.h> // StreamChannelManager from AceUtils
 #include <AceTime.h>
 #include "config.h"
 #include "Controller.h"
 #include "PersistentStore.h"
 
-using namespace ace_routine;
+using ace_routine::CoroutineScheduler;
 using namespace ace_time;
 using namespace ace_time::clock;
-using namespace ace_utils::cli;
+using ace_utils::cli::StreamChannelManager;
+using ace_utils::cli::CommandHandler;
 
 //---------------------------------------------------------------------------
 // Configure RTC and Clock
@@ -427,11 +429,11 @@ const CommandHandler* const COMMANDS[] = {
 };
 uint8_t const NUM_COMMANDS = sizeof(COMMANDS) / sizeof(CommandHandler*);
 
-// Create an instance of the CommandManager.
+// StreamChannelManager auto-inserts itself into CoroutineScheduler.
 uint8_t const BUF_SIZE = 64;
 uint8_t const ARGV_SIZE = 5;
-CommandManager<BUF_SIZE, ARGV_SIZE> commandManager(
-    COMMANDS, NUM_COMMANDS, SERIAL_PORT_MONITOR, "> ");
+StreamChannelManager<BUF_SIZE, ARGV_SIZE> commandManager(
+    COMMANDS, NUM_COMMANDS, SERIAL_PORT_MONITOR, "> " /*prompt*/);
 
 //---------------------------------------------------------------------------
 // Main setup and loop
