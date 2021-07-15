@@ -62,7 +62,8 @@ Memory size (flash/ram) for `au --cli verify attiny_tm1637`:
 #include <AceButton.h>
 #include <AceTime.h>
 #include <ace_time/hw/DS3231Module.h>
-#include <AceUtilsCrcEeprom.h>
+#include <AceUtils.h>
+#include <crc_eeprom/crc_eeprom.h> // from AceUtils
 #include "Controller.h"
 
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)

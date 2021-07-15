@@ -6,7 +6,8 @@
 
 #if ENABLE_EEPROM
 
-#include <AceUtilsCrcEeprom.h>
+#include <AceUtils.h>
+#include <crc_eeprom/crc_eeprom.h> // from AceUtils
 
 #if defined(EPOXY_DUINO)
   #include <EpoxyEepromEsp.h>

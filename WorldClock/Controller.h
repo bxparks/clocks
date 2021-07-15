@@ -4,7 +4,8 @@
 #include "config.h"
 #include <AceCommon.h> // incrementMod
 #include <AceTime.h>
-#include <AceUtilsCrcEeprom.h>
+#include <AceUtils.h>
+#include <crc_eeprom/crc_eeprom.h> // from AceUtils
 #include <AceUtilsModeGroup.h>
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
