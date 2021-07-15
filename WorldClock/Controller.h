@@ -6,7 +6,7 @@
 #include <AceTime.h>
 #include <AceUtils.h>
 #include <crc_eeprom/crc_eeprom.h> // from AceUtils
-#include <AceUtilsModeGroup.h>
+#include <mode_group/mode_group.h> // from AceUtils
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
 #include "PersistentStore.h"

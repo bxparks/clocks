@@ -31,7 +31,8 @@
     || TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDEDDB
   #include <AceTimePro.h> // BasicDbZoneManager, ExtendedDbZoneManager
 #endif
-#include <AceUtilsModeGroup.h>
+#include <AceUtils.h>
+#include <mode_group/mode_group.h> // from AceUtils
 #include <SPI.h>
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
   #include <SSD1306AsciiWire.h>

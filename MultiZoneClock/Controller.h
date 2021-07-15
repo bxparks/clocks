@@ -4,8 +4,8 @@
 #include "config.h"
 #include <AceCommon.h> // incrementMod
 #include <AceTime.h>
-#include <AceUtilsModeGroup.h>
-#include "config.h"
+#include <AceUtils.h>
+#include <mode_group/mode_group.h> // from AceUtils
 #include "ClockInfo.h"
 #include "RenderingInfo.h"
 #include "StoredInfo.h"

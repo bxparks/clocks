@@ -26,7 +26,8 @@
 #include <AceRoutine.h>
 #include <AceTime.h>
 #include <AceCommon.h>
-#include <AceUtilsModeGroup.h>
+#include <AceUtils.h>
+#include <mode_group/mode_group.h> // from AceUtils
 #include <SSD1306AsciiSpi.h>
 #include "ClockInfo.h"
 #include "Controller.h"
