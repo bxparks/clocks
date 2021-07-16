@@ -19,7 +19,8 @@
   #include <EEPROM.h>
   using ace_utils::crc_eeprom::CrcEepromEsp;
 #elif defined(ARDUINO_ARCH_STM32)
-  #include <AceUtilsBufferedEepromStm32.h>
+  #include <AceUtils.h>
+  #include <buffered_eeprom_stm32/buffered_eeprom_stm32.h>
   using ace_utils::crc_eeprom::CrcEepromEsp;
 #else
   #error Unsupported platform for EEPROM
