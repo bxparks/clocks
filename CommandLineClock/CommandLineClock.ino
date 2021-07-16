@@ -49,7 +49,7 @@
 #include <Wire.h>
 #include <AceRoutine.h>
 #include <AceUtils.h>
-#include <cli/cli.h> // StreamChannelManager from AceUtils
+#include <cli/cli.h> // StreamProcessorManager from AceUtils
 #include <AceTime.h>
 #include "config.h"
 #include "Controller.h"
@@ -58,7 +58,7 @@
 using ace_routine::CoroutineScheduler;
 using namespace ace_time;
 using namespace ace_time::clock;
-using ace_utils::cli::StreamChannelManager;
+using ace_utils::cli::StreamProcessorManager;
 using ace_utils::cli::CommandHandler;
 
 //---------------------------------------------------------------------------
@@ -429,10 +429,11 @@ const CommandHandler* const COMMANDS[] = {
 };
 uint8_t const NUM_COMMANDS = sizeof(COMMANDS) / sizeof(CommandHandler*);
 
-// StreamChannelManager auto-inserts itself into CoroutineScheduler.
+// StreamProcessorCoroutine inside StreamProcessorManager auto-inserts itself
+// into CoroutineScheduler.
 uint8_t const BUF_SIZE = 64;
 uint8_t const ARGV_SIZE = 5;
-StreamChannelManager<BUF_SIZE, ARGV_SIZE> commandManager(
+StreamProcessorManager<BUF_SIZE, ARGV_SIZE> commandManager(
     COMMANDS, NUM_COMMANDS, SERIAL_PORT_MONITOR, "> " /*prompt*/);
 
 //---------------------------------------------------------------------------
