@@ -434,7 +434,8 @@ uint8_t const NUM_COMMANDS = sizeof(COMMANDS) / sizeof(CommandHandler*);
 uint8_t const BUF_SIZE = 64;
 uint8_t const ARGV_SIZE = 5;
 StreamProcessorManager<BUF_SIZE, ARGV_SIZE> commandManager(
-    COMMANDS, NUM_COMMANDS, SERIAL_PORT_MONITOR, "> " /*prompt*/);
+    SERIAL_PORT_MONITOR, COMMANDS, NUM_COMMANDS, SERIAL_PORT_MONITOR,
+    "> " /*prompt*/);
 
 //---------------------------------------------------------------------------
 // Main setup and loop
