@@ -24,8 +24,8 @@ Supported boards are:
 
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
-#include <ace_spi/SoftSpiFastInterface.h>
-#include <ace_tmi/SoftTmiFastInterface.h>
+#include <ace_spi/SimpleSpiFastInterface.h>
+#include <ace_tmi/SimpleTmiFastInterface.h>
 #include <ace_wire/SimpleWireFastInterface.h>
 #include <ace_segment/direct/DirectFast4Module.h>
 #endif
@@ -168,10 +168,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
   const uint8_t NUM_DIGITS = 4;
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    using TmiInterface = SoftTmiInterface;
+    using TmiInterface = SimpleTmiInterface;
     TmiInterface tmiInterface(DIO_PIN, CLK_PIN, BIT_DELAY);
   #else
-    using TmiInterface = SoftTmiFastInterface<DIO_PIN, CLK_PIN, BIT_DELAY>;
+    using TmiInterface = SimpleTmiFastInterface<DIO_PIN, CLK_PIN, BIT_DELAY>;
     TmiInterface tmiInterface;
   #endif
 
@@ -183,10 +183,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
   const uint8_t NUM_DIGITS = 8;
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    using SpiInterface = SoftSpiInterface;
+    using SpiInterface = SimpleSpiInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
   #else
-    using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+    using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
   #endif
 
@@ -222,10 +222,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
   // Common Anode, with transistors on Group pins
   const uint8_t NUM_DIGITS = 8;
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    using SpiInterface = SoftSpiInterface;
+    using SpiInterface = SimpleSpiInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
   #else
-    using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+    using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
   #endif
 
@@ -276,10 +276,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t NUM_DIGITS = 4;
   const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    using SpiInterface = SoftSpiInterface;
+    using SpiInterface = SimpleSpiInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
   #else
-    using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+    using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
   #endif
   HybridModule<SpiInterface, NUM_DIGITS> ledModule(
@@ -298,10 +298,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
   // Common Anode, with transistors on Group pins
   const uint8_t NUM_DIGITS = 4;
   #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    using SpiInterface = SoftSpiInterface;
+    using SpiInterface = SimpleSpiInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
   #else
-    using SpiInterface = SoftSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+    using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
   #endif
   Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
