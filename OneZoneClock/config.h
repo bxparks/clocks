@@ -130,8 +130,8 @@
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
-  #define MODE_BUTTON_PIN 8
-  #define CHANGE_BUTTON_PIN 9
+  #define MODE_BUTTON_PIN A2
+  #define CHANGE_BUTTON_PIN A3
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
