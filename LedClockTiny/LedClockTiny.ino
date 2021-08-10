@@ -59,6 +59,7 @@ Memory size (flash/ram) for `au --cli verify attiny_tm1637`:
 #include <AceTMI.h>
 #include <AceWire.h>
 #include <AceSegment.h>
+#include <AceSegmentWriter.h>
 #include <AceButton.h>
 #include <AceTime.h>
 #include <ace_time/hw/DS3231Module.h>

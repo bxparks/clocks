@@ -3,13 +3,13 @@
 
 #include <AceTime.h>
 #include <AceSegment.h>
+#include <AceSegmentWriter.h>
 #include "config.h"
 #include "RenderingInfo.h"
 
 using ace_time::DateStrings;
 using ace_time::ZonedDateTime;
 using ace_segment::kHexCharSpace;
-using ace_segment::LedModule;
 using ace_segment::LedModule;
 using ace_segment::PatternWriter;
 using ace_segment::ClockWriter;

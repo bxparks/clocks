@@ -4,7 +4,7 @@
 APP_NAME := LedClock
 ARDUINO_LIBS := EpoxyEepromEsp EpoxyMockDigitalWriteFast AUnit \
 	AceCommon AceCRC AceButton AceTime \
-	AceRoutine AceUtils AceSPI AceTMI AceWire AceSegment
+	AceRoutine AceUtils AceSPI AceTMI AceWire AceSegment AceSegmentWriter
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 
