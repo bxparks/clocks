@@ -32,32 +32,27 @@ class Presenter {
       if (needsClear()) {
         clearDisplay();
       }
+
       if (needsUpdate()) {
+      #if ENABLE_SERIAL_DEBUG == 1
+        SERIAL_PORT_MONITOR.println(F("display(): needsUpdate"));
+      #endif
+
         updateDisplaySettings();
         displayData();
-        mIsRendered = true;
+        mPrevRenderingInfo = mRenderingInfo;
       }
     }
 
     /**
      * Set the RenderingInfo of the Presenter. This is called about 10 times a
      * second.
-     *
-     * Updating the rendering info is decoupled from the actual rendering
-     * because it takes too long to render the 3 OLED displays, while blocking
-     * everything else. So the 'mIsRendered' flag is used to keep track of
-     * whether the mPrevRenderingInfo has actually been rendered or not, before
-     * clobbering it with the new RenderingInfo.
      */
     void setRenderingInfo(
         Mode mode, acetime_t now,
         bool blinkShowState,
         const ClockInfo& clockInfo,
         const TimeZone& primaryTimeZone) {
-      if (mIsRendered) {
-        mPrevRenderingInfo = mRenderingInfo;
-        mIsRendered = false;
-      }
 
       mRenderingInfo.mode = mode;
       mRenderingInfo.now = now;
@@ -84,33 +79,38 @@ class Presenter {
       ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
       ClockInfo& clockInfo = mRenderingInfo.clockInfo;
 
+      // Update contrastLevel if changed.
       if (mPrevRenderingInfo.mode == Mode::kUnknown
           || prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
         uint8_t value = toContrastValue(clockInfo.contrastLevel);
         mOled.setContrast(value);
       }
 
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
-          || prevClockInfo.invertDisplay != clockInfo.invertDisplay
-          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayAuto) {
-        if (clockInfo.invertDisplay != ClockInfo::kInvertDisplayAuto) {
-          mRenderingInfo.invertDisplay = clockInfo.invertDisplay;
-          mOled.invertDisplay(clockInfo.invertDisplay);
-        } else {
-          // Invert the display for 12 hours, from 7am to 7pm.
-          const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
-              mRenderingInfo.now, mRenderingInfo.primaryTimeZone);
-          const LocalDateTime& ldt = dateTime.localDateTime();
-          uint8_t invertDisplay = (7 <= ldt.hour() && ldt.hour() < 19)
+      // Calculate the next actual invertDisplay setting.
+      uint8_t invertDisplay;
+      if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+        const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
+            mRenderingInfo.now, mRenderingInfo.primaryTimeZone);
+        const LocalDateTime& ldt = dateTime.localDateTime();
+        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+          invertDisplay = (ldt.hour() & 0x1)
               ? ClockInfo::kInvertDisplayOn
               : ClockInfo::kInvertDisplayOff;
-          mRenderingInfo.invertDisplay = invertDisplay;
-
-          // Update display if changed.
-          if (mPrevRenderingInfo.invertDisplay != invertDisplay) {
-            mOled.invertDisplay(invertDisplay);
-          }
+        } else {
+          invertDisplay = (7 <= ldt.hour() && ldt.hour() < 19)
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
         }
+      } else {
+        invertDisplay = clockInfo.invertDisplay;
+      }
+      mRenderingInfo.invertDisplay = invertDisplay;
+
+      // Update invertDisplay if changed.
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || mPrevRenderingInfo.invertDisplay != invertDisplay) {
+        mOled.invertDisplay(invertDisplay);
       }
     }
 
@@ -303,7 +303,7 @@ class Presenter {
         mOled.print(clockInfo.hourMode == ClockInfo::kTwelve
             ? "12" : "24");
       } else {
-        mOled.print("  ");
+        mOled.clearToEOL();
       }
       mOled.println();
 
@@ -311,7 +311,7 @@ class Presenter {
       if (shouldShowFor(Mode::kChangeBlinkingColon)) {
         mOled.print(clockInfo.blinkingColon ? "on " : "off");
       } else {
-        mOled.print("   ");
+        mOled.clearToEOL();
       }
       mOled.println();
 
@@ -319,15 +319,21 @@ class Presenter {
       if (shouldShowFor(Mode::kChangeContrast)) {
         mOled.print(clockInfo.contrastLevel);
       } else {
-        mOled.print(' ');
+        mOled.clearToEOL();
       }
       mOled.println();
 
       mOled.print(F("Invert:"));
       if (shouldShowFor(Mode::kChangeInvertDisplay)) {
-        mOled.println(clockInfo.invertDisplay);
+        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+          mOled.println(F("hour"));
+        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily) {
+          mOled.println(F("day"));
+        } else {
+          mOled.println(clockInfo.invertDisplay);
+        }
       } else {
-        mOled.println(' ');
+        mOled.clearToEOL();
       }
 
       // Extract time zone info.
@@ -352,7 +358,7 @@ class Presenter {
           && shouldShowFor(Mode::kChangeTimeZoneDst2)) {
         mOled.print(timeZone.isDst() ? "on " : "off");
       } else {
-        mOled.print("   ");
+        mOled.clearToEOL();
       }
       mOled.println();
 #endif
@@ -393,7 +399,6 @@ class Presenter {
     RenderingInfo mRenderingInfo;
     RenderingInfo mPrevRenderingInfo;
     ClockInfo mPrimaryClockInfo;
-    bool mIsRendered = true; // true after a successful display()
 };
 
 #endif

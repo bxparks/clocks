@@ -300,9 +300,9 @@ class Controller {
 
         case Mode::kChangeInvertDisplay:
           mSuppressBlink = true;
-          incrementMod(mClockInfo0.invertDisplay, (uint8_t) 3);
-          incrementMod(mClockInfo1.invertDisplay, (uint8_t) 3);
-          incrementMod(mClockInfo2.invertDisplay, (uint8_t) 3);
+          incrementMod(mClockInfo0.invertDisplay, (uint8_t) 4);
+          incrementMod(mClockInfo1.invertDisplay, (uint8_t) 4);
+          incrementMod(mClockInfo2.invertDisplay, (uint8_t) 4);
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL

@@ -24,8 +24,11 @@ struct ClockInfo {
   /** Invert display on. */
   static uint8_t const kInvertDisplayOn = 1;
 
-  /** Invert display auto. */
-  static uint8_t const kInvertDisplayAuto = 2;
+  /** Invert display automatically every hour. */
+  static uint8_t const kInvertDisplayHourly = 2;
+
+  /** Invert display automatically half-daily. */
+  static uint8_t const kInvertDisplayDaily = 3;
 
   /** Default constructor. */
   ClockInfo() {}
