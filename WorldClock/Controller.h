@@ -109,7 +109,7 @@ class Controller {
     void updatePresenter2() { mPresenter2.display(); }
 
     void handleModeButtonPress() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
       performLeavingModeAction();
@@ -119,7 +119,7 @@ class Controller {
 
     /** Toggle edit mode. The editable field will start blinking. */
     void handleModeButtonLongPress() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
       }
 
@@ -135,7 +135,7 @@ class Controller {
      * already in edit mode.
      */
     void handleModeButtonDoubleClick() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
       }
 
@@ -170,19 +170,19 @@ class Controller {
     }
 
     void performEnteringModeAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
       }
     }
 
     void performLeavingModeAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeAction()"));
       }
     }
 
     void performEnteringModeGroupAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
       }
 
@@ -196,7 +196,7 @@ class Controller {
     }
 
     void performLeavingModeGroupAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
       }
 
@@ -228,7 +228,7 @@ class Controller {
     }
 
     void handleChangeButtonPress() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
       switch ((Mode) mNavigator.mode()) {
@@ -485,7 +485,7 @@ class Controller {
     }
 
     void saveClockInfo() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("saveClockInfo()"));
       }
       preserveClockInfo();
@@ -504,13 +504,13 @@ class Controller {
       bool isValid;
 
       if (factoryReset) {
-        if (ENABLE_SERIAL_DEBUG == 1) {
+        if (ENABLE_SERIAL_DEBUG >= 1) {
           SERIAL_PORT_MONITOR.println(F("restoreClockInfo(): FACTORY RESET"));
         }
         isValid = false;
       } else {
         isValid = mPersistentStore.readStoredInfo(storedInfo);
-        if (ENABLE_SERIAL_DEBUG == 1) {
+        if (ENABLE_SERIAL_DEBUG >= 1) {
           if (! isValid) {
             SERIAL_PORT_MONITOR.println(F(
                 "restoreClockInfo(): EEPROM NOT VALID; "

@@ -351,7 +351,7 @@ void setup() {
   TXLED0; // LED off
 #endif
 
-  if (ENABLE_SERIAL_DEBUG == 1) {
+  if (ENABLE_SERIAL_DEBUG >= 1) {
     SERIAL_PORT_MONITOR.begin(115200);
     while (!SERIAL_PORT_MONITOR); // Leonardo/Micro
     SERIAL_PORT_MONITOR.println(F("setup(): begin"));
@@ -371,7 +371,7 @@ void setup() {
   bool isModePressedDuringBoot = modeButton.isPressedRaw();
   controller.setup(isModePressedDuringBoot);
 
-  if (ENABLE_SERIAL_DEBUG == 1) {
+  if (ENABLE_SERIAL_DEBUG >= 1) {
     SERIAL_PORT_MONITOR.println(F("setup(): end"));
   }
 }

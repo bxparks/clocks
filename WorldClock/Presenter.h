@@ -34,7 +34,7 @@ class Presenter {
       }
 
       if (needsUpdate()) {
-      #if ENABLE_SERIAL_DEBUG == 1
+      #if ENABLE_SERIAL_DEBUG >= 1
         SERIAL_PORT_MONITOR.println(F("display(): needsUpdate"));
       #endif
 
