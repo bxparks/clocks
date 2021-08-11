@@ -33,13 +33,14 @@ class Presenter {
         clearDisplay();
       }
 
+      updateDisplaySettings();
+
       if (needsUpdate()) {
       #if ENABLE_SERIAL_DEBUG >= 1
         SERIAL_PORT_MONITOR.println(F("display(): needsUpdate"));
       #endif
-
-        updateDisplaySettings();
-        displayData();
+        writeDisplayData();
+        writeDisplaySettings();
         mPrevRenderingInfo = mRenderingInfo;
       }
     }
@@ -67,34 +68,34 @@ class Presenter {
     Presenter& operator=(const Presenter&) = delete;
 
     /**
-     * Update the display settings, e.g. brightness, backlight, etc. Normally,
-     * this is called from display(). But the WorldClock is special because it
-     * has 3 displays so updating all of them takes too much time. But if a
-     * display settings is changed (backlight, inversion, etc), we have to
-     * update those settings right away. So this method is exposed so that
-     * Controller::update() can call this lighter weight method, instead of
-     * display().
+     * Update the display settings, e.g. brightness, backlight, etc, but don't
+     * write the data to the display yet.
      */
     void updateDisplaySettings() {
-      ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
       ClockInfo& clockInfo = mRenderingInfo.clockInfo;
 
-      // Update contrastLevel if changed.
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
-          || prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
-        uint8_t value = toContrastValue(clockInfo.contrastLevel);
-        mOled.setContrast(value);
-      }
-
-      // Calculate the next actual invertDisplay setting.
+      // Calculate the next actual invertDisplay setting. Automatically
+      // alternating inversion is an attempt to extend the life-time of these
+      // OLED devices which seem to suffer from burn-in after about 6-12 months.
       uint8_t invertDisplay;
-      if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
+      if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
           || clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
         const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
             mRenderingInfo.now, mRenderingInfo.primaryTimeZone);
         const LocalDateTime& ldt = dateTime.localDateTime();
-        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
-          invertDisplay = (ldt.hour() & 0x1)
+        // The XOR alternates the pattern of on/off to smooth out the wear level
+        // on specific digits. For example, if kInvertDisplayMinutely is
+        // selected, and if last bit of only the minute is used, then the "1" on
+        // the minute segment will always be inverted, which will cause uneven
+        // wearning. By XOR'ing with the hour(), we invert the on/off cycle
+        // every hour.
+        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely) {
+          invertDisplay = ((ldt.minute() & 0x1) ^ (ldt.hour() & 0x1))
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+          invertDisplay = ((ldt.hour() & 0x1) ^ (ldt.day() & 0x1))
               ? ClockInfo::kInvertDisplayOn
               : ClockInfo::kInvertDisplayOff;
         } else {
@@ -106,17 +107,30 @@ class Presenter {
         invertDisplay = clockInfo.invertDisplay;
       }
       mRenderingInfo.invertDisplay = invertDisplay;
+    }
+
+    /** Write the display settings (brightness, contrast, inversion). */
+    void writeDisplaySettings() {
+      ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
+      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
+
+      // Update contrastLevel if changed.
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
+        uint8_t value = toContrastValue(mRenderingInfo.clockInfo.contrastLevel);
+        mOled.setContrast(value);
+      }
 
       // Update invertDisplay if changed.
       if (mPrevRenderingInfo.mode == Mode::kUnknown
-          || mPrevRenderingInfo.invertDisplay != invertDisplay) {
-        mOled.invertDisplay(invertDisplay);
+          || mPrevRenderingInfo.invertDisplay != mRenderingInfo.invertDisplay) {
+        mOled.invertDisplay(mRenderingInfo.invertDisplay);
       }
     }
 
     void clearDisplay() { mOled.clear(); }
 
-    void displayData() {
+    void writeDisplayData() {
       mOled.home();
 
       switch ((Mode) mRenderingInfo.mode) {
@@ -325,7 +339,9 @@ class Presenter {
 
       mOled.print(F("Invert:"));
       if (shouldShowFor(Mode::kChangeInvertDisplay)) {
-        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely) {
+          mOled.println(F("min"));
+        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
           mOled.println(F("hour"));
         } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily) {
           mOled.println(F("day"));

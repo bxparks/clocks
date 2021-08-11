@@ -27,6 +27,8 @@
  *
  * Program Size (flash/ram)
  *  * 24798/1531
+ *  * 24852/1525
+ *    * (add support for kInvertDisplayMinutely)
  */
 
 #include "config.h"

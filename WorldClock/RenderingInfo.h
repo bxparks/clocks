@@ -18,9 +18,6 @@ struct RenderingInfo {
   /** true if blinking info should be shown */
   bool blinkShowState = true;
 
-  /** true if the info has been rendered */
-  bool isRendered = false;
-
   /**
    * Information about how to render the clock: date, time, timezone, contrast.
    */
@@ -36,11 +33,10 @@ struct RenderingInfo {
   ace_time::TimeZone primaryTimeZone;
 
   /**
-   * Actual inversion mode, calculated from clockInfo.
+   * Actual inversion mode, derived from clockInfo.
    *
    *  * 0: white on black
    *  * 1: black on white
-   *  * (2: auto, not allowed)
    */
   uint8_t invertDisplay = 0;
 };

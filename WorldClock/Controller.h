@@ -90,14 +90,6 @@ class Controller {
       updateDateTime();
       updateBlinkState();
       updateRenderingInfo();
-
-      // Commented out, to decouple the updating of the RenderingInfo from the
-      // actual re-rendering of the OLED display.
-      /*
-      mPresenter0.updateDisplaySettings();
-      mPresenter1.updateDisplaySettings();
-      mPresenter2.updateDisplaySettings();
-      */
     }
 
     // These are exposed as public methods so that the
@@ -300,9 +292,9 @@ class Controller {
 
         case Mode::kChangeInvertDisplay:
           mSuppressBlink = true;
-          incrementMod(mClockInfo0.invertDisplay, (uint8_t) 4);
-          incrementMod(mClockInfo1.invertDisplay, (uint8_t) 4);
-          incrementMod(mClockInfo2.invertDisplay, (uint8_t) 4);
+          incrementMod(mClockInfo0.invertDisplay, (uint8_t) 5);
+          incrementMod(mClockInfo1.invertDisplay, (uint8_t) 5);
+          incrementMod(mClockInfo2.invertDisplay, (uint8_t) 5);
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
