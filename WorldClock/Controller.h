@@ -186,21 +186,13 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
       }
 
-      switch ((Mode) mNavigator.mode()) {
-        case Mode::kChangeYear:
-        case Mode::kChangeMonth:
-        case Mode::kChangeDay:
-        case Mode::kChangeHour:
-        case Mode::kChangeMinute:
-        case Mode::kChangeSecond:
-          mChangingDateTime = ZonedDateTime::forEpochSeconds(
-              mClock.getNow(), mClockInfo0.timeZone);
-          mSecondFieldCleared = false;
-          break;
-
-        default:
-          break;
-      }
+      // Update mChangingDateTime for all modes. Even when changing only the
+      // Clock Info settings, the current date and time is required to make sure
+      // that the display is updated correctly when invertDisplay is set to
+      // kInvertDisplayAuto.
+      mChangingDateTime = ZonedDateTime::forEpochSeconds(
+          mClock.getNow(), mClockInfo0.timeZone);
+      mSecondFieldCleared = false;
     }
 
     void performLeavingModeGroupAction() {
@@ -308,9 +300,9 @@ class Controller {
 
         case Mode::kChangeInvertDisplay:
           mSuppressBlink = true;
-          incrementMod(mClockInfo0.invertDisplay, (uint8_t) 2);
-          incrementMod(mClockInfo1.invertDisplay, (uint8_t) 2);
-          incrementMod(mClockInfo2.invertDisplay, (uint8_t) 2);
+          incrementMod(mClockInfo0.invertDisplay, (uint8_t) 3);
+          incrementMod(mClockInfo1.invertDisplay, (uint8_t) 3);
+          incrementMod(mClockInfo2.invertDisplay, (uint8_t) 3);
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -415,9 +407,12 @@ class Controller {
           bool blinkShowState = mBlinkShowState || mSuppressBlink;
           Mode mode = (Mode) mNavigator.mode();
           acetime_t now = mClock.getNow();
-          mPresenter0.setRenderingInfo(mode, now, blinkShowState, mClockInfo0);
-          mPresenter1.setRenderingInfo(mode, now, blinkShowState, mClockInfo1);
-          mPresenter2.setRenderingInfo(mode, now, blinkShowState, mClockInfo2);
+          mPresenter0.setRenderingInfo(
+              mode, now, blinkShowState, mClockInfo0, mClockInfo0.timeZone);
+          mPresenter1.setRenderingInfo(
+              mode, now, blinkShowState, mClockInfo1, mClockInfo0.timeZone);
+          mPresenter2.setRenderingInfo(
+              mode, now, blinkShowState, mClockInfo2, mClockInfo0.timeZone);
           break;
         }
 
@@ -435,9 +430,12 @@ class Controller {
           acetime_t now = mChangingDateTime.toEpochSeconds();
           bool blinkShowState = mBlinkShowState || mSuppressBlink;
           Mode mode = (Mode) mNavigator.mode();
-          mPresenter0.setRenderingInfo(mode, now, blinkShowState, mClockInfo0);
-          mPresenter1.setRenderingInfo(mode, now, true, mClockInfo1);
-          mPresenter2.setRenderingInfo(mode, now, true, mClockInfo2);
+          mPresenter0.setRenderingInfo(
+              mode, now, blinkShowState, mClockInfo0, mClockInfo0.timeZone);
+          mPresenter1.setRenderingInfo(
+              mode, now, true, mClockInfo1, mClockInfo0.timeZone);
+          mPresenter2.setRenderingInfo(
+              mode, now, true, mClockInfo2, mClockInfo0.timeZone);
           break;
         }
 
@@ -464,17 +462,20 @@ class Controller {
           (Mode) mNavigator.mode(),
           now,
           mBlinkShowState || clockId!=0,
-          mClockInfo0);
+          mClockInfo0,
+          mClockInfo0.timeZone);
       mPresenter1.setRenderingInfo(
           (Mode) mNavigator.mode(),
           now,
           mBlinkShowState || clockId!=1,
-          mClockInfo1);
+          mClockInfo1,
+          mClockInfo0.timeZone);
       mPresenter2.setRenderingInfo(
           (Mode) mNavigator.mode(),
           now,
           mBlinkShowState || clockId!=2,
-          mClockInfo2);
+          mClockInfo2,
+          mClockInfo0.timeZone);
     }
 
     /** Save the current UTC ZonedDateTime to the RTC. */

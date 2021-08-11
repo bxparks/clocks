@@ -40,14 +40,20 @@ class Presenter {
     }
 
     /**
-     * Updating the rendering info and doing the actual rendering is now
-     * decoupled in WorldClock because it takes too long to render the 3 OLED
-     * displays, while blocking everything else. So use the 'mIsRendered' flag
-     * to keep track of whether the mPrevRenderingInfo has actually been
-     * rendered or not, before clobbering it with the new RenderingInfo.
+     * Set the RenderingInfo of the Presenter. This is called about 10 times a
+     * second.
+     *
+     * Updating the rendering info is decoupled from the actual rendering
+     * because it takes too long to render the 3 OLED displays, while blocking
+     * everything else. So the 'mIsRendered' flag is used to keep track of
+     * whether the mPrevRenderingInfo has actually been rendered or not, before
+     * clobbering it with the new RenderingInfo.
      */
-    void setRenderingInfo(Mode mode, acetime_t now, bool blinkShowState,
-        const ClockInfo& clockInfo) {
+    void setRenderingInfo(
+        Mode mode, acetime_t now,
+        bool blinkShowState,
+        const ClockInfo& clockInfo,
+        const TimeZone& primaryTimeZone) {
       if (mIsRendered) {
         mPrevRenderingInfo = mRenderingInfo;
         mIsRendered = false;
@@ -57,6 +63,7 @@ class Presenter {
       mRenderingInfo.now = now;
       mRenderingInfo.blinkShowState = blinkShowState;
       mRenderingInfo.clockInfo = clockInfo;
+      mRenderingInfo.primaryTimeZone = primaryTimeZone;
     }
 
   private:
@@ -77,15 +84,33 @@ class Presenter {
       ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
       ClockInfo& clockInfo = mRenderingInfo.clockInfo;
 
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
         uint8_t value = toContrastValue(clockInfo.contrastLevel);
         mOled.setContrast(value);
       }
 
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.invertDisplay != clockInfo.invertDisplay) {
-        mOled.invertDisplay(clockInfo.invertDisplay);
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.invertDisplay != clockInfo.invertDisplay
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayAuto) {
+        if (clockInfo.invertDisplay != ClockInfo::kInvertDisplayAuto) {
+          mRenderingInfo.invertDisplay = clockInfo.invertDisplay;
+          mOled.invertDisplay(clockInfo.invertDisplay);
+        } else {
+          // Invert the display for 12 hours, from 7am to 7pm.
+          const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
+              mRenderingInfo.now, mRenderingInfo.primaryTimeZone);
+          const LocalDateTime& ldt = dateTime.localDateTime();
+          uint8_t invertDisplay = (7 <= ldt.hour() && ldt.hour() < 19)
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+          mRenderingInfo.invertDisplay = invertDisplay;
+
+          // Update display if changed.
+          if (mPrevRenderingInfo.invertDisplay != invertDisplay) {
+            mOled.invertDisplay(invertDisplay);
+          }
+        }
       }
     }
 
@@ -367,6 +392,7 @@ class Presenter {
 
     RenderingInfo mRenderingInfo;
     RenderingInfo mPrevRenderingInfo;
+    ClockInfo mPrimaryClockInfo;
     bool mIsRendered = true; // true after a successful display()
 };
 

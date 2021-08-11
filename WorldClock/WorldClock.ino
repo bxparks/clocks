@@ -329,6 +329,10 @@ void setupAceButton() {
   buttonConfig->setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
   buttonConfig->setFeature(ButtonConfig::kFeatureRepeatPress);
   buttonConfig->setRepeatPressInterval(150);
+
+  // Shorten the DoubleClick delay to prevent accidental interpretation of
+  // rapid Mode button presses as a DoubleClick.
+  buttonConfig->setDoubleClickDelay(250);
 }
 
 //----------------------------------------------------------------------------

@@ -12,18 +12,48 @@ using namespace ace_time;
  * addition to other information related to the presentation of the clock.
  */ 
 struct RenderingInfo {
-  Mode mode = Mode::kUnknown; // display mode
-  bool blinkShowState = true; // true if blinking info should be shown
-  bool isRendered = false; // true if the info has been rendered
+  /** display mode */
+  Mode mode = Mode::kUnknown;
 
+  /** true if blinking info should be shown */
+  bool blinkShowState = true;
+
+  /** true if the info has been rendered */
+  bool isRendered = false;
+
+  /**
+   * Information about how to render the clock: date, time, timezone, contrast.
+   */
   ClockInfo clockInfo;
-  acetime_t now; // seconds from AceTime epoch
+
+  /** Seconds from AceTime epoch. */
+  acetime_t now;
+
+  /**
+   * The primary time zone of the clock, used to calculate auto-inversion of
+   * the display.
+   */
+  ace_time::TimeZone primaryTimeZone;
+
+  /**
+   * Actual inversion mode, calculated from clockInfo.
+   *
+   *  * 0: white on black
+   *  * 1: black on white
+   *  * (2: auto, not allowed)
+   */
+  uint8_t invertDisplay = 0;
 };
 
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
-  return a.now == b.now
-      && a.blinkShowState == b.blinkShowState
+  // The following fields are ordered so that frequently changing fields come
+  // before infrequently changing fields. This allows the '&&' operator to
+  // short-circuit faster.
+  return a.blinkShowState == b.blinkShowState
+      && a.now == b.now
+      && a.invertDisplay == b.invertDisplay
       && a.clockInfo == b.clockInfo
+      && a.primaryTimeZone == b.primaryTimeZone
       && a.mode == b.mode;
 }
 
