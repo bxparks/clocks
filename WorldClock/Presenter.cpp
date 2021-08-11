@@ -6,9 +6,6 @@
 void Presenter::displayAbout() const {
   mOled.set1X();
 
-  // For smallest flash memory size, use F() macros for these longer strings,
-  // but no F() for shorter version strings.
-
   mOled.print(F("TZDB:"));
   mOled.println(zonedb::kTzDatabaseVersion);
   mOled.println(F("ATim:" ACE_TIME_VERSION_STRING));
@@ -20,4 +17,9 @@ const uint8_t Presenter::kContrastValues[Presenter::kNumContrastValues] = {
   // Can't start from 0 because that would turn off the display
   // completely, and prevent us from doing anything else.
   25, 50, 75, 100, 125, 150, 175, 200, 225, 255
+
+  // In theory, a logarithmic scale should work better, but it seems like the
+  // SSD1306 already performs a logarithmic mapping internally, so the above
+  // linear mapping actually works better.
+  // 1, 2, 4, 7, 12, 22, 40, 74, 136, 255
 };
