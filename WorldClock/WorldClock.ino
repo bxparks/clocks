@@ -1,10 +1,16 @@
 /*
- * A digital clock with 3 OLED displays to show 3 different time zones. The
- * hardware consists of:
+ * A digital clock with 3 OLED displays using SPI, to show 3 different time
+ * zones. The hardware consists of:
  *
  *   * 1 x DS3231 RTC chip (I2C)
  *   * 3 x SSD1306 OLED displays using SPI interface (not I2C)
  *   * 2 x push buttons
+ *
+ * (It occurs to me that it should be possible support 3 displays using the I2C
+ * version of the SSD1306 as well, if we used 3 different SDA lines to the OLED
+ * devices, sharing a common SCL line, then use software I2C to communicate with
+ * them. This would require using a different SSD1306 library, or modify the
+ * SSD1306Ascii library to handle different pins.)
  *
  * Tested on Arduino Pro Micro, but should work for Arduino Nano, ESP8266 and
  * ESP32.
@@ -18,6 +24,9 @@
  *  * AceUtils (https://github.com/bxparks/AceUtils)
  *  * AceCRC (https://github.com/bxparks/AceCRC)
  *  * SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
+ *
+ * Program Size (flash/ram)
+ *  * 24798/1531
  */
 
 #include "config.h"
