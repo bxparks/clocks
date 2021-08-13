@@ -371,7 +371,7 @@ class Controller {
         }
         case Mode::kChangeInvertDisplay: {
           mSuppressBlink = true;
-          incrementMod(mClockInfo.invertDisplay, (uint8_t) 3);
+          incrementMod(mClockInfo.invertDisplay, (uint8_t) 5);
           break;
         }
       #endif

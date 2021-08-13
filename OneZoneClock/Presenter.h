@@ -144,6 +144,7 @@ class Presenter {
       // on re-render.
     #else
       mDisplay.clearToEOL();
+      mDisplay.println();
     #endif
     }
 
@@ -201,11 +202,54 @@ class Presenter {
         uint8_t value = toOledContrastValue(clockInfo.contrastLevel);
         mDisplay.setContrast(value);
       }
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.invertDisplay != clockInfo.invertDisplay) {
-        mDisplay.invertDisplay(clockInfo.invertDisplay);
+
+      // Update invertDisplay if changed.
+      mRenderingInfo.invertDisplay = calculateActualInvertDisplay(clockInfo);
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || mPrevRenderingInfo.invertDisplay != mRenderingInfo.invertDisplay) {
+        mDisplay.invertDisplay(mRenderingInfo.invertDisplay);
       }
     #endif
+    }
+
+    /**
+     * Calculate the next actual invertDisplay setting. Automatically
+     * alternating inversion is an attempt to extend the life-time of these
+     * OLED devices which seem to suffer from burn-in after about 6-12 months.
+     */
+    static uint8_t calculateActualInvertDisplay(ClockInfo& clockInfo) {
+      uint8_t invertDisplay;
+      if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+
+        const ZonedDateTime& dateTime = clockInfo.dateTime;
+        const LocalDateTime& ldt = dateTime.localDateTime();
+
+        // The XOR alternates the pattern of on/off to smooth out the wear level
+        // on specific digits. For example, if kInvertDisplayMinutely is
+        // selected, and if last bit of only the minute is used, then the "1" on
+        // the minute segment will always be inverted, which will cause uneven
+        // wearning. By XOR'ing with the hour(), we invert the on/off cycle
+        // every hour.
+        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely) {
+          invertDisplay = ((ldt.minute() & 0x1) ^ (ldt.hour() & 0x1))
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+          invertDisplay = ((ldt.hour() & 0x1) ^ (ldt.day() & 0x1))
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        } else {
+          invertDisplay = (7 <= ldt.hour() && ldt.hour() < 19)
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        }
+      } else {
+        invertDisplay = clockInfo.invertDisplay;
+      }
+
+      return invertDisplay;
     }
 
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
@@ -301,10 +345,11 @@ class Presenter {
       }
 
       displayDate(dateTime);
-      mDisplay.println();
+      clearToEOL();
       displayTime(dateTime);
-      mDisplay.println();
+      clearToEOL();
       displayWeekday(dateTime);
+      clearToEOL();
     }
 
     void displayDate(const ZonedDateTime& dateTime) {
@@ -325,7 +370,6 @@ class Presenter {
       } else{
         mDisplay.print("  ");
       }
-      clearToEOL();
     }
 
     void displayTime(const ZonedDateTime& dateTime) {
@@ -360,12 +404,10 @@ class Presenter {
       if (mRenderingInfo.clockInfo.hourMode == ClockInfo::kTwelve) {
         mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
-      clearToEOL();
     }
 
     void displayWeekday(const ZonedDateTime& dateTime) {
       mDisplay.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
-      clearToEOL();
     }
 
     void displayTimeZoneMode() {
@@ -398,7 +440,6 @@ class Presenter {
       }
       mDisplay.print(typeString);
       clearToEOL();
-      mDisplay.println();
 
       switch (tz.getType()) {
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -409,14 +450,12 @@ class Presenter {
             offset.printTo(mDisplay);
           }
           clearToEOL();
-          mDisplay.println();
 
           mDisplay.print("DST: ");
           if (shouldShowFor(Mode::kChangeTimeZoneDst)) {
             mDisplay.print((tz.getDstOffset().isZero()) ? "off" : "on ");
           }
           clearToEOL();
-          mDisplay.println();
           break;
 
       #else
@@ -427,20 +466,16 @@ class Presenter {
             tz.printShortTo(mDisplay);
           }
           clearToEOL();
-          mDisplay.println();
 
           // Clear the DST: {on|off} line from a previous screen
           clearToEOL();
-          mDisplay.println();
           break;
       #endif
 
         default:
           mDisplay.print(F("<unknown>"));
           clearToEOL();
-          mDisplay.println();
           clearToEOL();
-          mDisplay.println();
           break;
       }
     }
@@ -457,21 +492,21 @@ class Presenter {
       if (shouldShowFor(Mode::kChangeSettingsBacklight)) {
         mDisplay.println(clockInfo.backlightLevel);
       } else {
-        mDisplay.println(' ');
+        clearToEOL();
       }
 
       mDisplay.print(F("Contrast:"));
       if (shouldShowFor(Mode::kChangeSettingsContrast)) {
         mDisplay.println(clockInfo.contrast);
       } else {
-        mDisplay.println(' ');
+        clearToEOL();
       }
 
       mDisplay.print(F("Bias:"));
       if (shouldShowFor(Mode::kChangeSettingsBias)) {
         mDisplay.println(clockInfo.bias);
       } else {
-        mDisplay.println(' ');
+        clearToEOL();
       }
 
     #else
@@ -479,16 +514,34 @@ class Presenter {
       if (shouldShowFor(Mode::kChangeSettingsContrast)) {
         mDisplay.println(clockInfo.contrastLevel);
       } else {
-        mDisplay.println(' ');
+        clearToEOL();
       }
 
       mDisplay.print(F("Invert:"));
       if (shouldShowFor(Mode::kChangeInvertDisplay)) {
-        mDisplay.println(clockInfo.invertDisplay);
+        const __FlashStringHelper* statusString;
+        switch (clockInfo.invertDisplay) {
+          case ClockInfo::kInvertDisplayOff:
+            statusString = F("off");
+            break;
+          case ClockInfo::kInvertDisplayOn:
+            statusString = F("on");
+            break;
+          case ClockInfo::kInvertDisplayMinutely:
+            statusString = F("min");
+            break;
+          case ClockInfo::kInvertDisplayHourly:
+            statusString = F("hour");
+            break;
+          case ClockInfo::kInvertDisplayDaily:
+            statusString = F("day");
+            break;
+        }
+        mDisplay.print(statusString);
+        clearToEOL();
       } else {
-        mDisplay.println(' ');
+        clearToEOL();
       }
-
     #endif
     }
 
