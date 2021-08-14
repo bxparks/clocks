@@ -703,10 +703,13 @@ class Presenter {
       setFont(0);
       mDisplay.print(F("TZDB:"));
       mDisplay.println(zonedb::kTzDatabaseVersion);
-      mDisplay.println(F("ATim:" ACE_TIME_VERSION_STRING));
+      mDisplay.println(F("ATime:" ACE_TIME_VERSION_STRING));
       mDisplay.println(F("ABut:" ACE_BUTTON_VERSION_STRING));
       mDisplay.println(F("ARou:" ACE_ROUTINE_VERSION_STRING));
       mDisplay.println(F("ACom:" ACE_COMMON_VERSION_STRING));
+      mDisplay.println(F("ASeg:" ACE_SEGMENT_VERSION_STRING));
+      mDisplay.println(F("ASgW:" ACE_SEGMENT_WRITER_VERSION_STRING));
+      mDisplay.println(F("ATMI:" ACE_TMI_VERSION_STRING));
     }
 
   private:

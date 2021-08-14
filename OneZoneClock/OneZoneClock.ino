@@ -357,10 +357,10 @@ const ModeGroup SETTINGS_MODE_GROUP = {
 const uint8_t TOP_LEVEL_MODES[] = {
   (uint8_t) Mode::kViewDateTime,
   (uint8_t) Mode::kViewTimeZone,
-  (uint8_t) Mode::kViewSettings,
 #if ENABLE_DHT22
   (uint8_t) Mode::kViewTemperature,
 #endif
+  (uint8_t) Mode::kViewSettings,
   (uint8_t) Mode::kViewSysclock,
   (uint8_t) Mode::kViewAbout,
 };
@@ -370,10 +370,10 @@ const uint8_t TOP_LEVEL_MODES[] = {
 const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
   &DATE_TIME_MODE_GROUP,
   &TIME_ZONE_MODE_GROUP,
-  &SETTINGS_MODE_GROUP,
 #if ENABLE_DHT22
   nullptr /* Mode::kViewTemperature has no submodes */,
 #endif
+  &SETTINGS_MODE_GROUP,
   nullptr /* Mode::kViewSysclock has no submodes */,
   nullptr /* Mode::kViewAbout has no submodes */,
 };
