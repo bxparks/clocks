@@ -312,6 +312,10 @@
   #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
+  // Enable DHT22 Sensor
+  #define ENABLE_DHT22 1
+  #define DHT22_PIN D3
+
 #elif defined(AUNITER_D1MINI_LARGE)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -378,6 +382,9 @@ enum class Mode : uint8_t {
   kViewDateTime,
   kViewTimeZone,
   kViewSettings,
+#if ENABLE_DHT22
+  kViewTemperature,
+#endif
   kViewSysclock,
   kViewAbout,
 

@@ -156,6 +156,23 @@ void setupClocks() {
 }
 
 //------------------------------------------------------------------
+// Configure DHT22 temperature and humidity sensor
+//------------------------------------------------------------------
+
+#if ENABLE_DHT22
+
+#include <DHT.h>
+
+DHT dht(DHT22_PIN, DHT22);
+
+void setupDht22() {
+  pinMode(DHT22_PIN, INPUT_PULLUP);
+  dht.begin();
+}
+
+#endif
+
+//------------------------------------------------------------------
 // Configure OLED display or LCD display.
 //------------------------------------------------------------------
 
@@ -301,6 +318,9 @@ const uint8_t TOP_LEVEL_MODES[] = {
   (uint8_t) Mode::kViewDateTime,
   (uint8_t) Mode::kViewTimeZone,
   (uint8_t) Mode::kViewSettings,
+#if ENABLE_DHT22
+  (uint8_t) Mode::kViewTemperature,
+#endif
   (uint8_t) Mode::kViewSysclock,
   (uint8_t) Mode::kViewAbout,
 };
@@ -311,6 +331,9 @@ const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
   &DATE_TIME_MODE_GROUP,
   &TIME_ZONE_MODE_GROUP,
   &SETTINGS_MODE_GROUP,
+#if ENABLE_DHT22
+  nullptr /* Mode::kViewTemperature has no submodes */,
+#endif
   nullptr /* Mode::kViewSysclock has no submodes */,
   nullptr /* Mode::kViewAbout has no submodes */,
 };
@@ -340,12 +363,28 @@ void setupPersistentStore() {
 // Create controller.
 //------------------------------------------------------------------
 
-Controller controller(systemClock, persistentStore, presenter, zoneManager,
-  DISPLAY_ZONE, &ROOT_MODE_GROUP);
+#if ENABLE_DHT22
+  Controller controller(systemClock, persistentStore, presenter, zoneManager,
+    DISPLAY_ZONE, &ROOT_MODE_GROUP, &dht);
+#else
+  Controller controller(systemClock, persistentStore, presenter, zoneManager,
+    DISPLAY_ZONE, &ROOT_MODE_GROUP, nullptr /*dht*/);
+#endif
 
 void setupController(bool factoryReset) {
   controller.setup(factoryReset);
 }
+
+#if ENABLE_DHT22
+
+COROUTINE(updateTemperature) {
+  COROUTINE_LOOP() {
+    controller.updateTemperature();
+    COROUTINE_DELAY_SECONDS(60);
+  }
+}
+
+#endif
 
 //------------------------------------------------------------------
 // Render the Clock periodically.
@@ -566,6 +605,9 @@ if (ENABLE_SERIAL_DEBUG >= 1) {
   setupClocks();
   setupDisplay();
   setupPresenter();
+#if ENABLE_DHT22
+  setupDht22();
+#endif
 
   // Hold down the Mode button to perform factory reset.
   bool isModePressedDuringBoot = modeButton.isPressedRaw();
@@ -582,6 +624,10 @@ void loop() {
   printFrameRate.runCoroutine();
 #endif
   readButtons.runCoroutine();
+
+#if ENABLE_DHT22
+  updateTemperature.runCoroutine();
+#endif
 
 #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
   systemClock.loop();

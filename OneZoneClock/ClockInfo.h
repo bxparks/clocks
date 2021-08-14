@@ -74,6 +74,14 @@ struct ClockInfo {
 
   /** Status code of the most recent sync attempt. */
   uint8_t syncStatusCode;
+
+#if ENABLE_DHT22
+  /** Current temperature in Celcius. */
+  float temperatureC;
+
+  /** Current humidity. */
+  float humidity;
+#endif
 };
 
 inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
@@ -84,6 +92,10 @@ inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
     && a.clockSkew == b.clockSkew
     && a.syncStatusCode == b.syncStatusCode
     && a.hourMode == b.hourMode
+  #if ENABLE_DHT22
+    && a.temperatureC == b.temperatureC
+    && a.humidity == b.humidity
+  #endif
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     && a.backlightLevel == b.backlightLevel
     && a.contrast == b.contrast

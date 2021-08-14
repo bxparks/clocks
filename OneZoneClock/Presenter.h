@@ -117,22 +117,28 @@ class Presenter {
     #endif
     }
 
-    void setFont() {
+    /**
+     * Set font and size.
+     *
+     *  0 - extra small size
+     *  1 - normal 1X
+     *  2 - double 2X
+     */
+    void setFont(uint8_t size) {
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       // Use default font
+      // if (size == 0) {
+      //   mDisplay.setTextSize(8);
+      // }
     #else
-      mDisplay.setFont(fixed_bold10x15);
-      //mDisplay.setFont(Adafruit5x7);
-    #endif
-    }
-
-    void setSize(uint8_t size) {
-    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-      mDisplay.setTextSize(size);
-    #else
-      if (size == 1) {
+      if (size == 0) {
+        mDisplay.setFont(Adafruit5x7);
+        mDisplay.set1X();
+      } else if (size == 1) {
+        mDisplay.setFont(fixed_bold10x15);
         mDisplay.set1X();
       } else if (size == 2) {
+        mDisplay.setFont(fixed_bold10x15);
         mDisplay.set2X();
       }
     #endif
@@ -283,7 +289,7 @@ class Presenter {
       if (!mIsOverwriting) {
         clearDisplay();
       }
-      setFont();
+      setFont(1);
 
       switch (mRenderingInfo.mode) {
         case Mode::kViewDateTime:
@@ -317,6 +323,12 @@ class Presenter {
       #endif
           displaySettingsMode();
           break;
+
+      #if ENABLE_DHT22
+        case Mode::kViewTemperature:
+          displayTemperature();
+          break;
+      #endif
 
         case Mode::kViewSysclock:
           displaySystemClockMode();
@@ -519,7 +531,7 @@ class Presenter {
 
       mDisplay.print(F("Invert:"));
       if (shouldShowFor(Mode::kChangeInvertDisplay)) {
-        const __FlashStringHelper* statusString;
+        const __FlashStringHelper* statusString = F("<error>");
         switch (clockInfo.invertDisplay) {
           case ClockInfo::kInvertDisplayOff:
             statusString = F("off");
@@ -544,6 +556,31 @@ class Presenter {
       }
     #endif
     }
+
+  #if ENABLE_DHT22
+    void displayTemperature() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("displayTemperature()"));
+      }
+
+      ClockInfo &clockInfo = mRenderingInfo.clockInfo;
+
+      mDisplay.print(F("Temp:"));
+      mDisplay.print(clockInfo.temperatureC, 1);
+      mDisplay.print('C');
+      clearToEOL();
+
+      mDisplay.print(F("Temp:"));
+      mDisplay.print(clockInfo.temperatureC * 9 / 5 + 32, 1);
+      mDisplay.print('F');
+      clearToEOL();
+
+      mDisplay.print(F("Humi:"));
+      mDisplay.print(clockInfo.humidity, 1);
+      mDisplay.print('%');
+      clearToEOL();
+    }
+  #endif
 
     void displaySystemClockMode() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
@@ -586,14 +623,13 @@ class Presenter {
 
       // Use F() macros for these longer strings. Seems to save both
       // flash memory and RAM.
+      setFont(0);
       mDisplay.print(F("TZDB:"));
       mDisplay.println(zonedb::kTzDatabaseVersion);
       mDisplay.println(F("ATim:" ACE_TIME_VERSION_STRING));
       mDisplay.println(F("ABut:" ACE_BUTTON_VERSION_STRING));
       mDisplay.println(F("ARou:" ACE_ROUTINE_VERSION_STRING));
-    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       mDisplay.println(F("ACom:" ACE_COMMON_VERSION_STRING));
-    #endif
     }
 
   private:

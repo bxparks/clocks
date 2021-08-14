@@ -2,6 +2,11 @@
 #define ONE_ZONE_CLOCK_CONTROLLER_H
 
 #include "config.h"
+#if ENABLE_DHT22
+  #include <DHT.h>
+#else
+  class DHT;
+#endif
 #include <AceCommon.h> // incrementMod()
 #include <AceTime.h>
 #include <AceUtils.h>
@@ -19,11 +24,12 @@ using ace_utils::mode_group::ModeGroup;
 using ace_utils::mode_group::ModeNavigator;
 
 /**
- * Class responsible for rendering the RenderingInfo to the indicated display.
- * Different subclasses output to different types of displays. In an MVC
- * architecture, this would be the Controller. The Model would be the various
- * member variables in this class. The View layer are the various Presenter
- * classes.
+ * Class responsible for updating the ClockInfo with the latest information:
+ *
+ *    * current date and time,
+ *    * current timezone,
+ *    * handling user-selected options,
+ *    * temperature and humidity.
  */
 class Controller {
   public:
@@ -41,6 +47,7 @@ class Controller {
      *        TIME_ZONE_TYPE_EXTENDED
      * @param displayZones array of TimeZoneData with NUM_TIME_ZONES elements
      * @param rootModeGroup poniter to the top level ModeGroup object
+     * @param dht pointer to DHT22 object if enabled
      */
     Controller(
         SystemClock& clock,
@@ -48,14 +55,16 @@ class Controller {
         Presenter& presenter,
         ZoneManager& zoneManager,
         TimeZoneData initialTimeZoneData,
-        ModeGroup const* rootModeGroup
+        ModeGroup const* rootModeGroup,
+        DHT* dht
     ) :
         mClock(clock),
         mPersistentStore(persistentStore),
         mPresenter(presenter),
         mZoneManager(zoneManager),
         mInitialTimeZoneData(initialTimeZoneData),
-        mNavigator(rootModeGroup)
+        mNavigator(rootModeGroup),
+        mDht(dht)
     {}
 
     void setup(bool factoryReset) {
@@ -102,17 +111,17 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
       }
 
-      #if TIME_ZONE_TYPE != TIME_ZONE_TYPE_MANUAL
       switch ((Mode) mNavigator.mode()) {
+      #if TIME_ZONE_TYPE != TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneName:
           mZoneRegistryIndex = mZoneManager.indexForZoneId(
               mChangingClockInfo.timeZoneData.zoneId);
           break;
+      #endif
 
         default:
           break;
       }
-      #endif
     }
 
     void performLeavingModeAction() {
@@ -256,6 +265,13 @@ class Controller {
           mClockInfo.hourMode ^= 0x1;
           preserveClockInfo(mClockInfo);
           break;
+
+      #if ENABLE_DHT22
+        // Clicking 'Change' button in Temperature mode forces another update.
+        case Mode::kViewTemperature:
+          updateTemperature();
+          break;
+      #endif
 
         case Mode::kChangeYear:
           mSuppressBlink = true;
@@ -425,6 +441,21 @@ class Controller {
           break;
       }
     }
+
+  #if ENABLE_DHT22
+    void updateTemperature() {
+      mClockInfo.temperatureC = mDht->readTemperature();
+      mClockInfo.humidity = mDht->readHumidity();
+
+    #if ENABLE_SERIAL_DEBUG >= 2
+      SERIAL_PORT_MONITOR.print(F("updateTemperature(): "));
+      SERIAL_PORT_MONITOR.print(mClockInfo.temperatureC);
+      SERIAL_PORT_MONITOR.print(" C, ");
+      SERIAL_PORT_MONITOR.print(mClockInfo.humidity);
+      SERIAL_PORT_MONITOR.println(" %");
+    #endif
+    }
+  #endif
 
   private:
     void updateDateTime() {
@@ -608,6 +639,7 @@ class Controller {
     ZoneManager& mZoneManager;
     TimeZoneData mInitialTimeZoneData;
     ModeNavigator mNavigator;
+    DHT* const mDht;
 
     ClockInfo mClockInfo; // current clock
     ClockInfo mChangingClockInfo; // the target clock
