@@ -36,11 +36,17 @@
   #include <Adafruit_GFX.h>
   #include <Adafruit_PCD8544.h>
 #endif
+
 #if ENABLE_LED_DISPLAY
   #include <AceTMI.h>
   #include <AceSegment.h>
   #include <AceSegmentWriter.h>
+  using ace_tmi::SimpleTmiInterface;
+  using ace_segment::ClockWriter;
+  using ace_segment::LedModule;
+  using ace_segment::Tm1637Module;
 #endif
+
 #include "PersistentStore.h"
 #include "Controller.h"
 
@@ -49,10 +55,6 @@ using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_utils::mode_group::ModeGroup;
-using ace_tmi::SimpleTmiInterface;
-using ace_segment::ClockWriter;
-using ace_segment::LedModule;
-using ace_segment::Tm1637Module;
 
 //-----------------------------------------------------------------------------
 // Configure time zones and ZoneManager.

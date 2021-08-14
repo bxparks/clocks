@@ -385,9 +385,18 @@ class Presenter {
       const ZonedDateTime& prevDateTime = prevClockInfo.dateTime;
       const ZonedDateTime& dateTime = clockInfo.dateTime;
       if (mPrevRenderingInfo.mode == Mode::kUnknown
-          || prevDateTime != dateTime) {
+          || prevDateTime != dateTime
+          || prevClockInfo.hourMode != clockInfo.hourMode) {
+        uint8_t hour = (clockInfo.hourMode == ClockInfo::kTwelve)
+            ? toTwelveHour(dateTime.hour())
+            : dateTime.hour();
+        uint8_t minute = dateTime.minute();
         ClockWriter<LedModule> clockWriter(mLedModule);
-        clockWriter.writeHourMinute(dateTime.hour(), dateTime.minute());
+        if (clockInfo.hourMode == ClockInfo::kTwelve) {
+          clockWriter.writeHourMinute12(hour, minute);
+        } else {
+          clockWriter.writeHourMinute24(hour, minute);
+        }
       }
 
       if (mPrevRenderingInfo.mode == Mode::kUnknown
@@ -452,11 +461,7 @@ class Presenter {
       if (shouldShowFor(Mode::kChangeHour)) {
         uint8_t hour = dateTime.hour();
         if (mRenderingInfo.clockInfo.hourMode == ClockInfo::kTwelve) {
-          if (hour == 0) {
-            hour = 12;
-          } else if (hour > 12) {
-            hour -= 12;
-          }
+          hour = toTwelveHour(hour);
           printPad2To(mDisplay, hour, ' ');
         } else {
           printPad2To(mDisplay, hour, '0');
@@ -707,9 +712,22 @@ class Presenter {
       mDisplay.println(F("ABut:" ACE_BUTTON_VERSION_STRING));
       mDisplay.println(F("ARou:" ACE_ROUTINE_VERSION_STRING));
       mDisplay.println(F("ACom:" ACE_COMMON_VERSION_STRING));
+    #if ENABLE_LED_DISPLAY
       mDisplay.println(F("ASeg:" ACE_SEGMENT_VERSION_STRING));
       mDisplay.println(F("ASgW:" ACE_SEGMENT_WRITER_VERSION_STRING));
       mDisplay.println(F("ATMI:" ACE_TMI_VERSION_STRING));
+    #endif
+    }
+
+    /** Return 12 hour version of 24 hour. */
+    static uint8_t toTwelveHour(uint8_t hour) {
+      if (hour == 0) {
+        return 12;
+      } else if (hour > 12) {
+        return hour - 12;
+      } else {
+        return hour;
+      }
     }
 
   private:
