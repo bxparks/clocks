@@ -12,6 +12,17 @@
 #else
   #include <SSD1306AsciiWire.h>
 #endif
+#if ENABLE_LED_DISPLAY
+  #include <AceTMI.h>
+  #include <AceSegment.h>
+  #include <AceSegmentWriter.h>
+  using ace_segment::Tm1637Module;
+  using ace_segment::ClockWriter;
+  using ace_segment::LedModule;
+  const uint8_t NUM_DIGITS = 4;
+  using TmiInterface = ace_tmi::SimpleTmiInterface;
+  using LedDisplay = Tm1637Module<TmiInterface, NUM_DIGITS>;
+#endif
 #include "StoredInfo.h"
 #include "ClockInfo.h"
 #include "RenderingInfo.h"
@@ -48,11 +59,14 @@ class Presenter {
      * Constructor.
      * @param display either an OLED display or an LCD display
      * @param isOverwriting if true, printing a character to a display
-     *        overwrites the existing bits, therefore, displayData() does
+     *        overwrites the existing bits, therefore, displayPrimary() does
      *        NOT need to clear the display
      */
     Presenter(
         ZoneManager& zoneManager,
+      #if ENABLE_LED_DISPLAY
+        LedDisplay& ledModule,
+      #endif
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
         Adafruit_PCD8544& display,
       #else
@@ -61,6 +75,9 @@ class Presenter {
         bool isOverwriting
     ) :
         mZoneManager(zoneManager),
+      #if ENABLE_LED_DISPLAY
+        mLedModule(ledModule),
+      #endif
         mDisplay(display),
         mIsOverwriting(isOverwriting)
       {}
@@ -69,9 +86,13 @@ class Presenter {
       if (needsClear()) {
         clearDisplay();
       }
+
       if (needsUpdate()) {
         updateDisplaySettings();
-        displayData();
+        displayPrimary();
+      #if ENABLE_LED_DISPLAY
+        displayLedModule();
+      #endif
       }
 
       mPrevRenderingInfo = mRenderingInfo;
@@ -117,22 +138,28 @@ class Presenter {
     #endif
     }
 
-    void setFont() {
+    /**
+     * Set font and size.
+     *
+     *  0 - extra small size
+     *  1 - normal 1X
+     *  2 - double 2X
+     */
+    void setFont(uint8_t size) {
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       // Use default font
+      // if (size == 0) {
+      //   mDisplay.setTextSize(8);
+      // }
     #else
-      mDisplay.setFont(fixed_bold10x15);
-      //mDisplay.setFont(Adafruit5x7);
-    #endif
-    }
-
-    void setSize(uint8_t size) {
-    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-      mDisplay.setTextSize(size);
-    #else
-      if (size == 1) {
+      if (size == 0) {
+        mDisplay.setFont(Adafruit5x7);
+        mDisplay.set1X();
+      } else if (size == 1) {
+        mDisplay.setFont(fixed_bold10x15);
         mDisplay.set1X();
       } else if (size == 2) {
+        mDisplay.setFont(fixed_bold10x15);
         mDisplay.set2X();
       }
     #endif
@@ -144,6 +171,7 @@ class Presenter {
       // on re-render.
     #else
       mDisplay.clearToEOL();
+      mDisplay.println();
     #endif
     }
 
@@ -182,30 +210,73 @@ class Presenter {
       ClockInfo &clockInfo = mRenderingInfo.clockInfo;
 
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.backlightLevel != clockInfo.backlightLevel) {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.backlightLevel != clockInfo.backlightLevel) {
         uint16_t value = toLcdBacklightValue(clockInfo.backlightLevel);
         analogWrite(LCD_BACKLIGHT_PIN, value);
       }
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.contrast != clockInfo.contrast) {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.contrast != clockInfo.contrast) {
         mDisplay.setContrast(clockInfo.contrast);
       }
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.bias != clockInfo.bias) {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.bias != clockInfo.bias) {
         mDisplay.setBias(clockInfo.bias);
       }
     #else
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
         uint8_t value = toOledContrastValue(clockInfo.contrastLevel);
         mDisplay.setContrast(value);
       }
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.invertDisplay != clockInfo.invertDisplay) {
-        mDisplay.invertDisplay(clockInfo.invertDisplay);
+
+      // Update invertDisplay if changed.
+      mRenderingInfo.invertDisplay = calculateActualInvertDisplay(clockInfo);
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || mPrevRenderingInfo.invertDisplay != mRenderingInfo.invertDisplay) {
+        mDisplay.invertDisplay(mRenderingInfo.invertDisplay);
       }
     #endif
+    }
+
+    /**
+     * Calculate the next actual invertDisplay setting. Automatically
+     * alternating inversion is an attempt to extend the life-time of these
+     * OLED devices which seem to suffer from burn-in after about 6-12 months.
+     */
+    static uint8_t calculateActualInvertDisplay(ClockInfo& clockInfo) {
+      uint8_t invertDisplay;
+      if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+
+        const ZonedDateTime& dateTime = clockInfo.dateTime;
+        const LocalDateTime& ldt = dateTime.localDateTime();
+
+        // The XOR alternates the pattern of on/off to smooth out the wear level
+        // on specific digits. For example, if kInvertDisplayMinutely is
+        // selected, and if last bit of only the minute is used, then the "1" on
+        // the minute segment will always be inverted, which will cause uneven
+        // wearning. By XOR'ing with the hour(), we invert the on/off cycle
+        // every hour.
+        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely) {
+          invertDisplay = ((ldt.minute() & 0x1) ^ (ldt.hour() & 0x1))
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+          invertDisplay = ((ldt.hour() & 0x1) ^ (ldt.day() & 0x1))
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        } else {
+          invertDisplay = (7 <= ldt.hour() && ldt.hour() < 19)
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        }
+      } else {
+        invertDisplay = clockInfo.invertDisplay;
+      }
+
+      return invertDisplay;
     }
 
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
@@ -234,12 +305,13 @@ class Presenter {
 
   #endif
 
-    void displayData() {
+    /** Render the primary OLED or LCD display. */
+    void displayPrimary() {
       home();
       if (!mIsOverwriting) {
         clearDisplay();
       }
-      setFont();
+      setFont(1);
 
       switch (mRenderingInfo.mode) {
         case Mode::kViewDateTime:
@@ -271,8 +343,18 @@ class Presenter {
         case Mode::kChangeSettingsContrast:
         case Mode::kChangeInvertDisplay:
       #endif
+      #if ENABLE_LED_DISPLAY
+        case Mode::kChangeSettingsLedOnOff:
+        case Mode::kChangeSettingsLedBrightness:
+      #endif
           displaySettingsMode();
           break;
+
+      #if ENABLE_DHT22
+        case Mode::kViewTemperature:
+          displayTemperature();
+          break;
+      #endif
 
         case Mode::kViewSysclock:
           displaySystemClockMode();
@@ -290,6 +372,53 @@ class Presenter {
       renderDisplay();
     }
 
+  #if ENABLE_LED_DISPLAY
+    /** Render the secondary LED module. */
+    void displayLedModule() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("displayLedModule()"));
+      }
+
+      ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
+      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
+
+      const ZonedDateTime& prevDateTime = prevClockInfo.dateTime;
+      const ZonedDateTime& dateTime = clockInfo.dateTime;
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevDateTime != dateTime
+          || prevClockInfo.hourMode != clockInfo.hourMode) {
+        uint8_t hour = (clockInfo.hourMode == ClockInfo::kTwelve)
+            ? toTwelveHour(dateTime.hour())
+            : dateTime.hour();
+        uint8_t minute = dateTime.minute();
+        ClockWriter<LedModule> clockWriter(mLedModule);
+        if (clockInfo.hourMode == ClockInfo::kTwelve) {
+          clockWriter.writeHourMinute12(hour, minute);
+        } else {
+          clockWriter.writeHourMinute24(hour, minute);
+        }
+      }
+
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.ledOnOff != clockInfo.ledOnOff) {
+        mLedModule.setDisplayOn(clockInfo.ledOnOff);
+      }
+
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.ledBrightness != clockInfo.ledBrightness) {
+        mLedModule.setBrightness(clockInfo.ledBrightness);
+      }
+
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || mLedModule.isFlushRequired()) {
+        if (ENABLE_SERIAL_DEBUG >= 2) {
+          SERIAL_PORT_MONITOR.println(F("displayLedModule(): flush()"));
+        }
+        mLedModule.flush();
+      }
+    }
+  #endif
+
     void displayDateTimeMode() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("displayDateTimeMode()"));
@@ -301,10 +430,11 @@ class Presenter {
       }
 
       displayDate(dateTime);
-      mDisplay.println();
+      clearToEOL();
       displayTime(dateTime);
-      mDisplay.println();
+      clearToEOL();
       displayWeekday(dateTime);
+      clearToEOL();
     }
 
     void displayDate(const ZonedDateTime& dateTime) {
@@ -325,18 +455,13 @@ class Presenter {
       } else{
         mDisplay.print("  ");
       }
-      clearToEOL();
     }
 
     void displayTime(const ZonedDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeHour)) {
         uint8_t hour = dateTime.hour();
         if (mRenderingInfo.clockInfo.hourMode == ClockInfo::kTwelve) {
-          if (hour == 0) {
-            hour = 12;
-          } else if (hour > 12) {
-            hour -= 12;
-          }
+          hour = toTwelveHour(hour);
           printPad2To(mDisplay, hour, ' ');
         } else {
           printPad2To(mDisplay, hour, '0');
@@ -360,12 +485,10 @@ class Presenter {
       if (mRenderingInfo.clockInfo.hourMode == ClockInfo::kTwelve) {
         mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
-      clearToEOL();
     }
 
     void displayWeekday(const ZonedDateTime& dateTime) {
       mDisplay.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
-      clearToEOL();
     }
 
     void displayTimeZoneMode() {
@@ -398,7 +521,6 @@ class Presenter {
       }
       mDisplay.print(typeString);
       clearToEOL();
-      mDisplay.println();
 
       switch (tz.getType()) {
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -409,14 +531,12 @@ class Presenter {
             offset.printTo(mDisplay);
           }
           clearToEOL();
-          mDisplay.println();
 
           mDisplay.print("DST: ");
           if (shouldShowFor(Mode::kChangeTimeZoneDst)) {
             mDisplay.print((tz.getDstOffset().isZero()) ? "off" : "on ");
           }
           clearToEOL();
-          mDisplay.println();
           break;
 
       #else
@@ -427,20 +547,16 @@ class Presenter {
             tz.printShortTo(mDisplay);
           }
           clearToEOL();
-          mDisplay.println();
 
           // Clear the DST: {on|off} line from a previous screen
           clearToEOL();
-          mDisplay.println();
           break;
       #endif
 
         default:
           mDisplay.print(F("<unknown>"));
           clearToEOL();
-          mDisplay.println();
           clearToEOL();
-          mDisplay.println();
           break;
       }
     }
@@ -457,21 +573,21 @@ class Presenter {
       if (shouldShowFor(Mode::kChangeSettingsBacklight)) {
         mDisplay.println(clockInfo.backlightLevel);
       } else {
-        mDisplay.println(' ');
+        clearToEOL();
       }
 
       mDisplay.print(F("Contrast:"));
       if (shouldShowFor(Mode::kChangeSettingsContrast)) {
         mDisplay.println(clockInfo.contrast);
       } else {
-        mDisplay.println(' ');
+        clearToEOL();
       }
 
       mDisplay.print(F("Bias:"));
       if (shouldShowFor(Mode::kChangeSettingsBias)) {
         mDisplay.println(clockInfo.bias);
       } else {
-        mDisplay.println(' ');
+        clearToEOL();
       }
 
     #else
@@ -479,18 +595,74 @@ class Presenter {
       if (shouldShowFor(Mode::kChangeSettingsContrast)) {
         mDisplay.println(clockInfo.contrastLevel);
       } else {
-        mDisplay.println(' ');
+        clearToEOL();
       }
 
       mDisplay.print(F("Invert:"));
       if (shouldShowFor(Mode::kChangeInvertDisplay)) {
-        mDisplay.println(clockInfo.invertDisplay);
-      } else {
-        mDisplay.println(' ');
+        const __FlashStringHelper* statusString = F("<error>");
+        switch (clockInfo.invertDisplay) {
+          case ClockInfo::kInvertDisplayOff:
+            statusString = F("off");
+            break;
+          case ClockInfo::kInvertDisplayOn:
+            statusString = F("on");
+            break;
+          case ClockInfo::kInvertDisplayMinutely:
+            statusString = F("min");
+            break;
+          case ClockInfo::kInvertDisplayHourly:
+            statusString = F("hour");
+            break;
+          case ClockInfo::kInvertDisplayDaily:
+            statusString = F("day");
+            break;
+        }
+        mDisplay.print(statusString);
+      }
+      clearToEOL();
+    #endif
+
+    #if ENABLE_LED_DISPLAY
+      mDisplay.print(F("LED:"));
+      if (shouldShowFor(Mode::kChangeSettingsLedOnOff)) {
+        mDisplay.print(clockInfo.ledOnOff ? "on" : "off");
+      }
+      clearToEOL();
+
+      mDisplay.print(F("LED Lvl:"));
+      if (shouldShowFor(Mode::kChangeSettingsLedBrightness)) {
+        mDisplay.print(clockInfo.ledBrightness);
+      }
+      clearToEOL();
+    #endif
+
+    }
+
+  #if ENABLE_DHT22
+    void displayTemperature() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("displayTemperature()"));
       }
 
-    #endif
+      ClockInfo &clockInfo = mRenderingInfo.clockInfo;
+
+      mDisplay.print(F("Temp:"));
+      mDisplay.print(clockInfo.temperatureC, 1);
+      mDisplay.print('C');
+      clearToEOL();
+
+      mDisplay.print(F("Temp:"));
+      mDisplay.print(clockInfo.temperatureC * 9 / 5 + 32, 1);
+      mDisplay.print('F');
+      clearToEOL();
+
+      mDisplay.print(F("Humi:"));
+      mDisplay.print(clockInfo.humidity, 1);
+      mDisplay.print('%');
+      clearToEOL();
     }
+  #endif
 
     void displaySystemClockMode() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
@@ -533,14 +705,29 @@ class Presenter {
 
       // Use F() macros for these longer strings. Seems to save both
       // flash memory and RAM.
+      setFont(0);
       mDisplay.print(F("TZDB:"));
       mDisplay.println(zonedb::kTzDatabaseVersion);
-      mDisplay.println(F("ATim:" ACE_TIME_VERSION_STRING));
+      mDisplay.println(F("ATime:" ACE_TIME_VERSION_STRING));
       mDisplay.println(F("ABut:" ACE_BUTTON_VERSION_STRING));
       mDisplay.println(F("ARou:" ACE_ROUTINE_VERSION_STRING));
-    #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       mDisplay.println(F("ACom:" ACE_COMMON_VERSION_STRING));
+    #if ENABLE_LED_DISPLAY
+      mDisplay.println(F("ASeg:" ACE_SEGMENT_VERSION_STRING));
+      mDisplay.println(F("ASgW:" ACE_SEGMENT_WRITER_VERSION_STRING));
+      mDisplay.println(F("ATMI:" ACE_TMI_VERSION_STRING));
     #endif
+    }
+
+    /** Return 12 hour version of 24 hour. */
+    static uint8_t toTwelveHour(uint8_t hour) {
+      if (hour == 0) {
+        return 12;
+      } else if (hour > 12) {
+        return hour - 12;
+      } else {
+        return hour;
+      }
     }
 
   private:
@@ -551,6 +738,9 @@ class Presenter {
   #endif
 
     ZoneManager& mZoneManager;
+  #if ENABLE_LED_DISPLAY
+    LedDisplay& mLedModule;
+  #endif
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     Adafruit_PCD8544& mDisplay;
   #else

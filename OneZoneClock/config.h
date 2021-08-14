@@ -46,7 +46,6 @@
   #define SYSTEM_CLOCK SystemClockCoroutine
 #endif
 
-
 // Options that define the authoratative source of the time.
 #define TIME_SOURCE_TYPE_NONE 0
 #define TIME_SOURCE_TYPE_DS3231 1
@@ -63,7 +62,9 @@
 #define BUTTON_TYPE_DIGITAL 0
 #define BUTTON_TYPE_ANALOG 1
 
-#if ! defined(AUNITER) // Arduino IDE in interactive mode
+//-----------------------------------------------------------------------------
+
+#if defined(EPOXY_DUINO)
   // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
   #define WIFI_SSID "your wifi ssid here"
   #define WIFI_PASSWORD "your wifi password here"
@@ -78,9 +79,10 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
-#elif defined(EPOXY_DUINO)
+#elif ! defined(AUNITER) // Arduino IDE in interactive mode
   // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
   #define WIFI_SSID "your wifi ssid here"
   #define WIFI_PASSWORD "your wifi password here"
@@ -95,6 +97,7 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_NANO)
@@ -112,6 +115,7 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_MICRO)
@@ -135,6 +139,7 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_LED_CLOCK)
@@ -158,6 +163,7 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP true
 
 #elif defined(AUNITER_MINI_MINDER)
@@ -175,6 +181,7 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_MEGA)
@@ -192,6 +199,7 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_SAMD)
@@ -209,6 +217,7 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP true
 
 #elif defined(AUNITER_STM32)
@@ -226,6 +235,7 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_ESP8266)
@@ -243,6 +253,7 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_D1MINI)
@@ -259,18 +270,58 @@
   #define CHANGE_BUTTON_PIN 1
   #define ANALOG_BUTTON_COUNT 2
   #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BITS 10
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*0%, "short" to ground w/ 470*/, \
+      512 /*50%, 10k*/, \
+      1023 /*100%, open*/ \
+    }
 
   // Display parameters
-  #define DISPLAY_TYPE DISPLAY_TYPE_LCD
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     #define LCD_SPI_DATA_COMMAND_PIN D4
     #define LCD_BACKLIGHT_PIN D3
     #define LCD_INITIAL_CONTRAST 20
     #define LCD_INITIAL_BIAS 7
   #else
+    #define OLED_INITIAL_CONTRAST 0
     #define OLED_REMAP true
   #endif
+
+#elif defined(AUNITER_D1MINI_BOX)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Button parameters
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_COUNT 2
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*0%, "short" to ground w/ 470*/, \
+      512 /*50%, 10k*/, \
+      1023 /*100%, open*/ \
+    }
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
+  #define OLED_REMAP false
+
+  // Enable DHT22 Sensor
+  #define ENABLE_DHT22 1
+  #define DHT22_PIN D3
+
+  // Enable LED display
+  #define ENABLE_LED_DISPLAY 1
+  #define CLK_PIN D5
+  #define DIO_PIN D7
+  #define BIT_DELAY 10
 
 #elif defined(AUNITER_D1MINI_LARGE)
   // Defined by auniter.ini
@@ -286,7 +337,13 @@
   #define CHANGE_BUTTON_PIN 2
   #define ANALOG_BUTTON_COUNT 4
   #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BITS 10
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*short to ground*/, \
+      327 /*32%, 4.7k*/, \
+      512 /*50%, 10k*/, \
+      844 /*82%, 47k*/, \
+      1023 /*100%, open*/ \
+    }
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_LCD
@@ -296,6 +353,7 @@
     #define LCD_INITIAL_CONTRAST 20
     #define LCD_INITIAL_BIAS 7
   #else
+    #define OLED_INITIAL_CONTRAST 0
     #define OLED_REMAP false
   #endif
 
@@ -314,6 +372,7 @@
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #else
@@ -330,6 +389,9 @@ enum class Mode : uint8_t {
   kViewDateTime,
   kViewTimeZone,
   kViewSettings,
+#if ENABLE_DHT22
+  kViewTemperature,
+#endif
   kViewSysclock,
   kViewAbout,
 
@@ -354,6 +416,10 @@ enum class Mode : uint8_t {
 #else
   kChangeSettingsContrast,
   kChangeInvertDisplay,
+#endif
+#if ENABLE_LED_DISPLAY
+  kChangeSettingsLedOnOff,
+  kChangeSettingsLedBrightness,
 #endif
 };
 

@@ -209,7 +209,11 @@
   #define MODE_BUTTON_PIN 0
   #define CHANGE_BUTTON_PIN 1
   #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BITS 10
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*0%, "short" to ground w/ 470*/, \
+      512 /*50%, 10k*/, \
+      1023 /*100%, open*/ \
+    }
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_LCD
@@ -237,7 +241,11 @@
   #define CHANGE_BUTTON_PIN 1
   #define ANALOG_BUTTON_COUNT 2
   #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BITS 10
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*0%, "short" to ground w/ 470*/, \
+      512 /*50%, 10k*/, \
+      1023 /*100%, open*/ \
+    }
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_LCD
@@ -249,6 +257,61 @@
   #else
     #define OLED_REMAP true
   #endif
+
+#elif defined(AUNITER_D1MINI_BOX)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Use BasicDbZoneManager for testing.
+  #undef TIME_ZONE_TYPE
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDEDDB
+
+  // Button parameters
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_COUNT 2
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*0%, "short" to ground w/ 470*/, \
+      512 /*50%, 10k*/, \
+      1023 /*100%, open*/ \
+    }
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_REMAP true
+
+#elif defined(AUNITER_D1MINIBOX)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+
+  // Use BasicDbZoneManager for testing.
+  #undef TIME_ZONE_TYPE
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDEDDB
+
+  // Button parameters
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_COUNT 2
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*0%, "short" to ground w/ 470*/, \
+      512 /*50%, 10k*/, \
+      1023 /*100%, open*/ \
+    }
+
+  // Display parameters
+  #define OLED_REMAP true
 
 #elif defined(AUNITER_D1MINI_LARGE)
   // Defined by auniter.ini
@@ -264,7 +327,13 @@
   #define CHANGE_BUTTON_PIN 2
   #define ANALOG_BUTTON_COUNT 4
   #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BITS 10
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*short to ground*/, \
+      327 /*32%, 4.7k*/, \
+      512 /*50%, 10k*/, \
+      844 /*82%, 47k*/, \
+      1023 /*100%, open*/ \
+    }
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_LCD

@@ -481,7 +481,7 @@ COROUTINE(checkButtons) {
   #else
     buttonConfig.checkButtons();
   #endif
-    COROUTINE_DELAY(5);
+    COROUTINE_DELAY(10);
   }
 }
 

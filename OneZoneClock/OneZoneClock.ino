@@ -36,6 +36,17 @@
   #include <Adafruit_GFX.h>
   #include <Adafruit_PCD8544.h>
 #endif
+
+#if ENABLE_LED_DISPLAY
+  #include <AceTMI.h>
+  #include <AceSegment.h>
+  #include <AceSegmentWriter.h>
+  using ace_tmi::SimpleTmiInterface;
+  using ace_segment::ClockWriter;
+  using ace_segment::LedModule;
+  using ace_segment::Tm1637Module;
+#endif
+
 #include "PersistentStore.h"
 #include "Controller.h"
 
@@ -60,6 +71,8 @@ static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
   &zonedb::kZoneAmerica_Denver,
   &zonedb::kZoneAmerica_Chicago,
   &zonedb::kZoneAmerica_New_York,
+  &zonedb::kZoneEurope_London,
+  &zonedb::kZoneAsia_Bangkok,
 };
 
 static const uint16_t ZONE_REGISTRY_SIZE =
@@ -77,6 +90,8 @@ static const extended::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
   &zonedbx::kZoneAmerica_Denver,
   &zonedbx::kZoneAmerica_Chicago,
   &zonedbx::kZoneAmerica_New_York,
+  &zonedbx::kZoneEurope_London,
+  &zonedbx::kZoneAsia_Bangkok,
 };
 
 static const uint16_t ZONE_REGISTRY_SIZE =
@@ -152,7 +167,24 @@ void setupClocks() {
 }
 
 //------------------------------------------------------------------
-// Configure OLED display or LCD display.
+// Configure DHT22 temperature and humidity sensor
+//------------------------------------------------------------------
+
+#if ENABLE_DHT22
+
+#include <DHT.h>
+
+DHT dht(DHT22_PIN, DHT22);
+
+void setupDht22() {
+  pinMode(DHT22_PIN, INPUT_PULLUP);
+  dht.begin();
+}
+
+#endif
+
+//------------------------------------------------------------------
+// Configure main OLED display or LCD display.
 //------------------------------------------------------------------
 
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
@@ -163,6 +195,7 @@ void setupClocks() {
     oled.displayRemap(OLED_REMAP);
     oled.setScrollMode(false);
     oled.clear();
+    oled.setContrast(OLED_INITIAL_CONTRAST);
   }
 #else
   Adafruit_PCD8544 lcd = Adafruit_PCD8544(LCD_SPI_DATA_COMMAND_PIN, -1, -1);
@@ -179,15 +212,42 @@ void setupClocks() {
   }
 #endif
 
+//------------------------------------------------------------------
+// Configure optional LED display
+//------------------------------------------------------------------
+
+#if ENABLE_LED_DISPLAY
+
+TmiInterface tmiInterface(DIO_PIN, CLK_PIN, BIT_DELAY);
+LedDisplay ledModule(tmiInterface);
+const uint8_t BRIGHTNESS_LEVELS = 7;
+const uint8_t BRIGHTNESS_MIN = 1;
+const uint8_t BRIGHTNESS_MAX = 7;
+
+void setupAceSegment() {
+  tmiInterface.begin();
+  ledModule.begin();
+}
+
+#endif
+
 //-----------------------------------------------------------------------------
 // Create presenter
 //-----------------------------------------------------------------------------
 
-#if DISPLAY_TYPE == DISPLAY_TYPE_OLED
-  Presenter presenter(zoneManager, oled, true /*isOverwriting*/);
-#else
-  Presenter presenter(zoneManager, lcd, false /*isOverwriting*/);
-#endif
+Presenter presenter(
+    zoneManager,
+  #if ENABLE_LED_DISPLAY
+    ledModule,
+  #endif
+  #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
+    oled,
+    true /*isOverwriting*/
+  #else
+    lcd,
+    false /*isOverwriting*/
+  #endif
+);
 
 void setupPresenter() {
 }
@@ -281,6 +341,10 @@ const uint8_t SETTINGS_MODES[] = {
   (uint8_t) Mode::kChangeSettingsContrast,
   (uint8_t) Mode::kChangeInvertDisplay,
 #endif
+#if ENABLE_LED_DISPLAY
+  (uint8_t) Mode::kChangeSettingsLedOnOff,
+  (uint8_t) Mode::kChangeSettingsLedBrightness,
+#endif
 };
 
 // ModeGroup for the Settings modes.
@@ -295,6 +359,9 @@ const ModeGroup SETTINGS_MODE_GROUP = {
 const uint8_t TOP_LEVEL_MODES[] = {
   (uint8_t) Mode::kViewDateTime,
   (uint8_t) Mode::kViewTimeZone,
+#if ENABLE_DHT22
+  (uint8_t) Mode::kViewTemperature,
+#endif
   (uint8_t) Mode::kViewSettings,
   (uint8_t) Mode::kViewSysclock,
   (uint8_t) Mode::kViewAbout,
@@ -305,6 +372,9 @@ const uint8_t TOP_LEVEL_MODES[] = {
 const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
   &DATE_TIME_MODE_GROUP,
   &TIME_ZONE_MODE_GROUP,
+#if ENABLE_DHT22
+  nullptr /* Mode::kViewTemperature has no submodes */,
+#endif
   &SETTINGS_MODE_GROUP,
   nullptr /* Mode::kViewSysclock has no submodes */,
   nullptr /* Mode::kViewAbout has no submodes */,
@@ -335,12 +405,28 @@ void setupPersistentStore() {
 // Create controller.
 //------------------------------------------------------------------
 
-Controller controller(systemClock, persistentStore, presenter, zoneManager,
-  DISPLAY_ZONE, &ROOT_MODE_GROUP);
+#if ENABLE_DHT22
+  Controller controller(systemClock, persistentStore, presenter, zoneManager,
+    DISPLAY_ZONE, &ROOT_MODE_GROUP, &dht);
+#else
+  Controller controller(systemClock, persistentStore, presenter, zoneManager,
+    DISPLAY_ZONE, &ROOT_MODE_GROUP, nullptr /*dht*/);
+#endif
 
 void setupController(bool factoryReset) {
   controller.setup(factoryReset);
 }
+
+#if ENABLE_DHT22
+
+COROUTINE(updateTemperature) {
+  COROUTINE_LOOP() {
+    controller.updateTemperature();
+    COROUTINE_DELAY_SECONDS(60);
+  }
+}
+
+#endif
 
 //------------------------------------------------------------------
 // Render the Clock periodically.
@@ -417,41 +503,10 @@ COROUTINE(printFrameRate) {
 
 #elif BUTTON_TYPE == BUTTON_TYPE_ANALOG
 
-  AceButton modeButton((uint8_t) MODE_BUTTON_PIN);
-  AceButton changeButton((uint8_t) CHANGE_BUTTON_PIN);
+  AceButton modeButton(nullptr, (uint8_t) MODE_BUTTON_PIN);
+  AceButton changeButton(nullptr, (uint8_t) CHANGE_BUTTON_PIN);
   AceButton* const BUTTONS[] = {&modeButton, &changeButton};
-
-  #if ANALOG_BUTTON_COUNT == 2
-    #if ANALOG_BITS == 8
-      const uint16_t LEVELS[] = {0, 128, 255};
-    #elif ANALOG_BITS == 10
-      const uint16_t LEVELS[] = {0, 512, 1023};
-    #else
-      #error Unknown number of ADC bits
-    #endif
-  #elif ANALOG_BUTTON_COUNT == 4
-    #if ANALOG_BITS == 8
-      const uint16_t LEVELS[] = {
-        0 /*short to ground*/,
-        82 /*32%, 4.7k*/,
-        128 /*50%, 10k*/,
-        210 /*82%, 47k*/,
-        255 /*100%, open*/
-      };
-    #elif ANALOG_BITS == 10
-      const uint16_t LEVELS[] = {
-        0 /*short to ground*/,
-        327 /*32%, 4.7k*/,
-        512 /*50%, 10k*/,
-        844 /*82%, 47k*/,
-        1023 /*100%, open*/
-      };
-    #else
-      #error Unknown number of ADC bits
-    #endif
-  #else
-    #error Unknown ANALOG_BUTTON_COUNT
-  #endif
+  const uint16_t LEVELS[] = ANALOG_BUTTON_LEVELS;
 
   LadderButtonConfig buttonConfig(
       ANALOG_BUTTON_PIN,
@@ -462,7 +517,6 @@ COROUTINE(printFrameRate) {
   );
 
 #else
-
   #error Unknown BUTTON_TYPE
 
 #endif
@@ -530,6 +584,10 @@ void setupAceButton() {
   buttonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
   buttonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);
   buttonConfig.setRepeatPressInterval(150);
+
+  // Shorten the DoubleClick delay to prevent accidental interpretation of
+  // rapid Mode button presses as a DoubleClick.
+  buttonConfig.setDoubleClickDelay(250);
 }
 
 // Read the buttons in a coroutine with a 5-10ms delay because if analogRead()
@@ -590,6 +648,14 @@ if (ENABLE_SERIAL_DEBUG >= 1) {
   setupDisplay();
   setupPresenter();
 
+#if ENABLE_DHT22
+  setupDht22();
+#endif
+
+#if ENABLE_LED_DISPLAY
+  setupAceSegment();
+#endif
+
   // Hold down the Mode button to perform factory reset.
   bool isModePressedDuringBoot = modeButton.isPressedRaw();
   setupController(isModePressedDuringBoot);
@@ -600,11 +666,17 @@ if (ENABLE_SERIAL_DEBUG >= 1) {
 }
 
 void loop() {
+  readButtons.runCoroutine();
+
+#if ENABLE_DHT22
+  updateTemperature.runCoroutine();
+#endif
+
   displayClock.runCoroutine();
+
 #if ENABLE_FPS_DEBUG
   printFrameRate.runCoroutine();
 #endif
-  readButtons.runCoroutine();
 
 #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
   systemClock.loop();

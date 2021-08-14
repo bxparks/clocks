@@ -42,7 +42,13 @@ struct ClockInfo {
   static uint8_t const kInvertDisplayOn = 1;
 
   /** Invert display auto. */
-  static uint8_t const kInvertDisplayAuto = 2;
+  static uint8_t const kInvertDisplayMinutely = 2;
+
+  /** Invert display automatically every hour. */
+  static uint8_t const kInvertDisplayHourly = 3;
+
+  /** Invert display automatically half-daily. */
+  static uint8_t const kInvertDisplayDaily = 4;
 
   /** Invert display mode. Only for OLED. */
   uint8_t invertDisplay;
@@ -68,6 +74,21 @@ struct ClockInfo {
 
   /** Status code of the most recent sync attempt. */
   uint8_t syncStatusCode;
+
+#if ENABLE_DHT22
+  /** Current temperature in Celcius. */
+  float temperatureC;
+
+  /** Current humidity. */
+  float humidity;
+#endif
+
+#if ENABLE_LED_DISPLAY
+  /** Enable LED Module or not interactively. */
+  bool ledOnOff = true;
+
+  uint8_t ledBrightness = 1;
+#endif
 };
 
 inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
@@ -78,6 +99,14 @@ inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
     && a.clockSkew == b.clockSkew
     && a.syncStatusCode == b.syncStatusCode
     && a.hourMode == b.hourMode
+  #if ENABLE_DHT22
+    && a.temperatureC == b.temperatureC
+    && a.humidity == b.humidity
+  #endif
+  #if ENABLE_LED_DISPLAY
+    && a.ledOnOff == b.ledOnOff
+    && a.ledBrightness == b.ledBrightness
+  #endif
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     && a.backlightLevel == b.backlightLevel
     && a.contrast == b.contrast

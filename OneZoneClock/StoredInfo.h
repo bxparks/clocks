@@ -1,6 +1,7 @@
 #ifndef ONE_ZONE_CLOCK_STORED_INFO_H
 #define ONE_ZONE_CLOCK_STORED_INFO_H
 
+#include "config.h"
 #include <AceTime.h>
 
 /** Data that is saved to and retrieved from EEPROM. */
@@ -31,6 +32,14 @@ struct StoredInfo {
   /** Invert display mode, [0-2]. Only for OLED. */
   uint8_t invertDisplay;
 
+#endif
+
+#if ENABLE_LED_DISPLAY
+  /** Enable LED Module or not interactively. */
+  bool ledOnOff;
+
+  /** Brightness of LED module. */
+  uint8_t ledBrightness;
 #endif
 
   /** TimeZone serialization. */
