@@ -86,6 +86,7 @@ static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
   &zonedb::kZoneAmerica_New_York,
   &zonedb::kZoneEurope_London,
   &zonedb::kZoneAsia_Kolkata,
+  &zonedb::kZoneAsia_Bangkok,
 };
 
 static const uint16_t ZONE_REGISTRY_SIZE =
@@ -105,6 +106,7 @@ static const extended::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
   &zonedbx::kZoneAmerica_New_York,
   &zonedbx::kZoneEurope_London,
   &zonedbx::kZoneAsia_Kolkata,
+  &zonedb::kZoneAsia_Bangkok,
 };
 
 static const uint16_t ZONE_REGISTRY_SIZE =
@@ -495,38 +497,7 @@ COROUTINE(printFrameRate) {
   AceButton modeButton((uint8_t) MODE_BUTTON_PIN);
   AceButton changeButton((uint8_t) CHANGE_BUTTON_PIN);
   AceButton* const BUTTONS[] = {&modeButton, &changeButton};
-
-  #if ANALOG_BUTTON_COUNT == 2
-    #if ANALOG_BITS == 8
-      const uint16_t LEVELS[] = {0, 128, 255};
-    #elif ANALOG_BITS == 10
-      const uint16_t LEVELS[] = {0, 512, 1023};
-    #else
-      #error Unknown number of ADC bits
-    #endif
-  #elif ANALOG_BUTTON_COUNT == 4
-    #if ANALOG_BITS == 8
-      const uint16_t LEVELS[] = {
-        0 /*short to ground*/,
-        82 /*32%, 4.7k*/,
-        128 /*50%, 10k*/,
-        210 /*82%, 47k*/,
-        255 /*100%, open*/
-      };
-    #elif ANALOG_BITS == 10
-      const uint16_t LEVELS[] = {
-        0 /*short to ground*/,
-        327 /*32%, 4.7k*/,
-        512 /*50%, 10k*/,
-        844 /*82%, 47k*/,
-        1023 /*100%, open*/
-      };
-    #else
-      #error Unknown number of ADC bits
-    #endif
-  #else
-    #error Unknown ANALOG_BUTTON_COUNT
-  #endif
+  const uint16_t LEVELS[] = ANALOG_BUTTON_LEVELS;
 
   LadderButtonConfig buttonConfig(
       ANALOG_BUTTON_PIN,
@@ -605,9 +576,13 @@ void setupAceButton() {
   buttonConfig.setFeature(ButtonConfig::kFeatureSuppressAfterLongPress);
   buttonConfig.setFeature(ButtonConfig::kFeatureRepeatPress);
   buttonConfig.setRepeatPressInterval(150);
+
+  // Shorten the DoubleClick delay to prevent accidental interpretation of
+  // rapid Mode button presses as a DoubleClick.
+  buttonConfig.setDoubleClickDelay(250);
 }
 
-// Read the buttons in a coroutine with a 10ms delay because if analogRead()
+// Read the buttons in a coroutine with a 5-10ms delay because if analogRead()
 // is used on an ESP8266 to read buttons in a resistor ladder, the WiFi
 // becomes disconnected after 5-10 seconds. See
 // https://github.com/esp8266/Arduino/issues/1634 and
