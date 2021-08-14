@@ -46,7 +46,6 @@
   #define SYSTEM_CLOCK SystemClockCoroutine
 #endif
 
-
 // Options that define the authoratative source of the time.
 #define TIME_SOURCE_TYPE_NONE 0
 #define TIME_SOURCE_TYPE_DS3231 1
@@ -62,6 +61,8 @@
 //  * ESP32: 12-bit analog pin
 #define BUTTON_TYPE_DIGITAL 0
 #define BUTTON_TYPE_ANALOG 1
+
+//-----------------------------------------------------------------------------
 
 #if defined(EPOXY_DUINO)
   // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
@@ -316,6 +317,12 @@
   #define ENABLE_DHT22 1
   #define DHT22_PIN D3
 
+  // Enable LED display
+  #define ENABLE_LED_DISPLAY 1
+  #define CLK_PIN D5
+  #define DIO_PIN D7
+  #define BIT_DELAY 10
+
 #elif defined(AUNITER_D1MINI_LARGE)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -409,6 +416,10 @@ enum class Mode : uint8_t {
 #else
   kChangeSettingsContrast,
   kChangeInvertDisplay,
+#endif
+#if ENABLE_LED_DISPLAY
+  kChangeSettingsLedOnOff,
+  kChangeSettingsLedBrightness,
 #endif
 };
 

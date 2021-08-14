@@ -173,6 +173,10 @@ class Controller {
         case Mode::kChangeSettingsContrast:
         case Mode::kChangeInvertDisplay:
       #endif
+      #if ENABLE_LED_DISPLAY
+        case Mode::kChangeSettingsLedOnOff:
+        case Mode::kChangeSettingsLedBrightness:
+      #endif
           // Throw away the changes and just change the mode group.
           //performLeavingModeAction();
           //performLeavingModeGroupAction();
@@ -246,6 +250,10 @@ class Controller {
       #else
         case Mode::kChangeSettingsContrast:
         case Mode::kChangeInvertDisplay:
+      #endif
+      #if ENABLE_LED_DISPLAY
+        case Mode::kChangeSettingsLedOnOff:
+        case Mode::kChangeSettingsLedBrightness:
       #endif
           preserveClockInfo(mClockInfo);
           break;
@@ -392,6 +400,19 @@ class Controller {
         }
       #endif
 
+      #if ENABLE_LED_DISPLAY
+        case Mode::kChangeSettingsLedOnOff: {
+          mSuppressBlink = true;
+          mClockInfo.ledOnOff = ! mClockInfo.ledOnOff;
+          break;
+        }
+        case Mode::kChangeSettingsLedBrightness: {
+          mSuppressBlink = true;
+          incrementMod(mClockInfo.ledBrightness, (uint8_t) 8);
+          break;
+        }
+      #endif
+
         default:
           break;
       }
@@ -433,6 +454,10 @@ class Controller {
       #else
         case Mode::kChangeSettingsContrast:
         case Mode::kChangeInvertDisplay:
+      #endif
+      #if ENABLE_LED_DISPLAY
+        case Mode::kChangeSettingsLedOnOff:
+        case Mode::kChangeSettingsLedBrightness:
       #endif
           mSuppressBlink = false;
           break;
@@ -571,6 +596,10 @@ class Controller {
         clockInfo.contrastLevel = storedInfo.contrastLevel;
         clockInfo.invertDisplay = storedInfo.invertDisplay;
       #endif
+      #if ENABLE_LED_DISPLAY
+        clockInfo.ledOnOff = storedInfo.ledOnOff;
+        clockInfo.ledBrightness = storedInfo.ledBrightness;
+      #endif
     }
 
     /** Convert ClockInfo to StoredInfo. */
@@ -585,6 +614,10 @@ class Controller {
       #else
         storedInfo.contrastLevel = clockInfo.contrastLevel;
         storedInfo.invertDisplay = clockInfo.invertDisplay;
+      #endif
+      #if ENABLE_LED_DISPLAY
+        storedInfo.ledOnOff = clockInfo.ledOnOff;
+        storedInfo.ledBrightness = clockInfo.ledBrightness;
       #endif
     }
 
@@ -629,6 +662,10 @@ class Controller {
     #else
       mClockInfo.contrastLevel = 5;
       mClockInfo.invertDisplay = ClockInfo::kInvertDisplayOff;
+    #endif
+    #if ENABLE_LED_DISPLAY
+      mClockInfo.ledOnOff = true;
+      mClockInfo.ledBrightness = 1;
     #endif
     }
 

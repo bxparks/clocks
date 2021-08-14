@@ -82,6 +82,13 @@ struct ClockInfo {
   /** Current humidity. */
   float humidity;
 #endif
+
+#if ENABLE_LED_DISPLAY
+  /** Enable LED Module or not interactively. */
+  bool ledOnOff = true;
+
+  uint8_t ledBrightness = 1;
+#endif
 };
 
 inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
@@ -95,6 +102,10 @@ inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
   #if ENABLE_DHT22
     && a.temperatureC == b.temperatureC
     && a.humidity == b.humidity
+  #endif
+  #if ENABLE_LED_DISPLAY
+    && a.ledOnOff == b.ledOnOff
+    && a.ledBrightness == b.ledBrightness
   #endif
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     && a.backlightLevel == b.backlightLevel

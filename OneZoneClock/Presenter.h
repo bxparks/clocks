@@ -12,6 +12,17 @@
 #else
   #include <SSD1306AsciiWire.h>
 #endif
+#if ENABLE_LED_DISPLAY
+  #include <AceTMI.h>
+  #include <AceSegment.h>
+  #include <AceSegmentWriter.h>
+  using ace_segment::Tm1637Module;
+  using ace_segment::ClockWriter;
+  using ace_segment::LedModule;
+  const uint8_t NUM_DIGITS = 4;
+  using TmiInterface = ace_tmi::SimpleTmiInterface;
+  using LedDisplay = Tm1637Module<TmiInterface, NUM_DIGITS>;
+#endif
 #include "StoredInfo.h"
 #include "ClockInfo.h"
 #include "RenderingInfo.h"
@@ -48,11 +59,14 @@ class Presenter {
      * Constructor.
      * @param display either an OLED display or an LCD display
      * @param isOverwriting if true, printing a character to a display
-     *        overwrites the existing bits, therefore, displayData() does
+     *        overwrites the existing bits, therefore, displayPrimary() does
      *        NOT need to clear the display
      */
     Presenter(
         ZoneManager& zoneManager,
+      #if ENABLE_LED_DISPLAY
+        LedDisplay& ledModule,
+      #endif
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
         Adafruit_PCD8544& display,
       #else
@@ -61,6 +75,9 @@ class Presenter {
         bool isOverwriting
     ) :
         mZoneManager(zoneManager),
+      #if ENABLE_LED_DISPLAY
+        mLedModule(ledModule),
+      #endif
         mDisplay(display),
         mIsOverwriting(isOverwriting)
       {}
@@ -69,9 +86,13 @@ class Presenter {
       if (needsClear()) {
         clearDisplay();
       }
+
       if (needsUpdate()) {
         updateDisplaySettings();
-        displayData();
+        displayPrimary();
+      #if ENABLE_LED_DISPLAY
+        displayLedModule();
+      #endif
       }
 
       mPrevRenderingInfo = mRenderingInfo;
@@ -189,22 +210,22 @@ class Presenter {
       ClockInfo &clockInfo = mRenderingInfo.clockInfo;
 
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.backlightLevel != clockInfo.backlightLevel) {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.backlightLevel != clockInfo.backlightLevel) {
         uint16_t value = toLcdBacklightValue(clockInfo.backlightLevel);
         analogWrite(LCD_BACKLIGHT_PIN, value);
       }
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.contrast != clockInfo.contrast) {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.contrast != clockInfo.contrast) {
         mDisplay.setContrast(clockInfo.contrast);
       }
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.bias != clockInfo.bias) {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.bias != clockInfo.bias) {
         mDisplay.setBias(clockInfo.bias);
       }
     #else
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
         uint8_t value = toOledContrastValue(clockInfo.contrastLevel);
         mDisplay.setContrast(value);
       }
@@ -284,7 +305,8 @@ class Presenter {
 
   #endif
 
-    void displayData() {
+    /** Render the primary OLED or LCD display. */
+    void displayPrimary() {
       home();
       if (!mIsOverwriting) {
         clearDisplay();
@@ -321,6 +343,10 @@ class Presenter {
         case Mode::kChangeSettingsContrast:
         case Mode::kChangeInvertDisplay:
       #endif
+      #if ENABLE_LED_DISPLAY
+        case Mode::kChangeSettingsLedOnOff:
+        case Mode::kChangeSettingsLedBrightness:
+      #endif
           displaySettingsMode();
           break;
 
@@ -345,6 +371,44 @@ class Presenter {
 
       renderDisplay();
     }
+
+  #if ENABLE_LED_DISPLAY
+    /** Render the secondary LED module. */
+    void displayLedModule() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("displayLedModule()"));
+      }
+
+      ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
+      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
+
+      const ZonedDateTime& prevDateTime = prevClockInfo.dateTime;
+      const ZonedDateTime& dateTime = clockInfo.dateTime;
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevDateTime != dateTime) {
+        ClockWriter<LedModule> clockWriter(mLedModule);
+        clockWriter.writeHourMinute(dateTime.hour(), dateTime.minute());
+      }
+
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.ledOnOff != clockInfo.ledOnOff) {
+        mLedModule.setDisplayOn(clockInfo.ledOnOff);
+      }
+
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || prevClockInfo.ledBrightness != clockInfo.ledBrightness) {
+        mLedModule.setBrightness(clockInfo.ledBrightness);
+      }
+
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || mLedModule.isFlushRequired()) {
+        if (ENABLE_SERIAL_DEBUG >= 2) {
+          SERIAL_PORT_MONITOR.println(F("displayLedModule(): flush()"));
+        }
+        mLedModule.flush();
+      }
+    }
+  #endif
 
     void displayDateTimeMode() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
@@ -550,11 +614,24 @@ class Presenter {
             break;
         }
         mDisplay.print(statusString);
-        clearToEOL();
-      } else {
-        clearToEOL();
       }
+      clearToEOL();
     #endif
+
+    #if ENABLE_LED_DISPLAY
+      mDisplay.print(F("LED:"));
+      if (shouldShowFor(Mode::kChangeSettingsLedOnOff)) {
+        mDisplay.print(clockInfo.ledOnOff ? "on" : "off");
+      }
+      clearToEOL();
+
+      mDisplay.print(F("LED Lvl:"));
+      if (shouldShowFor(Mode::kChangeSettingsLedBrightness)) {
+        mDisplay.print(clockInfo.ledBrightness);
+      }
+      clearToEOL();
+    #endif
+
     }
 
   #if ENABLE_DHT22
@@ -640,6 +717,9 @@ class Presenter {
   #endif
 
     ZoneManager& mZoneManager;
+  #if ENABLE_LED_DISPLAY
+    LedDisplay& mLedModule;
+  #endif
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     Adafruit_PCD8544& mDisplay;
   #else

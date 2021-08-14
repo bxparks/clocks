@@ -36,6 +36,11 @@
   #include <Adafruit_GFX.h>
   #include <Adafruit_PCD8544.h>
 #endif
+#if ENABLE_LED_DISPLAY
+  #include <AceTMI.h>
+  #include <AceSegment.h>
+  #include <AceSegmentWriter.h>
+#endif
 #include "PersistentStore.h"
 #include "Controller.h"
 
@@ -44,6 +49,10 @@ using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_utils::mode_group::ModeGroup;
+using ace_tmi::SimpleTmiInterface;
+using ace_segment::ClockWriter;
+using ace_segment::LedModule;
+using ace_segment::Tm1637Module;
 
 //-----------------------------------------------------------------------------
 // Configure time zones and ZoneManager.
@@ -173,7 +182,7 @@ void setupDht22() {
 #endif
 
 //------------------------------------------------------------------
-// Configure OLED display or LCD display.
+// Configure main OLED display or LCD display.
 //------------------------------------------------------------------
 
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
@@ -201,15 +210,42 @@ void setupDht22() {
   }
 #endif
 
+//------------------------------------------------------------------
+// Configure optional LED display
+//------------------------------------------------------------------
+
+#if ENABLE_LED_DISPLAY
+
+TmiInterface tmiInterface(DIO_PIN, CLK_PIN, BIT_DELAY);
+LedDisplay ledModule(tmiInterface);
+const uint8_t BRIGHTNESS_LEVELS = 7;
+const uint8_t BRIGHTNESS_MIN = 1;
+const uint8_t BRIGHTNESS_MAX = 7;
+
+void setupAceSegment() {
+  tmiInterface.begin();
+  ledModule.begin();
+}
+
+#endif
+
 //-----------------------------------------------------------------------------
 // Create presenter
 //-----------------------------------------------------------------------------
 
-#if DISPLAY_TYPE == DISPLAY_TYPE_OLED
-  Presenter presenter(zoneManager, oled, true /*isOverwriting*/);
-#else
-  Presenter presenter(zoneManager, lcd, false /*isOverwriting*/);
-#endif
+Presenter presenter(
+    zoneManager,
+  #if ENABLE_LED_DISPLAY
+    ledModule,
+  #endif
+  #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
+    oled,
+    true /*isOverwriting*/
+  #else
+    lcd,
+    false /*isOverwriting*/
+  #endif
+);
 
 void setupPresenter() {
 }
@@ -302,6 +338,10 @@ const uint8_t SETTINGS_MODES[] = {
 #else
   (uint8_t) Mode::kChangeSettingsContrast,
   (uint8_t) Mode::kChangeInvertDisplay,
+#endif
+#if ENABLE_LED_DISPLAY
+  (uint8_t) Mode::kChangeSettingsLedOnOff,
+  (uint8_t) Mode::kChangeSettingsLedBrightness,
 #endif
 };
 
@@ -605,8 +645,13 @@ if (ENABLE_SERIAL_DEBUG >= 1) {
   setupClocks();
   setupDisplay();
   setupPresenter();
+
 #if ENABLE_DHT22
   setupDht22();
+#endif
+
+#if ENABLE_LED_DISPLAY
+  setupAceSegment();
 #endif
 
   // Hold down the Mode button to perform factory reset.
@@ -619,14 +664,16 @@ if (ENABLE_SERIAL_DEBUG >= 1) {
 }
 
 void loop() {
-  displayClock.runCoroutine();
-#if ENABLE_FPS_DEBUG
-  printFrameRate.runCoroutine();
-#endif
   readButtons.runCoroutine();
 
 #if ENABLE_DHT22
   updateTemperature.runCoroutine();
+#endif
+
+  displayClock.runCoroutine();
+
+#if ENABLE_FPS_DEBUG
+  printFrameRate.runCoroutine();
 #endif
 
 #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
