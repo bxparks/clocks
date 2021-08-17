@@ -288,6 +288,10 @@
     #define OLED_REMAP true
   #endif
 
+  // Enable DHT22 Sensor
+  #define ENABLE_DHT22 1
+  #define DHT22_PIN D3
+
 #elif defined(AUNITER_D1MINI_BOX)
   // Defined by auniter.ini
   //#define WIFI_SSID
