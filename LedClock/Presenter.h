@@ -10,6 +10,7 @@
 using ace_time::DateStrings;
 using ace_time::ZonedDateTime;
 using ace_segment::kHexCharSpace;
+using ace_segment::kPatternSpace;
 using ace_segment::LedModule;
 using ace_segment::PatternWriter;
 using ace_segment::ClockWriter;
@@ -133,33 +134,33 @@ class Presenter {
 
     void displayHourMinute(const ZonedDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeHour)) {
-        mClockWriter.writeDec2At(0, dateTime.hour());
+        mNumberWriter.writeDec2At(0, dateTime.hour());
       } else {
-        mClockWriter.writeChars2At(0, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeHexChars2At(1, kHexCharSpace, kHexCharSpace);
       }
 
       if (shouldShowFor(Mode::kChangeMinute)) {
-        mClockWriter.writeDec2At(2, dateTime.minute());
+        mNumberWriter.writeDec2At(2, dateTime.minute());
       } else {
-        mClockWriter.writeChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
       mClockWriter.writeColon(true);
     }
 
     void displaySecond(const ZonedDateTime& dateTime) {
-      mClockWriter.writeChars2At(0, kHexCharSpace, kHexCharSpace);
+      mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
 
       if (shouldShowFor(Mode::kChangeSecond)) {
-        mClockWriter.writeDec2At(2, dateTime.second());
+        mNumberWriter.writeDec2At(2, dateTime.second());
         mClockWriter.writeColon(true);
       } else {
-        mClockWriter.writeChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
     }
 
     void displayYear(const ZonedDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeYear)) {
-        mClockWriter.writeDec4At(0, dateTime.year());
+        mNumberWriter.writeDec4At(0, dateTime.year());
       } else {
         clearDisplay();
       }
@@ -167,21 +168,21 @@ class Presenter {
     }
 
     void displayMonth(const ZonedDateTime& dateTime) {
-      mClockWriter.writeChars2At(0, kHexCharSpace, kHexCharSpace);
+      mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
       if (shouldShowFor(Mode::kChangeMonth)) {
-        mClockWriter.writeDec2At(2, dateTime.month());
+        mNumberWriter.writeDec2At(2, dateTime.month());
       } else {
-        mClockWriter.writeChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
       mClockWriter.writeColon(false);
     }
 
     void displayDay(const ZonedDateTime& dateTime) {
-      mClockWriter.writeChars2At(0, kHexCharSpace, kHexCharSpace);
+      mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
       if (shouldShowFor(Mode::kChangeDay)) {
-        mClockWriter.writeDec2At(2, dateTime.day());
+        mNumberWriter.writeDec2At(2, dateTime.day());
       } else  {
-        mClockWriter.writeChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
       mClockWriter.writeColon(false);
     }
@@ -191,15 +192,15 @@ class Presenter {
       mCharWriter.writeCharAt(1, 'r');
       mClockWriter.writeColon(true);
       if (shouldShowFor(Mode::kChangeBrightness)) {
-        // Save 110 bytes of flash using NumberWriter::writeUnsignedDecimal2At()
-        // instead of the more general writeUnsignedDecimalAt(). We could avoid
+        // Save 110 bytes of flash using NumberWriter::writeDec2At() instead of
+        // the more general writeUnsignedDecimalAt(). We could avoid
         // NumberWriter completely by manually doing the conversion here. But
         // that turns out to save only 18 bytes (12 of which are character
         // patterns in NumberWriter::kHexCharPatterns[]) so not really worth
         // duplicating the code here.
-        mNumberWriter.writeUnsignedDecimal2At(2, mRenderingInfo.brightness);
+        mNumberWriter.writeDec2At(2, mRenderingInfo.brightness, kPatternSpace);
       } else {
-        mClockWriter.writeChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
     }
 
