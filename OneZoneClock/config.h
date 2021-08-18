@@ -350,7 +350,7 @@
     }
 
   // Display parameters
-  #define DISPLAY_TYPE DISPLAY_TYPE_LCD
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
     #define LCD_SPI_DATA_COMMAND_PIN D4
     #define LCD_BACKLIGHT_PIN D3
@@ -360,6 +360,16 @@
     #define OLED_INITIAL_CONTRAST 0
     #define OLED_REMAP false
   #endif
+
+  // Enable DHT22 Sensor
+  #define ENABLE_DHT22 1
+  #define DHT22_PIN D3
+
+  // Enable LED display
+  #define ENABLE_LED_DISPLAY 1
+  #define CLK_PIN D5
+  #define DIO_PIN D7
+  #define BIT_DELAY 10
 
 #elif defined(AUNITER_ESP32)
   // Defined by auniter.ini
