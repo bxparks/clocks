@@ -136,7 +136,7 @@ class Presenter {
       if (shouldShowFor(Mode::kChangeHour)) {
         mNumberWriter.writeDec2At(0, dateTime.hour());
       } else {
-        mNumberWriter.writeHexChars2At(1, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
       }
 
       if (shouldShowFor(Mode::kChangeMinute)) {
