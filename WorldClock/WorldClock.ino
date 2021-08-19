@@ -28,7 +28,12 @@
  * Program Size (flash/ram)
  *  * 24798/1531
  *  * 24852/1525
- *    * (add support for kInvertDisplayMinutely)
+ *    * add support for kInvertDisplayMinutely
+ *  * 25242/1502 bytes
+ *    * add Invert: on/off indicators
+ *    * add AceCommon, AceCRC version numbers to About page
+ *    * add setFont() to select Adafruit5x7 font
+ *    * simplify clearToEOL()
  */
 
 #include "config.h"

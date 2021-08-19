@@ -1,16 +1,20 @@
 #include <AceTime.h>
 #include <AceButton.h>
 #include <AceRoutine.h>
+#include <AceCommon.h>
+#include <AceCRC.h>
 #include "Presenter.h"
 
 void Presenter::displayAbout() const {
-  mOled.set1X();
+  setFont(0);
 
   mOled.print(F("TZDB:"));
   mOled.println(zonedb::kTzDatabaseVersion);
   mOled.println(F("ATim:" ACE_TIME_VERSION_STRING));
   mOled.println(F("ABut:" ACE_BUTTON_VERSION_STRING));
   mOled.println(F("ARou:" ACE_ROUTINE_VERSION_STRING));
+  mOled.println(F("ACom:" ACE_COMMON_VERSION_STRING));
+  mOled.println(F("ACRC:" ACE_CRC_VERSION_STRING));
 }
 
 const uint8_t Presenter::kContrastValues[Presenter::kNumContrastValues] = {

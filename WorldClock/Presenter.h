@@ -128,7 +128,32 @@ class Presenter {
       }
     }
 
-    void clearDisplay() { mOled.clear(); }
+    void clearDisplay() const { mOled.clear(); }
+
+    void clearToEOL() const {
+      mOled.clearToEOL();
+      mOled.println();
+    }
+
+    /**
+     * Set font and size.
+     *
+     *  0 - extra small size
+     *  1 - normal 1X
+     *  2 - double 2X
+     */
+    void setFont(uint8_t size) const {
+      if (size == 0) {
+        mOled.setFont(Adafruit5x7);
+        mOled.set1X();
+      } else if (size == 1) {
+        mOled.setFont(fixed_bold10x15);
+        mOled.set1X();
+      } else if (size == 2) {
+        mOled.setFont(fixed_bold10x15);
+        mOled.set2X();
+      }
+    }
 
     void writeDisplayData() {
       mOled.home();
@@ -169,8 +194,8 @@ class Presenter {
       }
     }
 
-    void displayDateTime() {
-      mOled.setFont(fixed_bold10x15);
+    void displayDateTime() const {
+      setFont(1);
 
       ClockInfo& clockInfo = mRenderingInfo.clockInfo;
       const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
@@ -182,14 +207,10 @@ class Presenter {
       }
 
       // time
-      mOled.set2X();
+      setFont(2);
       uint8_t hour = dateTime.hour();
       if (clockInfo.hourMode == ClockInfo::kTwelve) {
-        if (hour == 0) {
-          hour = 12;
-        } else if (hour > 12) {
-          hour -= 12;
-        }
+        hour = toTwelveHour(hour);
         printPad2To(mOled, hour, ' ');
       } else {
         printPad2To(mOled, hour, '0');
@@ -216,8 +237,7 @@ class Presenter {
       mOled.print('/');
       printPad2To(mOled, dateTime.day(), '0');
       mOled.print(' ');
-      mOled.clearToEOL();
-      mOled.println();
+      clearToEOL();
 
       // place name
       acetime_t epochSeconds = dateTime.toEpochSeconds();
@@ -226,8 +246,18 @@ class Presenter {
       mOled.print('(');
       mOled.print(clockInfo.name);
       mOled.print(')');
-      mOled.clearToEOL();
-      mOled.println();
+      clearToEOL();
+    }
+
+    /** Return 12 hour version of 24 hour. */
+    static uint8_t toTwelveHour(uint8_t hour) {
+      if (hour == 0) {
+        return 12;
+      } else if (hour > 12) {
+        return hour - 12;
+      } else {
+        return hour;
+      }
     }
 
     void displayChangeableDateTime() const {
@@ -235,8 +265,7 @@ class Presenter {
       const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
           mRenderingInfo.now, clockInfo.timeZone);
 
-      mOled.setFont(fixed_bold10x15);
-      mOled.set1X();
+      setFont(1);
 
       // date
       if (shouldShowFor(Mode::kChangeYear)) {
@@ -256,8 +285,7 @@ class Presenter {
       } else{
         mOled.print("  ");
       }
-      mOled.clearToEOL();
-      mOled.println();
+      clearToEOL();
 
       // time
       if (shouldShowFor(Mode::kChangeHour)) {
@@ -291,22 +319,19 @@ class Presenter {
       if (clockInfo.hourMode == ClockInfo::kTwelve) {
         mOled.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
-      mOled.clearToEOL();
-      mOled.println();
+      clearToEOL();
 
       // week day
       mOled.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
-      mOled.clearToEOL();
+      clearToEOL();
 
       // abbreviation and place name
-      mOled.println();
       mOled.print(dateTime.timeZone().getAbbrev(mRenderingInfo.now));
       mOled.print(' ');
       mOled.print('(');
       mOled.print(clockInfo.name);
       mOled.print(')');
-      mOled.clearToEOL();
-      mOled.println();
+      clearToEOL();
     }
 
     void displayClockInfo() const {
@@ -316,41 +341,44 @@ class Presenter {
       if (shouldShowFor(Mode::kChangeHourMode)) {
         mOled.print(clockInfo.hourMode == ClockInfo::kTwelve
             ? "12" : "24");
-      } else {
-        mOled.clearToEOL();
       }
-      mOled.println();
+      clearToEOL();
 
       mOled.print(F("Blink:"));
       if (shouldShowFor(Mode::kChangeBlinkingColon)) {
         mOled.print(clockInfo.blinkingColon ? "on " : "off");
-      } else {
-        mOled.clearToEOL();
       }
-      mOled.println();
+      clearToEOL();
 
       mOled.print(F("Contrast:"));
       if (shouldShowFor(Mode::kChangeContrast)) {
         mOled.print(clockInfo.contrastLevel);
-      } else {
-        mOled.clearToEOL();
       }
-      mOled.println();
+      clearToEOL();
 
       mOled.print(F("Invert:"));
       if (shouldShowFor(Mode::kChangeInvertDisplay)) {
-        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely) {
-          mOled.println(F("min"));
-        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
-          mOled.println(F("hour"));
-        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily) {
-          mOled.println(F("day"));
-        } else {
-          mOled.println(clockInfo.invertDisplay);
+        const __FlashStringHelper* statusString = F("<error>");
+        switch (clockInfo.invertDisplay) {
+          case ClockInfo::kInvertDisplayOff:
+            statusString = F("off");
+            break;
+          case ClockInfo::kInvertDisplayOn:
+            statusString = F("on");
+            break;
+          case ClockInfo::kInvertDisplayMinutely:
+            statusString = F("min");
+            break;
+          case ClockInfo::kInvertDisplayHourly:
+            statusString = F("hour");
+            break;
+          case ClockInfo::kInvertDisplayDaily:
+            statusString = F("day");
+            break;
         }
-      } else {
-        mOled.clearToEOL();
+        mOled.print(statusString);
       }
+      clearToEOL();
 
       // Extract time zone info.
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -366,17 +394,15 @@ class Presenter {
       printPad2To(mOled, hour, '0');
       mOled.print(':');
       printPad2To(mOled, minute, '0');
-      mOled.println();
+      clearToEOL();
 
       mOled.print("DST:");
       if (shouldShowFor(Mode::kChangeTimeZoneDst0)
           && shouldShowFor(Mode::kChangeTimeZoneDst1)
           && shouldShowFor(Mode::kChangeTimeZoneDst2)) {
         mOled.print(timeZone.isDst() ? "on " : "off");
-      } else {
-        mOled.clearToEOL();
       }
-      mOled.println();
+      clearToEOL();
 #endif
     }
 
@@ -412,9 +438,8 @@ class Presenter {
 
     SSD1306Ascii& mOled;
 
-    RenderingInfo mRenderingInfo;
-    RenderingInfo mPrevRenderingInfo;
-    ClockInfo mPrimaryClockInfo;
+    mutable RenderingInfo mRenderingInfo;
+    mutable RenderingInfo mPrevRenderingInfo;
 };
 
 #endif
