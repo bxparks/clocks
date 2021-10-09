@@ -23,7 +23,8 @@
  */
 
 #include "config.h"
-#include <Wire.h>
+#include <Wire.h> // TwoWire, Wire
+#include <AceWire.h> // TwoWireInterface
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
@@ -189,13 +190,17 @@ void setupZoneManager() {
 //-----------------------------------------------------------------------------
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  DS3231Clock dsClock;
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+  DS3231Clock<WireInterface> dsClock(wireInterface);
   SystemClockCoroutine systemClock(&dsClock, &dsClock);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   NtpClock ntpClock;
   SystemClockCoroutine systemClock(&ntpClock, nullptr);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  DS3231Clock dsClock;
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+  DS3231Clock<WireInterface> dsClock(wireInterface);
   NtpClock ntpClock;
   SystemClockCoroutine systemClock(&ntpClock, &dsClock);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE

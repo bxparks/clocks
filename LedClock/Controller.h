@@ -360,7 +360,6 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 1) {
         Serial.print(F("saveDateTime(): epochSeconds:"));
         Serial.println(epochSeconds);
-
         mChangingClockInfo.dateTime.printTo(Serial);
         Serial.println();
       }

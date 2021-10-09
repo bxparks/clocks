@@ -46,7 +46,8 @@
   #include <WiFi.h>
 #endif
 
-#include <Wire.h>
+#include <Wire.h> // TwoWire, Wire
+#include <AceWire.h> // TwoWireInterface
 #include <AceRoutine.h>
 #include <AceUtils.h>
 #include <cli/cli.h> // StreamProcessorManager from AceUtils
@@ -74,7 +75,9 @@ using ace_utils::cli::CommandHandler;
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
   SYSTEM_CLOCK systemClock(nullptr /*reference*/, nullptr /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  DS3231Clock dsClock;
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+  DS3231Clock<WireInterface> dsClock(wireInterface);
   SYSTEM_CLOCK systemClock(&dsClock, &dsClock /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32RTC
   StmRtcClock stmRtcClock;
@@ -83,7 +86,9 @@ using ace_utils::cli::CommandHandler;
   NtpClock ntpClock;
   SYSTEM_CLOCK systemClock(&ntpClock, nullptr /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  DS3231Clock dsClock;
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+  DS3231Clock<WireInterface> dsClock(wireInterface);
   NtpClock ntpClock;
   SYSTEM_CLOCK systemClock(&ntpClock, &dsClock);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_UNIX

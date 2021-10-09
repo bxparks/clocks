@@ -4,6 +4,7 @@
 #include "config.h"
 #include <AceCommon.h> // incrementMod
 #include <AceTime.h>
+#include <AceTimeClock.h>
 #include <AceUtils.h>
 #include <mode_group/mode_group.h> // from AceUtils
 #include <SSD1306AsciiWire.h>

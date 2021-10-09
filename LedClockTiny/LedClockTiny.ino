@@ -62,7 +62,7 @@ Memory size (flash/ram) for `au --cli verify attiny_tm1637`:
 #include <AceSegmentWriter.h>
 #include <AceButton.h>
 #include <AceTime.h>
-#include <ace_time/hw/DS3231Module.h>
+#include <AceTimeClock.h>
 #include <AceUtils.h>
 #include <crc_eeprom/crc_eeprom.h> // from AceUtils
 #include "Controller.h"
@@ -99,22 +99,21 @@ void setupPersistentStore() {
 // Configure various Clocks
 //------------------------------------------------------------------
 
-using ace_time::hw::DS3231Module;
 #if DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
   #include <Wire.h>
-  using DS3231WireInterface = TwoWireInterface<TwoWire>;
+  using DS3231WireInterface = ace_wire::TwoWireInterface<TwoWire>;
   DS3231WireInterface ds3231WireInterface(Wire);
 #elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
   using DS3231WireInterface = SimpleWireInterface;
   DS3231WireInterface ds3231WireInterface(SDA_PIN, SCL_PIN, BIT_DELAY);
 #elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
   using DS3231WireInterface = SimpleWireFastInterface<
-      SDA_PIN, SCL_PIN, BIT_DELAY>;
+      SDA_PIN, SCL_PIN, WIRE_BIT_DELAY>;
   DS3231WireInterface ds3231WireInterface;
 #else
   #error Unknown DS3231_INTERFACE_TYPE
 #endif
-DS3231Module<DS3231WireInterface> ds3231(ds3231WireInterface);
+DS3231Clock<DS3231WireInterface> dsClock(ds3231WireInterface);
 
 //------------------------------------------------------------------
 // Configure LED display using AceSegment.
@@ -235,7 +234,7 @@ void renderLed() {
 //------------------------------------------------------------------
 
 Presenter presenter(ledModule);
-Controller controller(ds3231, persistentStore, presenter);
+Controller controller(dsClock, persistentStore, presenter);
 
 //------------------------------------------------------------------
 // Update the Presenter Clock periodically.

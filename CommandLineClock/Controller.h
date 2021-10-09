@@ -2,7 +2,7 @@
 #define COMMAND_LINE_CLOCK_CONTROLLER_H
 
 #include <AceRoutine.h>
-#include <AceTime.h>
+#include <AceTimeClock.h>
 #include "config.h"
 #include "PersistentStore.h"
 #include "StoredInfo.h"

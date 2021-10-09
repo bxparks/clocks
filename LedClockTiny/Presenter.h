@@ -7,7 +7,7 @@
 #include "RenderingInfo.h"
 
 using ace_time::DateStrings;
-using ace_time::hw::HardwareDateTime;
+using ace_time::ZonedDateTime;
 using ace_segment::kHexCharSpace;
 using ace_segment::kPatternSpace;
 using ace_segment::LedModule;
@@ -78,7 +78,7 @@ class Presenter {
     void clearDisplay() { mClockWriter.clear(); }
 
     void displayData() {
-      const HardwareDateTime& dateTime = mRenderingInfo.dateTime;
+      const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
       #if ENABLE_SERIAL_DEBUG >= 2
         SERIAL_PORT_MONITOR.print(F("displayData():"));
         dateTime.printTo(SERIAL_PORT_MONITOR);
@@ -127,65 +127,65 @@ class Presenter {
       }
     }
 
-    void displayHourMinute(const HardwareDateTime& dateTime) {
+    void displayHourMinute(const ZonedDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeHour)) {
-        mNumberWriter.writeDec2At(0, dateTime.hour);
+        mNumberWriter.writeDec2At(0, dateTime.hour());
       } else {
         mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
       }
 
       if (shouldShowFor(Mode::kChangeMinute)) {
-        mNumberWriter.writeDec2At(2, dateTime.minute);
+        mNumberWriter.writeDec2At(2, dateTime.minute());
       } else {
         mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
       mClockWriter.writeColon(true);
     }
 
-    void displaySecond(const HardwareDateTime& dateTime) {
+    void displaySecond(const ZonedDateTime& dateTime) {
       mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
 
       if (shouldShowFor(Mode::kChangeSecond)) {
-        mNumberWriter.writeDec2At(2, dateTime.second);
+        mNumberWriter.writeDec2At(2, dateTime.second());
         mClockWriter.writeColon(true);
       } else {
         mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
     }
 
-    void displayYear(const HardwareDateTime& dateTime) {
+    void displayYear(const ZonedDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeYear)) {
-        mNumberWriter.writeDec4At(0, dateTime.year + 2000);
+        mNumberWriter.writeDec4At(0, dateTime.year());
       } else {
         clearDisplay();
       }
       mClockWriter.writeColon(false);
     }
 
-    void displayMonth(const HardwareDateTime& dateTime) {
+    void displayMonth(const ZonedDateTime& dateTime) {
       mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
       if (shouldShowFor(Mode::kChangeMonth)) {
-        mNumberWriter.writeDec2At(2, dateTime.month);
+        mNumberWriter.writeDec2At(2, dateTime.month());
       } else {
         mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
       mClockWriter.writeColon(false);
     }
 
-    void displayDay(const HardwareDateTime& dateTime) {
+    void displayDay(const ZonedDateTime& dateTime) {
       mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
       if (shouldShowFor(Mode::kChangeDay)) {
-        mNumberWriter.writeDec2At(2, dateTime.day);
+        mNumberWriter.writeDec2At(2, dateTime.day());
       } else  {
         mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
       mClockWriter.writeColon(false);
     }
 
-    void displayWeekday(const HardwareDateTime& dateTime) {
+    void displayWeekday(const ZonedDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeWeekday)) {
         uint8_t written = mStringWriter.writeStringAt(
-            0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek));
+            0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));
         mStringWriter.clearToEnd(written);
       } else {
         clearDisplay();

@@ -3,7 +3,6 @@
 
 #include <AceCommon.h> // incrementModOffset()
 #include <AceTime.h>
-#include <ace_time/hw/DS3231Module.h>
 #include <AceSegment.h>
 #include "config.h"
 #include "ClockInfo.h"
@@ -13,7 +12,7 @@
 
 using namespace ace_segment;
 using namespace ace_time;
-using ace_time::hw::DS3231Interface;
+using ace_time::clock::Clock;
 using ace_common::incrementModOffset;
 using ace_common::incrementMod;
 
@@ -21,7 +20,7 @@ class Controller {
   public:
     /** Constructor. */
     Controller(
-        DS3231Interface& clock,
+        Clock& clock,
         PersistentStore& persistentStore,
         Presenter& presenter
     ) :
@@ -210,46 +209,55 @@ class Controller {
       switch ((Mode) mMode) {
         case Mode::kChangeHour:
           mSuppressBlink = true;
-          incrementMod(mChangingClockInfo.dateTime.hour, (uint8_t) 24);
+          zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeMinute:
           mSuppressBlink = true;
-          incrementMod(mChangingClockInfo.dateTime.minute, (uint8_t) 60);
+          zoned_date_time_mutation::incrementMinute(
+              mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeSecond:
           mSuppressBlink = true;
           mSecondFieldCleared = true;
-          mChangingClockInfo.dateTime.second = 0;
+          mChangingClockInfo.dateTime.second(0);
           break;
 
         case Mode::kChangeYear:
           mSuppressBlink = true;
-          incrementMod(mChangingClockInfo.dateTime.year, (uint8_t) 100);
+          zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeMonth:
           mSuppressBlink = true;
-          incrementModOffset(mChangingClockInfo.dateTime.month, (uint8_t) 12,
-              (uint8_t) 1);
+          zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeDay:
           mSuppressBlink = true;
-          incrementModOffset(mChangingClockInfo.dateTime.day, (uint8_t) 31,
-              (uint8_t) 1);
+          zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
 
+        /*
         case Mode::kChangeWeekday:
           mSuppressBlink = true;
-          incrementModOffset(mChangingClockInfo.dateTime.dayOfWeek, (uint8_t) 7,
+          incrementModOffset(
+              mChangingClockInfo.dateTime.dayOfWeek(),
+              (uint8_t) 7,
               (uint8_t) 1);
           break;
+        */
 
         case Mode::kChangeBrightness:
           mSuppressBlink = true;
           incrementModOffset(mClockInfo.brightness, (uint8_t) 7, (uint8_t) 1);
+          /*
+          incrementModOffset(
+              mClockInfo.brightness,
+              mBrightnessLevels,
+              mBrightnessMin);
+          */
           break;
 
         default:
@@ -293,7 +301,8 @@ class Controller {
 
   private:
     void updateDateTime() {
-      mClock.readDateTime(&mClockInfo.dateTime);
+      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
+          mClock.getNow(), TimeZone());
 
       // If in CHANGE mode, and the 'second' field has not been cleared, update
       // the displayed time with the current second.
@@ -305,7 +314,7 @@ class Controller {
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
           if (!mSecondFieldCleared) {
-            mChangingClockInfo.dateTime.second = mClockInfo.dateTime.second;
+            mChangingClockInfo.dateTime.second(mClockInfo.dateTime.second());
           }
           break;
 
@@ -351,14 +360,16 @@ class Controller {
 
     /** Save the current UTC dateTime to the RTC. */
     void saveDateTime() {
+      mChangingClockInfo.dateTime.normalize();
+      acetime_t epochSeconds = mChangingClockInfo.dateTime.toEpochSeconds();
       if (ENABLE_SERIAL_DEBUG >= 1) {
-        Serial.print(F("saveDateTime(): hardwareClock:"));
+        Serial.print(F("saveDateTime(): epochSeconds:"));
+        Serial.println(epochSeconds);
         mChangingClockInfo.dateTime.printTo(Serial);
         Serial.println();
       }
 
-      mClockInfo.dateTime = mChangingClockInfo.dateTime;
-      mClock.setDateTime(mChangingClockInfo.dateTime);
+      mClock.setNow(epochSeconds);
     }
 
     /** Save the time zone from Changing to current. */
@@ -397,7 +408,7 @@ class Controller {
     }
 
   private:
-    DS3231Interface& mClock;
+    Clock& mClock;
     PersistentStore& mPersistentStore;
     Presenter& mPresenter;
 

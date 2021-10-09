@@ -23,10 +23,12 @@
  */
 
 #include "config.h"
-#include <Wire.h>
+#include <Wire.h> // TwoWire, Wire
+#include <AceWire.h> // TwoWireInterface
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
+#include <AceTimeClock.h>
 #include <AceUtils.h>
 #include <mode_group/mode_group.h> // from AceUtils
 #include <SPI.h>
@@ -125,7 +127,9 @@ static ExtendedZoneManager<CACHE_SIZE> zoneManager(
 //------------------------------------------------------------------
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  DS3231Clock dsClock;
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+  DS3231Clock<WireInterface> dsClock(wireInterface);
   SYSTEM_CLOCK systemClock(&dsClock, &dsClock, 60 /*syncPeriod*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   NtpClock ntpClock;
@@ -137,7 +141,9 @@ static ExtendedZoneManager<CACHE_SIZE> zoneManager(
   Stm32F1Clock stm32F1Clock;
   SYSTEM_CLOCK systemClock(&stm32F1Clock, nullptr, 60 /*syncPeriod*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  DS3231Clock dsClock;
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+  DS3231Clock<WireInterface> dsClock(wireInterface);
   NtpClock ntpClock;
   SYSTEM_CLOCK systemClock(&ntpClock, &dsClock, 60 /*syncPeriod*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE

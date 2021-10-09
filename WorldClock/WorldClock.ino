@@ -37,10 +37,12 @@
  */
 
 #include "config.h"
-#include <Wire.h>
+#include <Wire.h> // TwoWire, Wire
+#include <AceWire.h> // TwoWireInterface
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
+#include <AceTimeClock.h>
 #include <AceCommon.h>
 #include <AceUtils.h>
 #include <mode_group/mode_group.h> // from AceUtils
@@ -71,7 +73,9 @@ void setupPersistentStore() {
 // Configure various Clocks.
 //----------------------------------------------------------------------------
 
-DS3231Clock dsClock;
+using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+WireInterface wireInterface(Wire);
+DS3231Clock<WireInterface> dsClock(wireInterface);
 SystemClockCoroutine systemClock(&dsClock, &dsClock);
 
 //----------------------------------------------------------------------------

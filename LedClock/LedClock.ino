@@ -19,6 +19,7 @@ Supported boards are:
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
+#include <AceTimeClock.h>
 #include "PersistentStore.h"
 #include "Controller.h"
 
@@ -117,15 +118,19 @@ static ExtendedZoneManager<CACHE_SIZE> zoneManager(
 //------------------------------------------------------------------
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  #include <Wire.h>
-  DS3231Clock dsClock;
+  #include <Wire.h> // TwoWire, Wire
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+  DS3231Clock<WireInterface> dsClock(wireInterface);
   SYSTEM_CLOCK systemClock(&dsClock /*ref*/, &dsClock /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   NtpClock ntpClock;
   SYSTEM_CLOCK systemClock(&ntpClock /*ref*/, nullptr /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  #include <Wire.h>
-  DS3231Clock dsClock;
+  #include <Wire.h> // TwoWire, Wire
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+  DS3231Clock<WireInterface> dsClock(wireInterface);
   NtpClock ntpClock;
   SYSTEM_CLOCK systemClock(&ntpClock /*ref*/, &dsClock /*backup*/);
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE

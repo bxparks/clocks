@@ -47,11 +47,13 @@
  *      * Powered by 3 AAA (3.9V)
  */
 
-#include <Wire.h>
+#include <Wire.h> // TwoWire, Wire
+#include <AceWire.h> // TwoWireInterface
 #include <SSD1306AsciiWire.h>
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
+#include <AceTimeClock.h>
 #include <AceUtils.h>
 #include <mode_group/mode_group.h> // from AceUtils
 
@@ -87,7 +89,9 @@ void setupPersistentStore() {
 //------------------------------------------------------------------
 
 #if TIME_PROVIDER == TIME_PROVIDER_DS3231
-  DS3231Clock dsClock;
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+  DS3231Clock<WireInterface> dsClock(wireInterface);
   SystemClockCoroutine systemClock(&dsClock /*reference*/, &dsClock /*backup*/);
 #elif TIME_PROVIDER == TIME_PROVIDER_NTP
   NtpClock ntpClock;
