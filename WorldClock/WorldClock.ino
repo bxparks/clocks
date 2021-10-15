@@ -34,6 +34,9 @@
  *    * add AceCommon, AceCRC version numbers to About page
  *    * add setFont() to select Adafruit5x7 font
  *    * simplify clearToEOL()
+ *  * 25386/1505 bytes
+ *    * AceTime v1.8
+ *    * AceTimeClock v1.0
  */
 
 #include "config.h"
