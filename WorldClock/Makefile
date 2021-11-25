@@ -3,7 +3,7 @@
 
 APP_NAME := WorldClock
 ARDUINO_LIBS := EpoxyEepromEsp AceCommon AceCRC AceButton AceTime AceTimeClock \
-	AceRoutine AceUtils AceWire SSD1306Ascii
+	AceRoutine AceUtils AceWire SSD1306Ascii AceSorting
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 

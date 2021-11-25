@@ -63,7 +63,13 @@ class Presenter {
      *        NOT need to clear the display
      */
     Presenter(
-        ZoneManager& zoneManager,
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        ManualZoneManager& zoneManager,
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+        BasicZoneManager& zoneManager,
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+        ExtendedZoneManager& zoneManager,
+      #endif
       #if ENABLE_LED_DISPLAY
         LedDisplay& ledModule,
       #endif
@@ -737,7 +743,13 @@ class Presenter {
     static const uint8_t kOledContrastValues[];
   #endif
 
-    ZoneManager& mZoneManager;
+  #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+    ManualZoneManager& mZoneManager;
+  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+    BasicZoneManager& mZoneManager;
+  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+    ExtendedZoneManager& mZoneManager;
+  #endif
   #if ENABLE_LED_DISPLAY
     LedDisplay& mLedModule;
   #endif

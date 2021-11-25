@@ -62,11 +62,7 @@ using ace_utils::mode_group::ModeGroup;
 // Configure time zones and ZoneManager.
 //-----------------------------------------------------------------------------
 
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-
-static ManualZoneManager zoneManager;
-
-#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
 
 static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
   &zonedb::kZoneAmerica_Los_Angeles,
@@ -82,8 +78,9 @@ static const uint16_t ZONE_REGISTRY_SIZE =
 
 // Only 1 displayed at any given time, need 2 for conversions.
 static const uint16_t CACHE_SIZE = 1 + 1;
-static BasicZoneManager<CACHE_SIZE> zoneManager(
-    ZONE_REGISTRY_SIZE, ZONE_REGISTRY);
+static BasicZoneProcessorCache<CACHE_SIZE> zoneProcessorCache;
+static BasicZoneManager zoneManager(
+    ZONE_REGISTRY_SIZE, ZONE_REGISTRY, zoneProcessorCache);
 
 #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
 
@@ -101,8 +98,9 @@ static const uint16_t ZONE_REGISTRY_SIZE =
 
 // Only 1 displayed at any given time, need 2 for conversions.
 static const uint16_t CACHE_SIZE = 1 + 1;
-static ExtendedZoneManager<CACHE_SIZE> zoneManager(
-    ZONE_REGISTRY_SIZE, ZONE_REGISTRY);
+static ExtendedZoneProcessorCache<CACHE_SIZE> zoneProcessorCache;
+static ExtendedZoneManager zoneManager(
+    ZONE_REGISTRY_SIZE, ZONE_REGISTRY, zoneProcessorCache);
 
 #endif
 

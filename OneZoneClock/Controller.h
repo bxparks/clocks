@@ -53,7 +53,13 @@ class Controller {
         SystemClock& clock,
         PersistentStore& persistentStore,
         Presenter& presenter,
-        ZoneManager& zoneManager,
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        ManualZoneManager& zoneManager,
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+        BasicZoneManager& zoneManager,
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+        ExtendedZoneManager& zoneManager,
+      #endif
         TimeZoneData initialTimeZoneData,
         ModeGroup const* rootModeGroup,
         DHT* dht
@@ -673,7 +679,13 @@ class Controller {
     SystemClock& mClock;
     PersistentStore& mPersistentStore;
     Presenter& mPresenter;
-    ZoneManager& mZoneManager;
+  #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+    ManualZoneManager& mZoneManager;
+  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+    BasicZoneManager& mZoneManager;
+  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+    ExtendedZoneManager& mZoneManager;
+  #endif
     TimeZoneData mInitialTimeZoneData;
     ModeNavigator mNavigator;
     DHT* const mDht;

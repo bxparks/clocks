@@ -16,11 +16,16 @@ class Controller {
         mSystemClock(systemClock),
         mPersistentStore(persistentStore)
       #if ENABLE_TIME_ZONE_TYPE_BASIC
-        , mBasicZoneManager(kBasicZoneRegistrySize, kBasicZoneRegistry)
+        , mBasicZoneManager(
+            kBasicZoneRegistrySize,
+            kBasicZoneRegistry,
+            mBasicZoneProcessorCache)
       #endif
       #if ENABLE_TIME_ZONE_TYPE_EXTENDED
         , mExtendedZoneManager(
-            kExtendedZoneRegistrySize, kExtendedZoneRegistry)
+            kExtendedZoneRegistrySize,
+            kExtendedZoneRegistry,
+            mExtendedZoneProcessorCache)
       #endif
     {}
 
@@ -187,10 +192,12 @@ class Controller {
     PersistentStore& mPersistentStore;
 
   #if ENABLE_TIME_ZONE_TYPE_BASIC
-    BasicZoneManager<1> mBasicZoneManager;
+    BasicZoneProcessorCache<1> mBasicZoneProcessorCache;
+    BasicZoneManager mBasicZoneManager;
   #endif
   #if ENABLE_TIME_ZONE_TYPE_EXTENDED
-    ExtendedZoneManager<1> mExtendedZoneManager;
+    ExtendedZoneProcessorCache<1> mExtendedZoneProcessorCache;
+    ExtendedZoneManager mExtendedZoneManager;
   #endif
     ManualZoneManager mManualZoneManager;
 

@@ -45,7 +45,7 @@ class Controller {
         mPresenter(presenter),
         mNavigator(rootModeGroup)
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-        , mZoneManager(kZoneRegistrySize, kZoneRegistry)
+        , mZoneManager(kZoneRegistrySize, kZoneRegistry, mZoneProcessorCache)
       #endif
     {}
 
@@ -583,7 +583,8 @@ class Controller {
     Presenter& mPresenter;
     ModeNavigator mNavigator;
   #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-    BasicZoneManager<kCacheSize> mZoneManager;
+    BasicZoneProcessorCache<kCacheSize> mZoneProcessorCache;
+    BasicZoneManager mZoneManager;
   #endif
 
     ClockInfo mClockInfo; // current clock

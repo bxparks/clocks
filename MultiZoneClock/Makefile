@@ -3,7 +3,8 @@
 
 APP_NAME := MultiZoneClock
 ARDUINO_LIBS := EpoxyFS EpoxyEepromEsp AceCommon AceButton AceCRC \
-	AceTime AceTimeClock AceTimePro AceRoutine AceUtils AceWire SSD1306Ascii
+	AceSorting AceTime AceTimeClock AceTimePro AceRoutine AceUtils AceWire \
+	SSD1306Ascii
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 
