@@ -21,6 +21,7 @@ jobs:
         git clone https://github.com/bxparks/AceSPI
         git clone https://github.com/bxparks/AceSegment
         git clone https://github.com/bxparks/AceSegmentWriter
+        git clone https://github.com/bxparks/AceSorting
         git clone https://github.com/bxparks/AceTMI
         git clone https://github.com/bxparks/AceTime
         git clone https://github.com/bxparks/AceTimeClock

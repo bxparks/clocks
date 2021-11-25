@@ -2,8 +2,8 @@
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 
 APP_NAME := MedMinder
-ARDUINO_LIBS := EpoxyEepromEsp AceCommon AceCRC AceButton AceTime AceTimeClock \
-	AceRoutine AceUtils AceWire SSD1306Ascii AceSorting
+ARDUINO_LIBS := EpoxyEepromEsp AceCommon AceCRC AceButton AceSorting \
+	AceTime AceTimeClock AceRoutine AceUtils AceWire SSD1306Ascii
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 
