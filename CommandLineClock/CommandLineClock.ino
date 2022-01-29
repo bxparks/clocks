@@ -72,45 +72,63 @@ using ace_utils::cli::CommandHandler;
   #define SYSTEM_CLOCK SystemClockLoop
 #endif
 
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
-  SYSTEM_CLOCK systemClock(nullptr /*reference*/, nullptr /*backup*/);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
+    || BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
   WireInterface wireInterface(Wire);
   DS3231Clock<WireInterface> dsClock(wireInterface);
-  SYSTEM_CLOCK systemClock(&dsClock, &dsClock /*backup*/);
+  Clock* refClock = &dsClock;
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32RTC
   StmRtcClock stmRtcClock;
-  SYSTEM_CLOCK systemClock(&stmRtcClock, &stmRtcClock /*backup*/);
+  Clock* refClock = &ntpClock;
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   NtpClock ntpClock;
-  SYSTEM_CLOCK systemClock(&ntpClock, nullptr /*backup*/);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
-  WireInterface wireInterface(Wire);
-  DS3231Clock<WireInterface> dsClock(wireInterface);
-  NtpClock ntpClock;
-  SYSTEM_CLOCK systemClock(&ntpClock, &dsClock);
+  Clock* refClock = &espSntpClock;
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
+  StmRtcClock stmClock;
+  Clock* refClock = &stmClock;
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  Stm32F1Clock stm32F1Clock;
+  Clock* refClock = &stm32F1Clock;
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_UNIX
   UnixClock unixClock;
-  SYSTEM_CLOCK systemClock(&unixClock, &unixClock);
+  Clock* refClock = &unixClock;
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
+  Clock* refClock = nullptr;
 #else
   #error Unknown clock option
 #endif
 
+#if BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
+  Clock* backupClock = nullptr;
+#elif BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+  Clock* backupClock = &dsClock;
+#elif BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
+  Clock* backupClock = &stmRtcClock;
+#elif BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  Clock* backupClock = &stm32F1Clock;
+#else
+  #error Unknown BACKUP_TIME_SOURCE_TYPE
+#endif
+
+SYSTEM_CLOCK systemClock(refClock, backupClock, 60 /*syncPeriod*/);
+
 void setupClocks() {
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
+    || BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   dsClock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
+  ntpClock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
+  espSntpClock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
   stmClock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
   stm32F1Clock.setup();
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  dsClock.setup();
-  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
 #endif
+
+  SERIAL_PORT_MONITOR.println(F("Setting up SystemClock"));
+  systemClock.setup();
 
   systemClock.setup();
   if (systemClock.getNow() == ace_time::LocalDate::kInvalidEpochSeconds) {
@@ -442,6 +460,57 @@ StreamProcessorManager<BUF_SIZE, ARGV_SIZE> commandManager(
     SERIAL_PORT_MONITOR, COMMANDS, NUM_COMMANDS, SERIAL_PORT_MONITOR,
     "> " /*prompt*/);
 
+//------------------------------------------------------------------
+// Setup WiFi if necessary.
+//------------------------------------------------------------------
+
+#if defined(ESP8266) || defined(ESP32)
+
+// Number of millis to wait for a WiFi connection before doing a software
+// reboot.
+static const unsigned long REBOOT_TIMEOUT_MILLIS = 15000;
+
+// Connect to WiFi. Sometimes the board will connect instantly. Sometimes it
+// will struggle to connect. I don't know why. Performing a software reboot
+// seems to help, but not always.
+void setupWiFi() {
+  SERIAL_PORT_MONITOR.print(F("Connecting to WiFi"));
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  unsigned long startMillis = millis();
+  while (true) {
+    SERIAL_PORT_MONITOR.print('.');
+    if (WiFi.status() == WL_CONNECTED) {
+      SERIAL_PORT_MONITOR.println(F(" Done."));
+      break;
+    }
+
+    // Detect timeout and reboot.
+    unsigned long nowMillis = millis();
+    if ((unsigned long) (nowMillis - startMillis) >= REBOOT_TIMEOUT_MILLIS) {
+    #if defined(ESP8266)
+      SERIAL_PORT_MONITOR.println(F("FAILED! Rebooting.."));
+      delay(1000);
+      ESP.reset();
+    #elif defined(ESP32)
+      SERIAL_PORT_MONITOR.println(F("FAILED! Rebooting.."));
+      delay(1000);
+      ESP.restart();
+    #else
+      SERIAL_PORT_MONITOR.println(
+          F("FAILED! But cannot reboot.. continuing.."));
+      delay(1000);
+      startMillis = nowMillis;
+    #endif
+    }
+
+    delay(500);
+  }
+}
+
+#endif
+
 //---------------------------------------------------------------------------
 // Main setup and loop
 //---------------------------------------------------------------------------
@@ -467,40 +536,31 @@ void setup() {
   SERIAL_PORT_MONITOR.println(sizeof(StoredInfo));
 
 #if ! defined(EPOXY_DUINO)
-  Serial.println(F("Setting up Wire"));
+  SERIAL_PORT_MONITOR.println(F("Setting up Wire"));
   Wire.begin();
   Wire.setClock(400000L);
 #endif
 
-  Serial.println(F("Setting up PersistentStore"));
+  SERIAL_PORT_MONITOR.println(F("Setting up PersistentStore"));
   setupPersistentStore();
 
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  Serial.println(F("Setting up DS3231Clock"));
-  dsClock.setup();
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  Serial.println(F("Setting up NtpClock DELAYED until WiFi"));
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  Serial.println(F("Setting up DS3231Clock"));
-  dsClock.setup();
-  Serial.println(F("Setting up NtpClock DELAYED until WiFi"));
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_UNIX
-  Serial.println(F("Setting up UnixClock"));
-  unixClock.setup();
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP \
+    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
+  setupWiFi();
 #endif
 
-  Serial.println(F("Setting up SystemClock"));
-  systemClock.setup();
+  SERIAL_PORT_MONITOR.println(F("Setting up Clocks"));
+  setupClocks();
 
-  Serial.println(F("Setting up Controller"));
+  SERIAL_PORT_MONITOR.println(F("Setting up Controller"));
   controller.setup();
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  Serial.println(F("Automatically connecting to Wifi"));
+  SERIAL_PORT_MONITOR.println(F("Automatically connecting to Wifi"));
   wifiCommand.connect(SERIAL_PORT_MONITOR);
 #endif
 
-  Serial.println(F("Setting up CoroutineScheduler"));
+  SERIAL_PORT_MONITOR.println(F("Setting up CoroutineScheduler"));
   CoroutineScheduler::setup();
 
   SERIAL_PORT_MONITOR.println(F("setup(): end"));

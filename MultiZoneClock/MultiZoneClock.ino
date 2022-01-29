@@ -187,36 +187,62 @@ void setupZoneManager() {
 // Create clocks
 //-----------------------------------------------------------------------------
 
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
+    || BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
   WireInterface wireInterface(Wire);
   DS3231Clock<WireInterface> dsClock(wireInterface);
-  SystemClockCoroutine systemClock(&dsClock, &dsClock);
+  Clock* refClock = &dsClock;
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   NtpClock ntpClock;
-  SystemClockCoroutine systemClock(&ntpClock, nullptr);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
-  WireInterface wireInterface(Wire);
-  DS3231Clock<WireInterface> dsClock(wireInterface);
-  NtpClock ntpClock;
-  SystemClockCoroutine systemClock(&ntpClock, &dsClock);
+  Clock* refClock = &ntpClock;
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
+  EspSntpClock espSntpClock;
+  Clock* refClock = &espSntpClock;
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
+  StmRtcClock stmClock;
+  Clock* refClock = &stmClock;
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  Stm32F1Clock stmF1Clock;
+  Clock* refClock = &stmF1Clock;
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
-  SystemClockCoroutine systemClock(nullptr /*sync*/, nullptr /*backup*/);
+  Clock* refClock = nullptr;
 #else
   #error Unknown clock option
 #endif
 
+#if BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
+  Clock* backupClock = nullptr;
+#elif BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+  Clock* backupClock = &dsClock;
+#elif BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
+  Clock* backupClock = &stmRtcClock;
+#elif BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  Clock* backupClock = &stm32F1Clock;
+#else
+  #error Unknown BACKUP_TIME_SOURCE_TYPE
+#endif
+
+SYSTEM_CLOCK systemClock(refClock, backupClock, 60 /*syncPeriod*/);
+
 void setupClocks() {
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
+    || BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   dsClock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  dsClock.setup();
-  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
+  ntpClock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
+  espSntpClock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
+  stmClock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  stm32F1Clock.setup();
 #endif
+
   systemClock.setup();
+  if (systemClock.getNow() == ace_time::LocalDate::kInvalidEpochSeconds) {
+    systemClock.setNow(0);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -603,6 +629,56 @@ COROUTINE(readButtons) {
   }
 }
 
+//------------------------------------------------------------------
+// Setup WiFi if necessary.
+//------------------------------------------------------------------
+
+#if defined(ESP8266) || defined(ESP32)
+
+// Number of millis to wait for a WiFi connection before doing a software
+// reboot.
+static const unsigned long REBOOT_TIMEOUT_MILLIS = 15000;
+
+// Connect to WiFi. Sometimes the board will connect instantly. Sometimes it
+// will struggle to connect. I don't know why. Performing a software reboot
+// seems to help, but not always.
+void setupWiFi() {
+  Serial.print(F("Connecting to WiFi"));
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  unsigned long startMillis = millis();
+  while (true) {
+    Serial.print('.');
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println(F(" Done."));
+      break;
+    }
+
+    // Detect timeout and reboot.
+    unsigned long nowMillis = millis();
+    if ((unsigned long) (nowMillis - startMillis) >= REBOOT_TIMEOUT_MILLIS) {
+    #if defined(ESP8266)
+      Serial.println(F("FAILED! Rebooting.."));
+      delay(1000);
+      ESP.reset();
+    #elif defined(ESP32)
+      Serial.println(F("FAILED! Rebooting.."));
+      delay(1000);
+      ESP.restart();
+    #else
+      Serial.println(F("FAILED! But cannot reboot.. continuing.."));
+      delay(1000);
+      startMillis = nowMillis;
+    #endif
+    }
+
+    delay(500);
+  }
+}
+
+#endif
+
 //-----------------------------------------------------------------------------
 // Main setup and loop
 //-----------------------------------------------------------------------------
@@ -637,12 +713,16 @@ void setup() {
   Wire.begin();
   Wire.setClock(400000L);
 
-  setupZoneManager();
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP \
+    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
+  setupWiFi();
+#endif
+  setupPersistentStore();
   setupAceButton();
   setupClocks();
   setupDisplay();
   setupPresenter();
-  setupPersistentStore();
+  setupZoneManager();
 
   // Hold down the Mode button to perform factory reset.
   bool isModePressedDuringBoot = modeButton.isPressedRaw();

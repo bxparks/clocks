@@ -38,14 +38,28 @@
 #define TIME_ZONE_TYPE_EXTENDEDDB 4
 #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
+// SystemClock
+#define SYSTEM_CLOCK_TYPE_LOOP 0
+#define SYSTEM_CLOCK_TYPE_COROUTINE 1
+#define SYSTEM_CLOCK_TYPE SYSTEM_CLOCK_TYPE_COROUTINE
+#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
+  #define SYSTEM_CLOCK SystemClockLoop
+#else
+  #define SYSTEM_CLOCK SystemClockCoroutine
+#endif
+
 // If Basic or Extended, number of time zones to display.
 #define NUM_TIME_ZONES 4
 
-// Options that define the authoratative source of the time.
+// List of clock types for the referenceClock and backupClock of the
+// SystemClock. Used as the value of the TIME_SOURCE_TYPE and
+// BACKUP_TIME_SOURCE_TYPE macros.
 #define TIME_SOURCE_TYPE_NONE 0
 #define TIME_SOURCE_TYPE_DS3231 1
 #define TIME_SOURCE_TYPE_NTP 2
-#define TIME_SOURCE_TYPE_BOTH 3 
+#define TIME_SOURCE_TYPE_ESP_SNTP 3
+#define TIME_SOURCE_TYPE_STMRTC 4
+#define TIME_SOURCE_TYPE_STM32F1RTC 5
 
 // Button options: either digital ButtonConfig or analog LadderButtonConfig.
 // AVR: 10-bit analog pin
@@ -61,6 +75,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE_DIGITAL 0
@@ -78,6 +93,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE_DIGITAL 0
@@ -95,6 +111,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE_DIGITAL 0
@@ -118,6 +135,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE_DIGITAL 0
@@ -135,6 +153,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE_DIGITAL 0
@@ -152,6 +171,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE_DIGITAL 0
@@ -169,6 +189,7 @@
 
   #define ENABLE_EEPROM 0
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE_DIGITAL 0
@@ -186,6 +207,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE_DIGITAL 0
@@ -202,7 +224,8 @@
   //#define WIFI_PASSWORD
 
   #define ENABLE_EEPROM 1
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
@@ -229,7 +252,8 @@
   //#define WIFI_PASSWORD
 
   #define ENABLE_EEPROM 1
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Use BasicDbZoneManager for testing.
   #undef TIME_ZONE_TYPE
@@ -265,6 +289,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Use BasicDbZoneManager for testing.
   #undef TIME_ZONE_TYPE
@@ -293,6 +318,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Use BasicDbZoneManager for testing.
   #undef TIME_ZONE_TYPE
@@ -320,6 +346,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
@@ -352,7 +379,8 @@
   //#define WIFI_PASSWORD
 
   #define ENABLE_EEPROM 1
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_ESP_SNTP
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_NONE
 
   // Button parameters
   #define BUTTON_TYPE_DIGITAL 0

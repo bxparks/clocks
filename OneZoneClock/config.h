@@ -46,11 +46,13 @@
   #define SYSTEM_CLOCK SystemClockCoroutine
 #endif
 
-// Options that define the authoratative source of the time.
+// List of clock types for the referenceClock and backupClock of the
+// SystemClock. Used as the value of the TIME_SOURCE_TYPE and
+// BACKUP_TIME_SOURCE_TYPE macros.
 #define TIME_SOURCE_TYPE_NONE 0
 #define TIME_SOURCE_TYPE_DS3231 1
 #define TIME_SOURCE_TYPE_NTP 2
-#define TIME_SOURCE_TYPE_BOTH 3
+#define TIME_SOURCE_TYPE_ESP_SNTP 3
 #define TIME_SOURCE_TYPE_STMRTC 4
 #define TIME_SOURCE_TYPE_STM32F1RTC 5
 
@@ -71,6 +73,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -89,6 +92,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -107,6 +111,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -125,6 +130,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Pro Micro has just enough memory for Basic TimeZone w/ 4 timezones.
   // In certain configurations, it does not have enough memory, in which case
@@ -149,6 +155,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Pro Micro has just enough memory for Basic TimeZone w/ 4 timezones.
   // In certain configurations, it does not have enough memory, in which case
@@ -173,6 +180,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -191,6 +199,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -209,6 +218,7 @@
 
   #define ENABLE_EEPROM 0
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -227,6 +237,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_STM32F1RTC
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_NONE
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -245,6 +256,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -263,6 +275,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
@@ -299,6 +312,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
@@ -334,6 +348,7 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
@@ -377,7 +392,8 @@
   //#define WIFI_PASSWORD
 
   #define ENABLE_EEPROM 1
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_BOTH
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_ESP_SNTP
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_NONE
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
