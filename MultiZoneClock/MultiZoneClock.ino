@@ -208,7 +208,7 @@ void setupZoneManager() {
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
   Clock* refClock = nullptr;
 #else
-  #error Unknown clock option
+  #error Unknown TIME_SOURCE_TYPE
 #endif
 
 #if BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE

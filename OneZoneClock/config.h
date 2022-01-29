@@ -36,16 +36,6 @@
 #define TIME_ZONE_TYPE_EXTENDED 2
 #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
-// SystemClock
-#define SYSTEM_CLOCK_TYPE_LOOP 0
-#define SYSTEM_CLOCK_TYPE_COROUTINE 1
-#define SYSTEM_CLOCK_TYPE SYSTEM_CLOCK_TYPE_COROUTINE
-#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
-  #define SYSTEM_CLOCK SystemClockLoop
-#else
-  #define SYSTEM_CLOCK SystemClockCoroutine
-#endif
-
 // List of clock types for the referenceClock and backupClock of the
 // SystemClock. Used as the value of the TIME_SOURCE_TYPE and
 // BACKUP_TIME_SOURCE_TYPE macros.
@@ -55,6 +45,16 @@
 #define TIME_SOURCE_TYPE_ESP_SNTP 3
 #define TIME_SOURCE_TYPE_STMRTC 4
 #define TIME_SOURCE_TYPE_STM32F1RTC 5
+
+// SystemClock
+#define SYSTEM_CLOCK_TYPE_LOOP 0
+#define SYSTEM_CLOCK_TYPE_COROUTINE 1
+#define SYSTEM_CLOCK_TYPE SYSTEM_CLOCK_TYPE_COROUTINE
+#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
+  #define SYSTEM_CLOCK SystemClockLoop
+#else
+  #define SYSTEM_CLOCK SystemClockCoroutine
+#endif
 
 // Button options: either digital buttons using ButtonConfig, 2 analog buttons
 // using LadderButtonConfig, or 4 analog buttons using LadderButtonConfig:

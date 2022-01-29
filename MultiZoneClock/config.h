@@ -38,16 +38,6 @@
 #define TIME_ZONE_TYPE_EXTENDEDDB 4
 #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
-// SystemClock
-#define SYSTEM_CLOCK_TYPE_LOOP 0
-#define SYSTEM_CLOCK_TYPE_COROUTINE 1
-#define SYSTEM_CLOCK_TYPE SYSTEM_CLOCK_TYPE_COROUTINE
-#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
-  #define SYSTEM_CLOCK SystemClockLoop
-#else
-  #define SYSTEM_CLOCK SystemClockCoroutine
-#endif
-
 // If Basic or Extended, number of time zones to display.
 #define NUM_TIME_ZONES 4
 
@@ -61,12 +51,24 @@
 #define TIME_SOURCE_TYPE_STMRTC 4
 #define TIME_SOURCE_TYPE_STM32F1RTC 5
 
+// SystemClock
+#define SYSTEM_CLOCK_TYPE_LOOP 0
+#define SYSTEM_CLOCK_TYPE_COROUTINE 1
+#define SYSTEM_CLOCK_TYPE SYSTEM_CLOCK_TYPE_COROUTINE
+#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
+  #define SYSTEM_CLOCK SystemClockLoop
+#else
+  #define SYSTEM_CLOCK SystemClockCoroutine
+#endif
+
 // Button options: either digital ButtonConfig or analog LadderButtonConfig.
 // AVR: 10-bit analog pin
 // ESP8266: 10-bit analog pin
 // ESP32: 12-bit analog pin
 #define BUTTON_TYPE_DIGITAL 0
 #define BUTTON_TYPE_ANALOG 1
+
+//-----------------------------------------------------------------------------
 
 #if ! defined(AUNITER) // Arduino IDE in interactive mode
   // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
