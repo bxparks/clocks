@@ -7,8 +7,6 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
-#define CLOCK_VERSION_STRING "0.2"
-
 // Set to >= 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
 #define ENABLE_SERIAL_DEBUG 0
@@ -69,7 +67,7 @@
 
 //-----------------------------------------------------------------------------
 
-#if ! defined(AUNITER) // Arduino IDE in interactive mode
+#if defined(EPOXY_DUINO)
   // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
   #define WIFI_SSID "your wifi ssid here"
   #define WIFI_PASSWORD "your wifi password here"
@@ -80,7 +78,7 @@
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
   // Button parameters
-  #define BUTTON_TYPE_DIGITAL 0
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
 
@@ -88,7 +86,7 @@
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
 
-#elif defined(EPOXY_DUINO)
+#elif ! defined(AUNITER) // Arduino IDE in interactive mode
   // These are sensitive information. DO NOT UPLOAD TO PUBLIC REPOSITORY.
   #define WIFI_SSID "your wifi ssid here"
   #define WIFI_PASSWORD "your wifi password here"
@@ -99,7 +97,7 @@
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
   // Button parameters
-  #define BUTTON_TYPE_DIGITAL 0
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
 
@@ -118,7 +116,7 @@
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
   // Button parameters
-  #define BUTTON_TYPE_DIGITAL 0
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
 
@@ -126,7 +124,7 @@
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
 
-#elif defined(AUNITER_MICRO)
+#elif defined(AUNITER_MICRO_OLED)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
@@ -137,7 +135,7 @@
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
   // Button parameters
-  #define BUTTON_TYPE_DIGITAL 0
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN A2
   #define CHANGE_BUTTON_PIN A3
 
@@ -145,7 +143,7 @@
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP true
 
-#elif defined(AUNITER_MEGA)
+#elif defined(AUNITER_MEGA_OLED)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
@@ -156,7 +154,7 @@
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
   // Button parameters
-  #define BUTTON_TYPE_DIGITAL 0
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 3
 
@@ -164,7 +162,7 @@
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
 
-#elif defined(AUNITER_SAMD)
+#elif defined(AUNITER_SAMD_OLED)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
@@ -175,7 +173,7 @@
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
 
   // Button parameters
-  #define BUTTON_TYPE_DIGITAL 0
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN 11
   #define CHANGE_BUTTON_PIN 10
 
@@ -211,7 +209,7 @@
   #define LCD_INITIAL_BIAS 7
   #define OLED_REMAP true
 
-#elif defined(AUNITER_D1MINI_SMALL)
+#elif defined(AUNITER_D1MINI_SMALL_OLED)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
@@ -222,7 +220,7 @@
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
 
   // Button parameters
-  #define BUTTON_TYPE_DIGITAL 0
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN D7
   #define CHANGE_BUTTON_PIN D5
 
@@ -230,7 +228,7 @@
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_REMAP false
 
-#elif defined(AUNITER_D1MINI_LARGE)
+#elif defined(AUNITER_D1MINI_LARGE_OLED)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
@@ -265,6 +263,7 @@
     #define OLED_REMAP false
   #endif
 
+// ESP32 Box using EzSBC board.
 #elif defined(AUNITER_ESP32)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -276,9 +275,38 @@
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
 
   // Button parameters
-  #define BUTTON_TYPE_DIGITAL 0
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 4
+
+  // Display parameters
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_REMAP false
+
+// ESP32 large dev board.
+#elif defined(AUNITER_ESP32_OLED)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
+
+  // Button parameters
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 2
+  #define ANALOG_BUTTON_COUNT 4
+  #define ANALOG_BUTTON_PIN A0
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*short to ground*/, \
+      327 /*32%, 4.7k*/, \
+      512 /*50%, 10k*/, \
+      844 /*82%, 47k*/, \
+      1023 /*100%, open*/ \
+    }
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED

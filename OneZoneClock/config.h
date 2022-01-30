@@ -7,8 +7,6 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
-#define CLOCK_VERSION_STRING "0.2"
-
 // Set to 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
 #define ENABLE_SERIAL_DEBUG 0
@@ -106,7 +104,7 @@
   #define OLED_REMAP false
 
 // TODO: The parameters needs updating
-#elif defined(AUNITER_ATTINY)
+#elif defined(AUNITER_ATTINY_OLED)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
@@ -146,7 +144,7 @@
   #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
-#elif defined(AUNITER_MICRO)
+#elif defined(AUNITER_MICRO_OLED)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
@@ -186,7 +184,7 @@
   #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
-#elif defined(AUNITER_SAMD)
+#elif defined(AUNITER_SAMD_OLED)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
@@ -206,13 +204,13 @@
   #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP true
 
-#elif defined(AUNITER_STM32)
+#elif defined(AUNITER_STM32_OLED)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
   #define ENABLE_EEPROM 1
-  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_STM32F1RTC
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_NONE
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
 
@@ -263,7 +261,8 @@
   #define DIO_PIN D7
   #define BIT_DELAY 10
 
-#elif defined(AUNITER_D1MINI_SMALL)
+#elif defined(AUNITER_D1MINI_SMALL_OLED) \
+    || defined(AUNITER_D1MINI_SMALL_LCD)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
@@ -278,12 +277,22 @@
   #define MODE_BUTTON_PIN D7
   #define CHANGE_BUTTON_PIN D5
 
-  // Display type
-  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
-  #define OLED_INITIAL_CONTRAST 0
-  #define OLED_REMAP false
+  // Display parameters
+  #if defined(AUNITER_D1MINI_SMALL_OLED)
+    #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+    #define OLED_INITIAL_CONTRAST 0
+    #define OLED_REMAP false
+  #else
+    #define DISPLAY_TYPE DISPLAY_TYPE_LCD
+    #define LCD_SPI_DATA_COMMAND_PIN D4
+    #define LCD_BACKLIGHT_PIN D3
+    #define LCD_INITIAL_CONTRAST 20
+    #define LCD_INITIAL_BIAS 7
+  #endif
 
-#elif defined(AUNITER_D1MINI_LARGE)
+
+#elif defined(AUNITER_D1MINI_LARGE_OLED) \
+    || defined(AUNITER_D1MINI_LARGE_LCD)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
@@ -308,15 +317,16 @@
     }
 
   // Display parameters
-  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
-  #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+  #if defined(AUNITER_D1MINI_LARGE_OLED)
+    #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+    #define OLED_INITIAL_CONTRAST 0
+    #define OLED_REMAP false
+  #else
+    #define DISPLAY_TYPE DISPLAY_TYPE_LCD
     #define LCD_SPI_DATA_COMMAND_PIN D4
     #define LCD_BACKLIGHT_PIN D3
     #define LCD_INITIAL_CONTRAST 20
     #define LCD_INITIAL_BIAS 7
-  #else
-    #define OLED_INITIAL_CONTRAST 0
-    #define OLED_REMAP false
   #endif
 
   // Enable DHT22 Sensor
@@ -329,6 +339,7 @@
   #define DIO_PIN D7
   #define BIT_DELAY 10
 
+// ESP32 Box using EzSBC dev board.
 #elif defined(AUNITER_ESP32)
   // Defined by auniter.ini
   //#define WIFI_SSID
@@ -336,13 +347,40 @@
 
   #define ENABLE_EEPROM 1
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_ESP_SNTP
-  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_NONE
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN 2
   #define CHANGE_BUTTON_PIN 4
+
+  // Display type
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
+  #define OLED_REMAP false
+
+// ESP32 large dev board.
+#elif defined(AUNITER_ESP32_OLED)
+  // Defined by auniter.ini
+  //#define WIFI_SSID
+  //#define WIFI_PASSWORD
+
+  #define ENABLE_EEPROM 1
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
+
+  // Button parameters
+  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
+  #define MODE_BUTTON_PIN 0
+  #define CHANGE_BUTTON_PIN 1
+  #define ANALOG_BUTTON_PIN A10
+  #define ANALOG_BUTTON_LEVELS { \
+      0 /*0% ground, 470*/, \
+      2048 /*50%, 10k*/, \
+      4096 /*100%, open*/ \
+    }
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
