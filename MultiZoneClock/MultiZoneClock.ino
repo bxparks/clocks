@@ -240,9 +240,6 @@ void setupClocks() {
 #endif
 
   systemClock.setup();
-  if (systemClock.getNow() == ace_time::LocalDate::kInvalidEpochSeconds) {
-    systemClock.setNow(0);
-  }
 }
 
 //-----------------------------------------------------------------------------
@@ -255,8 +252,9 @@ void setupClocks() {
   void setupDisplay() {
     oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
     oled.displayRemap(OLED_REMAP);
-    oled.clear();
     oled.setScrollMode(false);
+    oled.clear();
+    oled.setContrast(OLED_INITIAL_CONTRAST);
   }
 #else
   Adafruit_PCD8544 lcd = Adafruit_PCD8544(LCD_SPI_DATA_COMMAND_PIN, -1, -1);
@@ -264,9 +262,8 @@ void setupClocks() {
   void setupDisplay() {
     lcd.begin();
 
-    // Initial Contrast and Bias are set in Controller.setupClockInfo().
-    //lcd.setContrast(32);
-    //lcd.setBias(7);
+    lcd.setContrast(LCD_INITIAL_CONTRAST);
+    lcd.setBias(LCD_INITIAL_BIAS);
 
     lcd.setTextWrap(false);
     lcd.clearDisplay();

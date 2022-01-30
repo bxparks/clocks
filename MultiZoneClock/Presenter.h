@@ -719,24 +719,25 @@ class Presenter {
     #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
       mDisplay.print(F("SClkLoop:"));
     #else
-      mDisplay.print(F("SClkCrtn:"));
+      mDisplay.print(F("SClkCortn:"));
     #endif
-      mDisplay.println(clockInfo.syncStatusCode);
+      mDisplay.print(clockInfo.syncStatusCode);
+      clearToEOL();
 
       // Print the prev sync as a negative
       mDisplay.print(F("<:"));
       TimePeriod prevSync = clockInfo.prevSync;
       prevSync.sign(-prevSync.sign());
       displayTimePeriodHMS(prevSync);
-      mDisplay.println();
+      clearToEOL();
 
       mDisplay.print(F(">:"));
       displayTimePeriodHMS(clockInfo.nextSync);
-      mDisplay.println();
+      clearToEOL();
 
       mDisplay.print(F("S:"));
       displayTimePeriodHMS(clockInfo.clockSkew);
-      mDisplay.println();
+      clearToEOL();
     }
 
     void displayTimePeriodHMS(const TimePeriod& tp) {

@@ -131,9 +131,6 @@ void setupClocks() {
   systemClock.setup();
 
   systemClock.setup();
-  if (systemClock.getNow() == ace_time::LocalDate::kInvalidEpochSeconds) {
-    systemClock.setNow(0);
-  }
 }
 
 //-----------------------------------------------------------------------------

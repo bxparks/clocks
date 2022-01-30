@@ -141,30 +141,35 @@ class Controller {
       switch ((Mode) mMode) {
         case Mode::kViewHourMinute:
           mChangingClockInfo = mClockInfo;
+          initChangingClock();
           mSecondFieldCleared = false;
           mMode = Mode::kChangeHour;
           break;
 
         case Mode::kViewSecond:
           mChangingClockInfo = mClockInfo;
+          initChangingClock();
           mSecondFieldCleared = false;
           mMode = Mode::kChangeSecond;
           break;
 
         case Mode::kViewYear:
           mChangingClockInfo = mClockInfo;
+          initChangingClock();
           mSecondFieldCleared = false;
           mMode = Mode::kChangeYear;
           break;
 
         case Mode::kViewMonth:
           mChangingClockInfo = mClockInfo;
+          initChangingClock();
           mSecondFieldCleared = false;
           mMode = Mode::kChangeMonth;
           break;
 
         case Mode::kViewDay:
           mChangingClockInfo = mClockInfo;
+          initChangingClock();
           mSecondFieldCleared = false;
           mMode = Mode::kChangeDay;
           break;
@@ -210,6 +215,15 @@ class Controller {
 
         default:
           break;
+      }
+    }
+
+    // If the system clock hasn't been initialized, set the initial
+    // clock to epoch 0, which is 2000-01-01T00:00:00 UTC.
+    void initChangingClock() {
+      if (mChangingClockInfo.dateTime.isError()) {
+        mChangingClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
+            0, mChangingClockInfo.dateTime.timeZone());
       }
     }
 

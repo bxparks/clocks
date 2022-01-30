@@ -84,6 +84,7 @@
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif ! defined(AUNITER) // Arduino IDE in interactive mode
@@ -103,6 +104,7 @@
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_NANO)
@@ -122,6 +124,7 @@
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_MICRO_OLED)
@@ -141,6 +144,7 @@
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP true
 
 #elif defined(AUNITER_MEGA_OLED)
@@ -160,6 +164,7 @@
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_SAMD_OLED)
@@ -179,6 +184,7 @@
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP true
 
 #elif defined(AUNITER_WORLD_CLOCK_LCD)
@@ -226,6 +232,7 @@
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #elif defined(AUNITER_D1MINI_LARGE_OLED)
@@ -281,6 +288,7 @@
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 // ESP32 large dev board.
@@ -310,6 +318,7 @@
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP false
 
 #else

@@ -257,6 +257,12 @@ class Controller {
       #endif
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
+          // If the system clock hasn't been initialized, set the initial
+          // clock to epoch 0, which is 2000-01-01T00:00:00 UTC.
+          if (mChangingClockInfo.dateTime.isError()) {
+            mChangingClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
+                0, mChangingClockInfo.dateTime.timeZone());
+          }
           break;
 
         default:
@@ -727,7 +733,7 @@ class Controller {
       mClockInfo.contrast = LCD_INITIAL_CONTRAST;
       mClockInfo.bias = LCD_INITIAL_BIAS;
     #else
-      mClockInfo.contrastLevel = 5;
+      mClockInfo.contrastLevel = OLED_INITIAL_CONTRAST;
       mClockInfo.invertDisplay = ClockInfo::kInvertDisplayOff;
     #endif
     }
