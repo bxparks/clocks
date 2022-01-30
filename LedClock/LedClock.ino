@@ -119,44 +119,69 @@ static ExtendedZoneManager zoneManager(
 // Configure various Clocks
 //------------------------------------------------------------------
 
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  #include <Wire.h> // TwoWire, Wire
-  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
-  WireInterface wireInterface(Wire);
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
+    || BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+  #if DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+    #include <Wire.h> // TwoWire, Wire
+    using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+    WireInterface wireInterface(Wire);
+  #elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
+    using WireInterface = ace_wire::SimpleWireInterface;
+    WireInterface wireInterface(SDA_PIN, SCL_PIN, WIRE_BIT_DELAY);
+  #elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
+    using WireInterface = ace_wire::SimpleWireFastInterface<
+        SDA_PIN, SCL_PIN, WIRE_BIT_DELAY>;
+    WireInterface wireInterface;
+  #else
+    #error Unknown DS3231_INTERFACE_TYPE
+  #endif
+
   DS3231Clock<WireInterface> dsClock(wireInterface);
-  SYSTEM_CLOCK systemClock(&dsClock /*ref*/, &dsClock /*backup*/);
+  Clock* refClock = &dsClock;
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
   NtpClock ntpClock;
-  SYSTEM_CLOCK systemClock(&ntpClock /*ref*/, nullptr /*backup*/);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  #include <Wire.h> // TwoWire, Wire
-  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
-  WireInterface wireInterface(Wire);
-  DS3231Clock<WireInterface> dsClock(wireInterface);
-  NtpClock ntpClock;
-  SYSTEM_CLOCK systemClock(&ntpClock /*ref*/, &dsClock /*backup*/);
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
-  SYSTEM_CLOCK systemClock(nullptr /*ref*/, nullptr /*backup*/);
+  Clock* refClock = &ntpClock;
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
+  EspSntpClock espSntpClock;
+  Clock* refClock = &espSntpClock;
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
+  StmRtcClock stmClock;
+  Clock* refClock = &stmClock;
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
   Stm32F1Clock stm32F1Clock;
-  SYSTEM_CLOCK systemClock(
-      &stm32F1Clock /*ref*/, &stm32F1Clock /*backup*/, 60 /*syncPeriod*/);
+  Clock* refClock = &stm32F1Clock;
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
+  Clock* refClock = nullptr;
 #else
-  #error Unknown time keeper option
+  #error Unknown TIME_SOURCE_TYPE
 #endif
 
+#if BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NONE
+  Clock* backupClock = nullptr;
+#elif BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+  Clock* backupClock = &dsClock;
+#elif BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
+  Clock* backupClock = &stmRtcClock;
+#elif BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
+  Clock* backupClock = &stm32F1Clock;
+#else
+  #error Unknown BACKUP_TIME_SOURCE_TYPE
+#endif
+
+SYSTEM_CLOCK systemClock(refClock, backupClock, 60 /*syncPeriod*/);
+
 void setupClocks() {
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
+    || BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
   dsClock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
-  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
+  ntpClock.setup();
+#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
+  espSntpClock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STMRTC
   stmClock.setup();
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_STM32F1RTC
   stm32F1Clock.setup();
-#elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH
-  dsClock.setup();
-  ntpClock.setup(WIFI_SSID, WIFI_PASSWORD);
 #endif
 
   systemClock.setup();
@@ -173,30 +198,41 @@ const uint8_t FRAMES_PER_SECOND = 60;
 
 // The chain of resources.
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
-  const uint8_t NUM_DIGITS = 4;
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+  #if LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_TMI
     using TmiInterface = SimpleTmiInterface;
-    TmiInterface tmiInterface(DIO_PIN, CLK_PIN, BIT_DELAY);
-  #else
-    using TmiInterface = SimpleTmiFastInterface<DIO_PIN, CLK_PIN, BIT_DELAY>;
+    TmiInterface tmiInterface(DIO_PIN, CLK_PIN, TMI_BIT_DELAY);
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_TMI_FAST
+    using TmiInterface = SimpleTmiFastInterface<
+        DIO_PIN, CLK_PIN, TMI_BIT_DELAY>;
     TmiInterface tmiInterface;
+  #else
+    #error Unknown LED_INTERFACE_TYPE
   #endif
 
+  const uint8_t NUM_DIGITS = 4;
   Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
   const uint8_t BRIGHTNESS_LEVELS = 7;
   const uint8_t BRIGHTNESS_MIN = 1;
   const uint8_t BRIGHTNESS_MAX = 7;
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
-  const uint8_t NUM_DIGITS = 8;
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    using SpiInterface = SimpleSpiInterface;
+  #if LED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI
+    using SpiInterface = HardSpiInterface<SPIClass>;
+    SpiInterface spiInterface(SPI, LATCH_PIN);
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI_FAST
+    using SpiInterface = HardSpiFastInterface<SPIClass>;
+    SpiInterface spiInterface(SPI, LATCH_PIN);
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI
+    using SpiInterface = SimpleSpiFastInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  #else
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI_FAST
     using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
+  #else
+    #error Unknown LED_DISPLAY_TYPE
   #endif
 
+  const uint8_t NUM_DIGITS = 8;
   Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface, kDigitRemapArray8Max7219);
 
@@ -205,19 +241,26 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t BRIGHTNESS_MAX = 15;
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
-  const uint8_t NUM_DIGITS = 4;
-  #if INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
-    #include <Wire.h>
-    using WireInterface = TwoWireInterface<TwoWire>;
-    WireInterface wireInterface(Wire);
-  #elif INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
-    using WireInterface = SimpleWireInterface;
-    WireInterface wireInterface(SDA_PIN, SCL_PIN, BIT_DELAY);
-  #elif INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
-    using WireInterface = SimpleWireFastInterface<SDA_PIN, SCL_PIN, BIT_DELAY>;
-    WireInterface wireInterface;
+  // WireInterface already created if DS3231 is selected, so no need to create.
+  #if ! (TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
+      || BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231)
+    #if LED_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+      #include <Wire.h>
+      using WireInterface = TwoWireInterface<TwoWire>;
+      WireInterface wireInterface(Wire);
+    #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
+      using WireInterface = SimpleWireInterface;
+      WireInterface wireInterface(SDA_PIN, SCL_PIN, WIRE_BIT_DELAY);
+    #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
+      using WireInterface = SimpleWireFastInterface<
+          SDA_PIN, SCL_PIN, WIRE_BIT_DELAY>;
+      WireInterface wireInterface;
+    #else
+      #error Unknown LED_INTERFACE_TYPE
+    #endif
   #endif
 
+  const uint8_t NUM_DIGITS = 4;
   Ht16k33Module<WireInterface, NUM_DIGITS> ledModule(
       wireInterface, HT16K33_I2C_ADDRESS, true /* enableColon */);
 
@@ -226,16 +269,24 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t BRIGHTNESS_MAX = 15;
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
-  // Common Anode, with transistors on Group pins
-  const uint8_t NUM_DIGITS = 8;
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    using SpiInterface = SimpleSpiInterface;
+  #if LED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI
+    using SpiInterface = HardSpiInterface<SPIClass>;
+    SpiInterface spiInterface(SPI, LATCH_PIN);
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI_FAST
+    using SpiInterface = HardSpiFastInterface<SPIClass>;
+    SpiInterface spiInterface(SPI, LATCH_PIN);
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI
+    using SpiInterface = SimpleSpiFastInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  #else
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI_FAST
     using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
+  #else
+    #error Unknown LED_DISPLAY_TYPE
   #endif
 
+  // Common Anode, with transistors on Group pins
+  const uint8_t NUM_DIGITS = 8;
   Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
       kActiveLowPattern,
@@ -255,14 +306,14 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t NUM_SEGMENTS = 8;
   const uint8_t SEGMENT_PINS[NUM_SEGMENTS] = {8, 9, 10, 16, 14, 18, 19, 15};
   const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+  #if LED_INTERFACE_TYPE == INTERFACE_TYPE_DIRECT
     DirectModule<NUM_DIGITS> ledModule(
         kActiveLowPattern /*segmentOnPattern*/,
         kActiveLowPattern /*digitOnPattern*/,
         FRAMES_PER_SECOND,
         SEGMENT_PINS,
         DIGIT_PINS);
-  #else
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_DIRECT_FAST
     DirectFast4Module<
         8, 9, 10, 16, 14, 18, 19, 15, // segment pins
         4, 5, 6, 7, // digit pins
@@ -271,7 +322,8 @@ const uint8_t FRAMES_PER_SECOND = 60;
         kActiveLowPattern /*segmentOnPattern*/,
         kActiveLowPattern /*digitOnPattern*/,
         FRAMES_PER_SECOND);
-
+  #else
+    #error Unknown LED_INTERFACE_TYPE
   #endif
 
   const uint8_t BRIGHTNESS_LEVELS = 1;
@@ -279,16 +331,25 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t BRIGHTNESS_MAX = 1;
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID
+  #if LED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI
+    using SpiInterface = HardSpiInterface<SPIClass>;
+    SpiInterface spiInterface(SPI, LATCH_PIN);
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI_FAST
+    using SpiInterface = HardSpiFastInterface<SPIClass>;
+    SpiInterface spiInterface(SPI, LATCH_PIN);
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI
+    using SpiInterface = SimpleSpiInterface;
+    SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI_FAST
+    using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
+    SpiInterface spiInterface;
+  #else
+    #error Unknown LED_DISPLAY_TYPE
+  #endif
+
   // Common Cathode, with transistors on Group pins
   const uint8_t NUM_DIGITS = 4;
   const uint8_t DIGIT_PINS[NUM_DIGITS] = {4, 5, 6, 7};
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
-    using SpiInterface = SimpleSpiInterface;
-    SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  #else
-    using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
-    SpiInterface spiInterface;
-  #endif
   HybridModule<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
       kActiveHighPattern /*segmentOnPattern*/,
@@ -302,15 +363,24 @@ const uint8_t FRAMES_PER_SECOND = 60;
   const uint8_t BRIGHTNESS_MAX = 1;
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_FULL
-  // Common Anode, with transistors on Group pins
-  const uint8_t NUM_DIGITS = 4;
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+  #if LED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI
+    using SpiInterface = HardSpiInterface<SPIClass>;
+    SpiInterface spiInterface(SPI, LATCH_PIN);
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI_FAST
+    using SpiInterface = HardSpiFastInterface<SPIClass>;
+    SpiInterface spiInterface(SPI, LATCH_PIN);
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI
     using SpiInterface = SimpleSpiInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  #else
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI_FAST
     using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
+  #else
+    #error Unknown LED_DISPLAY_TYPE
   #endif
+
+  // Common Anode, with transistors on Group pins
+  const uint8_t NUM_DIGITS = 4;
   Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
       kActiveLowPattern,
@@ -331,15 +401,17 @@ const uint8_t FRAMES_PER_SECOND = 60;
 
 // Setup the various resources.
 void setupAceSegment() {
-  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID \
+  #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219 \
       || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595 \
-      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
+      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID \
+      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_FULL
     spiInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
     tmiInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
     wireInterface.begin();
   #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT
+    // do nothing
   #else
     #error Unknown LED_DISPLAY_TYPE
   #endif
@@ -351,6 +423,7 @@ COROUTINE(renderLed) {
   COROUTINE_LOOP() {
   #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_DIRECT \
       || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID \
+      || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_FULL \
       || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
     ledModule.renderFieldWhenReady();
     COROUTINE_YIELD();
@@ -493,6 +566,56 @@ COROUTINE(checkButtons) {
 }
 
 //------------------------------------------------------------------
+// Setup WiFi if necessary.
+//------------------------------------------------------------------
+
+#if defined(ESP8266) || defined(ESP32)
+
+// Number of millis to wait for a WiFi connection before doing a software
+// reboot.
+static const unsigned long REBOOT_TIMEOUT_MILLIS = 15000;
+
+// Connect to WiFi. Sometimes the board will connect instantly. Sometimes it
+// will struggle to connect. I don't know why. Performing a software reboot
+// seems to help, but not always.
+void setupWiFi() {
+  Serial.print(F("Connecting to WiFi"));
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  unsigned long startMillis = millis();
+  while (true) {
+    Serial.print('.');
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println(F(" Done."));
+      break;
+    }
+
+    // Detect timeout and reboot.
+    unsigned long nowMillis = millis();
+    if ((unsigned long) (nowMillis - startMillis) >= REBOOT_TIMEOUT_MILLIS) {
+    #if defined(ESP8266)
+      Serial.println(F("FAILED! Rebooting.."));
+      delay(1000);
+      ESP.reset();
+    #elif defined(ESP32)
+      Serial.println(F("FAILED! Rebooting.."));
+      delay(1000);
+      ESP.restart();
+    #else
+      Serial.println(F("FAILED! But cannot reboot.. continuing.."));
+      delay(1000);
+      startMillis = nowMillis;
+    #endif
+    }
+
+    delay(500);
+  }
+}
+
+#endif
+
+//------------------------------------------------------------------
 // Main setup and loop
 //------------------------------------------------------------------
 
@@ -514,12 +637,21 @@ void setup() {
   Serial.println(F("setup(): begin"));
 #endif
 
-#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
-    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH \
-    || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
+#if DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE \
+    || LED_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
   Wire.begin();
+  wireInterface.begin();
+#elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE \
+    || LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST \
+    || DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST \
+    || DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FASt
+  wireInterface.begin();
 #endif
 
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP \
+    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
+  setupWiFi();
+#endif
   setupPersistentStore();
   setupAceButton();
   setupClocks();
