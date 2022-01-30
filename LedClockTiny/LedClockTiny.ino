@@ -5,8 +5,8 @@ A simplified version of LedClock to reduce flash memory size. Uses:
   * 2 push buttons
 
 Support boards are:
-  * SparkFun Pro Micro
   * ATtiny85
+  * SparkFun Pro Micro
 
 Differences compared to LedClock:
   * no timezone support, no DST shifts
@@ -99,7 +99,7 @@ void setupPersistentStore() {
 // Configure various Clocks
 //------------------------------------------------------------------
 
-#if DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+#if DS3231_INTERFACE_TYPE == LED_INTERFACE_TYPE_TWO_WIRE
   #include <Wire.h>
   using DS3231WireInterface = ace_wire::TwoWireInterface<TwoWire>;
   DS3231WireInterface ds3231WireInterface(Wire);
@@ -113,6 +113,7 @@ void setupPersistentStore() {
 #else
   #error Unknown DS3231_INTERFACE_TYPE
 #endif
+
 DS3231Clock<DS3231WireInterface> dsClock(ds3231WireInterface);
 
 //------------------------------------------------------------------
@@ -124,57 +125,68 @@ const uint8_t FRAMES_PER_SECOND = 60;
 // The chain of resources.
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
   const uint8_t NUM_DIGITS = 4;
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+  #if LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_TMI
     using TmiInterface = SimpleTmiInterface;
     TmiInterface tmiInterface(DIO_PIN, CLK_PIN, BIT_DELAY);
     Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
-  #else
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_TMI_FAST
     using TmiInterface = SimpleTmiFastInterface<DIO_PIN, CLK_PIN, BIT_DELAY>;
     TmiInterface tmiInterface;
     Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
+  #else
+    #error Unknown LED_INTERFACE_TYPE
   #endif
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219
   const uint8_t NUM_DIGITS = 8;
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+  #if LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI
     using SpiInterface = SimpleSpiInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  #else
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI_FAST
     using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
+  #else
+    #error Unknown LED_INTERFACE_TYPE
   #endif
   Max7219Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface, kDigitRemapArray8Max7219);
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33
-  const uint8_t NUM_DIGITS = 4;
-  #if INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
-    #include <Wire.h>
-    using WireInterface = TwoWireInterface<TwoWire>;
-    WireInterface wireInterface(Wire);
-  #elif INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
-    using WireInterface = SimpleWireInterface;
-    WireInterface wireInterface(SDA_PIN, SCL_PIN, BIT_DELAY);
-  #elif INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
-    using WireInterface = SimpleWireFastInterface<SDA_PIN, SCL_PIN, BIT_DELAY>;
-    WireInterface wireInterface;
-  #else
-    #error Unknown INTERFACE_TYPE
+  // Create WireInterface only if DS3231 is NOT used.
+  #if TIME_SOURCE_TYPE != TIME_SOURCE_TYPE_DS3231
+    #if LED_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+      #include <Wire.h>
+      using WireInterface = TwoWireInterface<TwoWire>;
+      WireInterface wireInterface(Wire);
+    #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
+      using WireInterface = SimpleWireInterface;
+      WireInterface wireInterface(SDA_PIN, SCL_PIN, BIT_DELAY);
+    #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
+      using WireInterface = SimpleWireFastInterface<
+          SDA_PIN, SCL_PIN, BIT_DELAY>;
+      WireInterface wireInterface;
+    #else
+      #error Unknown LED_INTERFACE_TYPE
+    #endif
   #endif
 
+  const uint8_t NUM_DIGITS = 4;
   Ht16k33Module<WireInterface, NUM_DIGITS> ledModule(
       wireInterface, HT16K33_I2C_ADDRESS, true /* enableColon */);
 
 #elif LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595
   // Common Anode, with transistors on Group pins
-  const uint8_t NUM_DIGITS = 8;
-  #if INTERFACE_TYPE == INTERFACE_TYPE_NORMAL
+  #if LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI
     using SpiInterface = SimpleSpiInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
-  #else
+  #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI_FAST
     using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
     SpiInterface spiInterface;
+  #else
+    #error Unknown LED_INTERFACE_TYPE
   #endif
+
+  const uint8_t NUM_DIGITS = 8;
   Hc595Module<SpiInterface, NUM_DIGITS> ledModule(
       spiInterface,
       kActiveLowPattern /* segmentOnPattern */,
@@ -383,11 +395,10 @@ void setup() {
   Serial.println(F("setup(): begin"));
 #endif
 
-#if ((TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
-      || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_BOTH) \
-      && DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE) \
+#if (TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
+      && DS3231_INTERFACE_TYPE == LED_INTERFACE_TYPE_TWO_WIRE) \
     || (LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HT16K33 \
-      && INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE)
+      && LED_INTERFACE_TYPE == LED_INTERFACE_TYPE_TWO_WIRE)
   Wire.begin();
 #endif
 
