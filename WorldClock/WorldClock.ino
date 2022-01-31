@@ -2,15 +2,19 @@
  * A digital clock with 3 OLED displays using SPI, to show 3 different time
  * zones. The hardware consists of:
  *
- *   * 1 x DS3231 RTC chip (I2C)
- *   * 3 x SSD1306 OLED displays using SPI interface (not I2C)
+ *   * 1 x DS3231 RTC chip on I2C
+ *   * 3 x SSD1306 OLED displays on SPI
  *   * 2 x push buttons
  *
- * (It occurs to me that it should be possible support 3 displays using the I2C
- * version of the SSD1306 as well, if we used 3 different SDA lines to the OLED
- * devices, sharing a common SCL line, then use software I2C to communicate with
- * them. This would require using a different SSD1306 library, or modify the
- * SSD1306Ascii library to handle different pins.)
+ * I used the SPI version of the SSD1306 OLED displays because the I2C version
+ * that I got on eBay does not allow changing the I2C address. But it occurs to
+ * me that we might be able to place the I2C OLED devices on 3 different SDA
+ * lines to the OLED devices, sharing a common SCL line. The hardware <Wire.h>
+ * does not support using arbitrary pins, but most software I2C libraries do.
+ * We'd have to use a different SSD1306 library, or use my personal fork of the
+ * SSD1306Ascii library which adds the SSD1306AsciiAceWire<T> class which
+ * integrates with the AceWire library, which then supports I2C on arbitrary
+ * pins.
  *
  * Tested on Arduino Pro Micro, but should work for Arduino Nano, ESP8266 and
  * ESP32.
@@ -23,6 +27,8 @@
  *  * AceCommon (https://github.com/bxparks/AceCommon)
  *  * AceUtils (https://github.com/bxparks/AceUtils)
  *  * AceCRC (https://github.com/bxparks/AceCRC)
+ *  * AceWire (https://github.com/bxparks/AceWire)
+ *  * AceSPI (https://github.com/bxparks/AceSPI)
  *  * SSD1306Ascii (https://github.com/greiman/SSD1306Ascii)
  *
  * Program Size (flash/ram)
@@ -37,11 +43,20 @@
  *  * 25386/1505 bytes
  *    * AceTime v1.8
  *    * AceTimeClock v1.0
+ *  * 2022-01-31
+ *    * Add support for AceWire and AceSPI
+ *    * 23458/1322 bytes (SimpleWireFast, SimpleSpiFast)
+ *    * 25504/1528 bytes (TwoWire, HardSpi)
+ *    * 25346/1508 bytes (TwoWire, SSD1306AsciiSpi)
+ *    * Summary: We get almost 2kB reduction using the smallest interface
+ *    versions of AceWire and AceSPI. We can probably reduce this more by
+ *    replacing the calls to pinMode() and digitalWrite() with pinModeFast() and
+ *    digitalWriteFast() in the "fast" versions, because the normal GPIO
+ *    functions pulls in the pin-to-port mapping tables. But that requires
+ *    additional "fast" mode code which may not be worth the effort.
  */
 
 #include "config.h"
-#include <Wire.h> // TwoWire, Wire
-#include <AceWire.h> // TwoWireInterface
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
@@ -49,7 +64,9 @@
 #include <AceCommon.h>
 #include <AceUtils.h>
 #include <mode_group/mode_group.h> // from AceUtils
-#include <SSD1306AsciiSpi.h>
+#include <AceWire.h>
+#include <AceSPI.h>
+#include <SSD1306AsciiAceSpi.h>
 #include "ClockInfo.h"
 #include "Controller.h"
 #include "PersistentStore.h"
@@ -58,6 +75,7 @@ using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using ace_utils::mode_group::ModeGroup;
+using namespace ace_spi;
 
 //----------------------------------------------------------------------------
 // Configure PersistentStore
@@ -73,11 +91,26 @@ void setupPersistentStore() {
 }
 
 //----------------------------------------------------------------------------
-// Configure various Clocks.
+// Configure DS3231 RTC
 //----------------------------------------------------------------------------
 
-using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
-WireInterface wireInterface(Wire);
+#if DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+  #include <Wire.h>
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+#elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
+  using WireInterface = ace_wire::SimpleWireInterface;
+  WireInterface wireInterface(SDA_PIN, SCL_PIN, WIRE_BIT_DELAY);
+#elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
+  #include <digitalWriteFast.h>
+  #include <ace_wire/SimpleWireFastInterface.h>
+  using WireInterface = ace_wire::SimpleWireFastInterface<
+      SDA_PIN, SCL_PIN, WIRE_BIT_DELAY>;
+  WireInterface wireInterface;
+#else
+  #error Unknown DS3231_INTERFACE_TYPE
+#endif
+
 DS3231Clock<WireInterface> dsClock(wireInterface);
 SystemClockCoroutine systemClock(&dsClock, &dsClock);
 
@@ -85,9 +118,70 @@ SystemClockCoroutine systemClock(&dsClock, &dsClock);
 // Configure OLED display using SSD1306Ascii.
 //----------------------------------------------------------------------------
 
-SSD1306AsciiSpi oled0;
-SSD1306AsciiSpi oled1;
-SSD1306AsciiSpi oled2;
+#if OLED_INTERFACE_TYPE == INTERFACE_TYPE_SSD1306_SPI
+  #include <SSD1306AsciiSpi.h>
+  SSD1306AsciiSpi oled0;
+  SSD1306AsciiSpi oled1;
+  SSD1306AsciiSpi oled2;
+#elif OLED_INTERFACE_TYPE == INTERFACE_TYPE_SSD1306_SOFT_SPI
+  #include <SSD1306AsciiSoftSpi.h>
+  SSD1306AsciiSoftSpi oled0;
+  SSD1306AsciiSoftSpi oled1;
+  SSD1306AsciiSoftSpi oled2;
+#elif OLED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI
+  using SpiInterface0 = ace_spi::HardSpiInterface<SPIClass>;
+  using SpiInterface1 = ace_spi::HardSpiInterface<SPIClass>;
+  using SpiInterface2 = ace_spi::HardSpiInterface<SPIClass>;
+  SpiInterface0 spiInterface0(SPI, OLED_CS0_PIN);
+  SpiInterface1 spiInterface1(SPI, OLED_CS1_PIN);
+  SpiInterface2 spiInterface2(SPI, OLED_CS2_PIN);
+
+  SSD1306AsciiAceSpi<SpiInterface0> oled0(spiInterface0);
+  SSD1306AsciiAceSpi<SpiInterface1> oled1(spiInterface1);
+  SSD1306AsciiAceSpi<SpiInterface2> oled2(spiInterface2);
+#elif OLED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI_FAST
+  #include <digitalWriteFast.h>
+  #include <ace_spi/SimpleSpiFastInterface.h>
+  using SpiInterface0 = ace_spi::HardSpiFastInterface<SPIClass, OLED_CS0_PIN>;
+  SpiInterface0 spiInterface0(SPI, OLED_CS0_PIN);
+  using SpiInterface1 = ace_spi::HardSpiFastInterface<SPIClass, OLED_CS1_PIN>;
+  SpiInterface1 spiInterface1(SPI, OLED_CS1_PIN);
+  using SpiInterface2 = ace_spi::HardSpiFastInterface<SPIClass, OLED_CS2_PIN>;
+  SpiInterface2 spiInterface2(SPI, OLED_CS2_PIN);
+
+  SSD1306AsciiAceSpi<SpiInterface0> oled0(spiInterface0);
+  SSD1306AsciiAceSpi<SpiInterface1> oled1(spiInterface1);
+  SSD1306AsciiAceSpi<SpiInterface2> oled2(spiInterface2);
+#elif OLED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI
+  using SpiInterface0 = ace_spi::SimpleSpiInterface;
+  using SpiInterface1 = ace_spi::SimpleSpiInterface;
+  using SpiInterface2 = ace_spi::SimpleSpiInterface;
+  SpiInterface0 spiInterface0(OLED_CS0_PIN, OLED_DATA_PIN, OLED_CLOCK_PIN);
+  SpiInterface1 spiInterface1(OLED_CS1_PIN, OLED_DATA_PIN, OLED_CLOCK_PIN);
+  SpiInterface2 spiInterface2(OLED_CS2_PIN, OLED_DATA_PIN, OLED_CLOCK_PIN);
+
+  SSD1306AsciiAceSpi<SpiInterface0> oled0(spiInterface0);
+  SSD1306AsciiAceSpi<SpiInterface1> oled1(spiInterface1);
+  SSD1306AsciiAceSpi<SpiInterface2> oled2(spiInterface2);
+#elif OLED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI_FAST
+  #include <digitalWriteFast.h>
+  #include <ace_spi/SimpleSpiFastInterface.h>
+  using SpiInterface0 = ace_spi::SimpleSpiFastInterface<
+      OLED_CS0_PIN, OLED_DATA_PIN, OLED_CLOCK_PIN>;
+  SpiInterface0 spiInterface0;
+  using SpiInterface1 = ace_spi::SimpleSpiFastInterface<
+      OLED_CS1_PIN, OLED_DATA_PIN, OLED_CLOCK_PIN>;
+  SpiInterface1 spiInterface1;
+  using SpiInterface2 = ace_spi::SimpleSpiFastInterface<
+      OLED_CS2_PIN, OLED_DATA_PIN, OLED_CLOCK_PIN>;
+  SpiInterface2 spiInterface2;
+
+  SSD1306AsciiAceSpi<SpiInterface0> oled0(spiInterface0);
+  SSD1306AsciiAceSpi<SpiInterface1> oled1(spiInterface1);
+  SSD1306AsciiAceSpi<SpiInterface2> oled2(spiInterface2);
+#else
+  #error Unknown OLED_INTERFACE_TYPE
+#endif
 
 void setupOled() {
   pinMode(OLED_CS0_PIN, OUTPUT);
@@ -98,9 +192,18 @@ void setupOled() {
   digitalWrite(OLED_CS1_PIN, HIGH);
   digitalWrite(OLED_CS2_PIN, HIGH);
 
+#if OLED_INTERFACE_TYPE == INTERFACE_TYPE_SSD1306_SOFT_SPI
+  oled0.begin(&Adafruit128x64, OLED_CS0_PIN, OLED_DC_PIN,
+      OLED_CLOCK_PIN, OLED_DATA_PIN, OLED_RST_PIN);
+  oled1.begin(&Adafruit128x64, OLED_CS1_PIN, OLED_DC_PIN,
+      OLED_CLOCK_PIN, OLED_DATA_PIN);
+  oled2.begin(&Adafruit128x64, OLED_CS2_PIN, OLED_DC_PIN,
+      OLED_CLOCK_PIN, OLED_DATA_PIN);
+#else
   oled0.begin(&Adafruit128x64, OLED_CS0_PIN, OLED_DC_PIN, OLED_RST_PIN);
   oled1.begin(&Adafruit128x64, OLED_CS1_PIN, OLED_DC_PIN);
   oled2.begin(&Adafruit128x64, OLED_CS2_PIN, OLED_DC_PIN);
+#endif
 
   oled0.clear();
   oled1.clear();
@@ -124,29 +227,29 @@ Presenter presenter2(oled2);
 //----------------------------------------------------------------------------
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-TimeZone tz0 = TimeZone::forHours(-8);
-TimeZone tz1 = TimeZone::forHours(-5);
-TimeZone tz2 = TimeZone::forHours(0);
+  TimeZone tz0 = TimeZone::forHours(-8);
+  TimeZone tz1 = TimeZone::forHours(-5);
+  TimeZone tz2 = TimeZone::forHours(0);
 #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-BasicZoneProcessor zoneProcessor0;
-BasicZoneProcessor zoneProcessor1;
-BasicZoneProcessor zoneProcessor2;
-TimeZone tz0 = TimeZone::forZoneInfo(&zonedb::kZoneAmerica_Los_Angeles,
-    &zoneProcessor0);
-TimeZone tz1 = TimeZone::forZoneInfo(&zonedb::kZoneAmerica_New_York,
-    &zoneProcessor1);
-TimeZone tz2 = TimeZone::forZoneInfo(&zonedb::kZoneEurope_London,
-    &zoneProcessor2);
+  BasicZoneProcessor zoneProcessor0;
+  BasicZoneProcessor zoneProcessor1;
+  BasicZoneProcessor zoneProcessor2;
+  TimeZone tz0 = TimeZone::forZoneInfo(&zonedb::kZoneAmerica_Los_Angeles,
+      &zoneProcessor0);
+  TimeZone tz1 = TimeZone::forZoneInfo(&zonedb::kZoneAmerica_New_York,
+      &zoneProcessor1);
+  TimeZone tz2 = TimeZone::forZoneInfo(&zonedb::kZoneEurope_London,
+      &zoneProcessor2);
 #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
-ExtendedZoneProcessor zoneProcessor0;
-ExtendedZoneProcessor zoneProcessor1;
-ExtendedZoneProcessor zoneProcessor2;
-TimeZone tz0 = TimeZone::forZoneInfo(&zonedbx::kZoneAmerica_Los_Angeles,
-    &zoneProcessor0);
-TimeZone tz1 = TimeZone::forZoneInfo(&zonedbx::kZoneAmerica_New_York,
-    &zoneProcessor1);
-TimeZone tz2 = TimeZone::forZoneInfo(&zonedbx::kZoneEurope_London,
-    &zoneProcessor2);
+  ExtendedZoneProcessor zoneProcessor0;
+  ExtendedZoneProcessor zoneProcessor1;
+  ExtendedZoneProcessor zoneProcessor2;
+  TimeZone tz0 = TimeZone::forZoneInfo(&zonedbx::kZoneAmerica_Los_Angeles,
+      &zoneProcessor0);
+  TimeZone tz1 = TimeZone::forZoneInfo(&zonedbx::kZoneAmerica_New_York,
+      &zoneProcessor1);
+  TimeZone tz2 = TimeZone::forZoneInfo(&zonedbx::kZoneEurope_London,
+      &zoneProcessor2);
 #else
   #error Unknown TIME_ZONE_TYPE
 #endif
@@ -359,6 +462,56 @@ void setupAceButton() {
 }
 
 //----------------------------------------------------------------------------
+// Setup Wire interface.
+//----------------------------------------------------------------------------
+
+void setupWire() {
+#if DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+  Wire.begin();
+  Wire.setClock(400000L);
+  wireInterface.begin();
+#elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
+  wireInterface.begin();
+#elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
+  wireInterface.begin();
+#else
+  #error Unknown DS3231_INTERFACE_TYPE
+#endif
+}
+
+//----------------------------------------------------------------------------
+// Setup SPI interface
+//----------------------------------------------------------------------------
+
+void setupSPI() {
+#if OLED_INTERFACE_TYPE == INTERFACE_TYPE_SSD1306_SPI
+  SPI.begin();
+#elif OLED_INTERFACE_TYPE == INTERFACE_TYPE_SSD1306_SOFT_SPI
+  // do nothing
+#elif OLED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI
+  SPI.begin();
+  spiInterface0.begin();
+  spiInterface1.begin();
+  spiInterface2.begin();
+#elif OLED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI_FAST
+  SPI.begin();
+  spiInterface0.begin();
+  spiInterface1.begin();
+  spiInterface2.begin();
+#elif OLED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI
+  spiInterface0.begin();
+  spiInterface1.begin();
+  spiInterface2.begin();
+#elif OLED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI_FAST
+  spiInterface0.begin();
+  spiInterface1.begin();
+  spiInterface2.begin();
+#else
+  #error Unknown OLED_INTERFACE_TYPE
+#endif
+}
+
+//----------------------------------------------------------------------------
 // Main setup and loop
 //----------------------------------------------------------------------------
 
@@ -380,9 +533,8 @@ void setup() {
     SERIAL_PORT_MONITOR.println(F("setup(): begin"));
   }
 
-  Wire.begin();
-  Wire.setClock(400000L);
-
+  setupWire();
+  setupSPI();
   setupPersistentStore();
   setupAceButton();
   setupOled();
