@@ -3,7 +3,8 @@
 
 APP_NAME := OneZoneClock
 ARDUINO_LIBS := EpoxyEepromEsp AceCommon AceCRC AceButton AceSorting \
-	AceTime AceTimeClock AceRoutine AceUtils AceWire SSD1306Ascii
+	AceTime AceTimeClock AceRoutine AceUtils AceWire SSD1306Ascii \
+	EpoxyMockDigitalWriteFast
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 

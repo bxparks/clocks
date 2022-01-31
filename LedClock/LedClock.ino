@@ -116,7 +116,7 @@ static ExtendedZoneManager zoneManager(
 #endif
 
 //------------------------------------------------------------------
-// Configure various Clocks
+// Configure AceWire
 //------------------------------------------------------------------
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
@@ -135,6 +135,10 @@ static ExtendedZoneManager zoneManager(
   #else
     #error Unknown DS3231_INTERFACE_TYPE
   #endif
+
+//------------------------------------------------------------------
+// Configure various Clocks
+//------------------------------------------------------------------
 
   DS3231Clock<WireInterface> dsClock(wireInterface);
   Clock* refClock = &dsClock;
@@ -613,6 +617,23 @@ void setupWiFi() {
 #endif
 
 //------------------------------------------------------------------
+// Setup Wire.
+//------------------------------------------------------------------
+
+void setupWire() {
+#if DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE \
+    || LED_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+  Wire.begin();
+  wireInterface.begin();
+#elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE \
+    || LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST \
+    || DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST \
+    || DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FASt
+  wireInterface.begin();
+#endif
+}
+
+//------------------------------------------------------------------
 // Main setup and loop
 //------------------------------------------------------------------
 
@@ -634,21 +655,11 @@ void setup() {
   Serial.println(F("setup(): begin"));
 #endif
 
-#if DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE \
-    || LED_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
-  Wire.begin();
-  wireInterface.begin();
-#elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE \
-    || LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST \
-    || DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST \
-    || DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FASt
-  wireInterface.begin();
-#endif
-
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP \
     || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
   setupWiFi();
 #endif
+  setupWire();
   setupPersistentStore();
   setupAceButton();
   setupClocks();

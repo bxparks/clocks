@@ -23,8 +23,7 @@
  */
 
 #include "config.h"
-#include <Wire.h> // TwoWire, Wire
-#include <AceWire.h> // TwoWireInterface
+#include <AceWire.h>
 #include <AceButton.h>
 #include <AceRoutine.h>
 #include <AceTime.h>
@@ -33,7 +32,7 @@
 #include <mode_group/mode_group.h> // from AceUtils
 #include <SPI.h>
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
-  #include <SSD1306AsciiWire.h>
+  #include <SSD1306AsciiAceWire.h>
 #else
   #include <Adafruit_GFX.h>
   #include <Adafruit_PCD8544.h>
@@ -57,6 +56,30 @@ using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_utils::mode_group::ModeGroup;
+
+//-----------------------------------------------------------------------------
+// Configure AceWire
+//-----------------------------------------------------------------------------
+
+#if DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE \
+    || OLED_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+  #include <Wire.h> // TwoWire, Wire
+  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
+  WireInterface wireInterface(Wire);
+#elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE \
+    || OLED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE
+  using WireInterface = ace_wire::SimpleWireInterface;
+  WireInterface wireInterface(SDA_PIN, SCL_PIN, WIRE_BIT_DELAY);
+#elif DS3231_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST \
+    || OLED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_WIRE_FAST
+  #include <digitalWriteFast.h>
+  #include <ace_wire/SimpleWireFastInterface.h>
+  using WireInterface = ace_wire::SimpleWireFastInterface<
+      SDA_PIN, SCL_PIN, WIRE_BIT_DELAY>;
+  WireInterface wireInterface;
+#else
+  #error Unknown DS3231_INTERFACE_TYPE or OLED_INTERFACE_TYPE
+#endif
 
 //-----------------------------------------------------------------------------
 // Configure time zones and ZoneManager.
@@ -126,8 +149,6 @@ static ExtendedZoneManager zoneManager(
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231 \
     || BACKUP_TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_DS3231
-  using WireInterface = ace_wire::TwoWireInterface<TwoWire>;
-  WireInterface wireInterface(Wire);
   DS3231Clock<WireInterface> dsClock(wireInterface);
   Clock* refClock = &dsClock;
 #elif TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP
@@ -201,7 +222,7 @@ void setupDht22() {
 //------------------------------------------------------------------
 
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
-  SSD1306AsciiWire oled;
+  SSD1306AsciiAceWire<WireInterface> oled(wireInterface);
 
   void setupDisplay() {
     oled.begin(&Adafruit128x64, OLED_I2C_ADDRESS);
@@ -672,6 +693,20 @@ void setupWiFi() {
 #endif
 
 //------------------------------------------------------------------
+// Setup Wire.
+//------------------------------------------------------------------
+
+void setupWire() {
+  #if OLED_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE \
+      || DS3231_INTERFACE_TYPE == INTERFACE_TYPE_TWO_WIRE
+    Wire.begin();
+    Wire.setClock(400000L);
+  #endif
+
+  wireInterface.begin();
+}
+
+//------------------------------------------------------------------
 // Main setup and loop
 //------------------------------------------------------------------
 
@@ -702,13 +737,11 @@ if (ENABLE_SERIAL_DEBUG >= 1) {
   SERIAL_PORT_MONITOR.println(sizeof(RenderingInfo));
 }
 
-  Wire.begin();
-  Wire.setClock(400000L);
-
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP \
     || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
   setupWiFi();
 #endif
+  setupWire();
   setupPersistentStore();
   setupAceButton();
   setupClocks();
