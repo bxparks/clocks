@@ -42,7 +42,7 @@
   #include <AceTMI.h>
   #include <AceSegment.h>
   #include <AceSegmentWriter.h>
-  using ace_tmi::SimpleTmiInterface;
+  using ace_tmi::SimpleTmi1637Interface;
   using ace_segment::ClockWriter;
   using ace_segment::LedModule;
   using ace_segment::Tm1637Module;

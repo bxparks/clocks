@@ -70,7 +70,7 @@ Memory size (flash/ram) for `au --cli verify attiny_tm1637`:
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
 #include <ace_spi/SimpleSpiFastInterface.h>
-#include <ace_tmi/SimpleTmiFastInterface.h>
+#include <ace_tmi/SimpleTmi1637FastInterface.h>
 #include <ace_wire/SimpleWireFastInterface.h>
 #endif
 
@@ -126,11 +126,12 @@ const uint8_t FRAMES_PER_SECOND = 60;
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
   const uint8_t NUM_DIGITS = 4;
   #if LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_TMI
-    using TmiInterface = SimpleTmiInterface;
+    using TmiInterface = SimpleTmi1637Interface;
     TmiInterface tmiInterface(DIO_PIN, CLK_PIN, BIT_DELAY);
     Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
   #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_TMI_FAST
-    using TmiInterface = SimpleTmiFastInterface<DIO_PIN, CLK_PIN, BIT_DELAY>;
+    using TmiInterface = SimpleTmi1637FastInterface<
+        DIO_PIN, CLK_PIN, BIT_DELAY>;
     TmiInterface tmiInterface;
     Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
   #else

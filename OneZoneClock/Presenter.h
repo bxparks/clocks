@@ -20,7 +20,7 @@
   using ace_segment::ClockWriter;
   using ace_segment::LedModule;
   const uint8_t NUM_DIGITS = 4;
-  using TmiInterface = ace_tmi::SimpleTmiInterface;
+  using TmiInterface = ace_tmi::SimpleTmi1637Interface;
   using LedDisplay = Tm1637Module<TmiInterface, NUM_DIGITS>;
 #endif
 #include "StoredInfo.h"

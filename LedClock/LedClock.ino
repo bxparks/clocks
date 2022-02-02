@@ -26,7 +26,7 @@ Supported boards are:
 #if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
 #include <digitalWriteFast.h>
 #include <ace_spi/SimpleSpiFastInterface.h>
-#include <ace_tmi/SimpleTmiFastInterface.h>
+#include <ace_tmi/SimpleTmi1637FastInterface.h>
 #include <ace_wire/SimpleWireFastInterface.h>
 #include <ace_segment/direct/DirectFast4Module.h>
 #endif
@@ -200,10 +200,10 @@ const uint8_t FRAMES_PER_SECOND = 60;
 // The chain of resources.
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
   #if LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_TMI
-    using TmiInterface = SimpleTmiInterface;
+    using TmiInterface = SimpleTmi1637Interface;
     TmiInterface tmiInterface(DIO_PIN, CLK_PIN, TMI_BIT_DELAY);
   #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_TMI_FAST
-    using TmiInterface = SimpleTmiFastInterface<
+    using TmiInterface = SimpleTmi1637FastInterface<
         DIO_PIN, CLK_PIN, TMI_BIT_DELAY>;
     TmiInterface tmiInterface;
   #else
