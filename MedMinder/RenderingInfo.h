@@ -16,6 +16,7 @@ struct RenderingInfo {
   TimeZone timeZone; // currentTimeZone or changingTimeZone
   ZonedDateTime dateTime; // currentDateTime or changingDateTime
   TimePeriod timePeriod; // med interval or med remaining
+  uint8_t contrastLevel;
 };
 
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
@@ -23,7 +24,8 @@ inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
       && a.blinkShowState == b.blinkShowState
       && a.timeZone == b.timeZone
       && a.dateTime == b.dateTime
-      && a.timePeriod == b.timePeriod;
+      && a.timePeriod == b.timePeriod
+      && a.contrastLevel == b.contrastLevel;
 }
 
 inline bool operator!=(const RenderingInfo& a, const RenderingInfo& b) {

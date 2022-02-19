@@ -57,12 +57,12 @@ class Controller {
       StoredInfo storedInfo;
       bool isValid = mPersistentStore.readStoredInfo(storedInfo);
       if (isValid) {
-        if (ENABLE_SERIAL_DEBUG == 1) {
+        if (ENABLE_SERIAL_DEBUG >= 1) {
           SERIAL_PORT_MONITOR.println(F("setup(): valid StoredInfo"));
         }
         restoreClockInfo(mClockInfo, storedInfo);
       } else {
-        if (ENABLE_SERIAL_DEBUG == 1) {
+        if (ENABLE_SERIAL_DEBUG >= 1) {
           SERIAL_PORT_MONITOR.println(
               F("setup(): invalid StoredInfo; initializing"));
         }
@@ -97,7 +97,7 @@ class Controller {
     }
 
     void handleModeButtonPress()  {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
       performLeavingModeAction();
@@ -110,7 +110,7 @@ class Controller {
      * already in edit mode.
      */
     void handleModeButtonDoubleClick() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
       }
 
@@ -129,6 +129,7 @@ class Controller {
       #else
         case Mode::kChangeTimeZoneName:
       #endif
+        case Mode::kChangeSettingsContrast:
           // Throw away the changes and just change the mode group.
           //performLeavingModeAction();
           //performLeavingModeGroupAction();
@@ -143,7 +144,7 @@ class Controller {
     }
 
     void performEnteringModeAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
       }
 
@@ -161,13 +162,13 @@ class Controller {
     }
 
     void performLeavingModeAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeAction()"));
       }
     }
 
     void handleModeButtonLongPress() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
       }
 
@@ -179,7 +180,7 @@ class Controller {
     }
 
     void performEnteringModeGroupAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
       }
 
@@ -198,6 +199,7 @@ class Controller {
       #else
         case Mode::kChangeTimeZoneName:
       #endif
+        case Mode::kChangeSettingsContrast:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
           break;
@@ -208,7 +210,7 @@ class Controller {
     }
 
     void performLeavingModeGroupAction() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
       }
 
@@ -233,6 +235,10 @@ class Controller {
       #else
         case Mode::kChangeTimeZoneName:
       #endif
+          saveChangingClockInfo();
+          break;
+
+        case Mode::kChangeSettingsContrast:
           saveClockInfo();
           break;
 
@@ -245,7 +251,7 @@ class Controller {
       if (mClockInfo.medInterval != mChangingClockInfo.medInterval) {
         mClockInfo.medInterval = mChangingClockInfo.medInterval;
         mClockInfo.medInterval.second(0);
-        preserveInfo();
+        saveClockInfo();
       }
     }
 
@@ -254,20 +260,20 @@ class Controller {
       mClock.setNow(mChangingClockInfo.dateTime.toEpochSeconds());
     }
 
-    void saveClockInfo() {
+    void saveChangingClockInfo() {
       mClockInfo = mChangingClockInfo;
-      preserveInfo();
+      saveClockInfo();
     }
 
     void saveTimeZone() {
       mClockInfo.timeZone = mChangingClockInfo.timeZone;
       mClockInfo.dateTime =
           mClockInfo.dateTime.convertToTimeZone(mClockInfo.timeZone);
-      preserveInfo();
+      saveClockInfo();
     }
 
     void handleChangeButtonPress() {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
       switch ((Mode) mNavigator.mode()) {
@@ -348,6 +354,12 @@ class Controller {
           mSecondFieldCleared = true;
           break;
 
+        case Mode::kChangeSettingsContrast: {
+          mSuppressBlink = true;
+          incrementMod(mClockInfo.contrastLevel, (uint8_t) 10);
+          break;
+        }
+
         default:
           break;
       }
@@ -376,6 +388,7 @@ class Controller {
       #else
         case Mode::kChangeTimeZoneName:
       #endif
+        case Mode::kChangeSettingsContrast:
           mSuppressBlink = false;
           break;
 
@@ -388,7 +401,7 @@ class Controller {
       switch ((Mode) mNavigator.mode()) {
         case Mode::kViewMed:
           mClockInfo.medStartTime = mClockInfo.dateTime.toEpochSeconds();
-          preserveInfo();
+          saveClockInfo();
           break;
 
         default:
@@ -410,11 +423,12 @@ class Controller {
     }
 
   protected:
-    void preserveInfo() {
+    void saveClockInfo() {
       StoredInfo storedInfo;
       storedInfo.timeZoneData = mClockInfo.timeZone.toTimeZoneData();
       storedInfo.medStartTime = mClockInfo.medStartTime;
       storedInfo.medInterval = mClockInfo.medInterval;
+      storedInfo.contrastLevel = mClockInfo.contrastLevel;
       mPersistentStore.writeStoredInfo(storedInfo);
     }
 
@@ -446,7 +460,9 @@ class Controller {
       switch ((Mode) mNavigator.mode()) {
         case Mode::kViewDateTime:
         case Mode::kViewTimeZone:
+        case Mode::kViewSettings:
         case Mode::kViewAbout:
+        case Mode::kChangeSettingsContrast:
           mPresenter.setRenderingInfo(
               (Mode) mNavigator.mode(),
               mSuppressBlink || mBlinkShowState,
@@ -465,6 +481,8 @@ class Controller {
       #else
         case Mode::kChangeTimeZoneName:
       #endif
+        case Mode::kChangeMedHour:
+        case Mode::kChangeMedMinute:
           mPresenter.setRenderingInfo(
               (Mode) mNavigator.mode(),
               mSuppressBlink || mBlinkShowState,
@@ -483,14 +501,6 @@ class Controller {
               mChangingClockInfo);
           break;
         }
-
-        case Mode::kChangeMedHour:
-        case Mode::kChangeMedMinute:
-          mPresenter.setRenderingInfo(
-              (Mode) mNavigator.mode(),
-              mSuppressBlink || mBlinkShowState,
-              mChangingClockInfo);
-          break;
 
         default:
           break;
@@ -551,6 +561,7 @@ class Controller {
 
       clockInfo.medInterval = storedInfo.medInterval;
       clockInfo.medStartTime = storedInfo.medStartTime;
+      clockInfo.contrastLevel = storedInfo.contrastLevel;
     }
 
     void setupClockInfo(acetime_t nowSeconds) {
@@ -567,8 +578,9 @@ class Controller {
 
       storedInfo.medInterval = TimePeriod(86400); // one day
       storedInfo.medStartTime = nowSeconds;
+      mClockInfo.contrastLevel = OLED_INITIAL_CONTRAST;
 
-      preserveInfo();
+      saveClockInfo();
       restoreClockInfo(mClockInfo, storedInfo);
     }
 
