@@ -7,7 +7,7 @@
 // Compile-time selectors and options
 //------------------------------------------------------------------
 
-#define MED_MINDER_VERSION_STRING "0.1"
+#define MED_MINDER_VERSION_STRING "2022.02.19"
 
 // Set to 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
@@ -63,28 +63,18 @@
   #define MODE_BUTTON_PIN 8
   #define CHANGE_BUTTON_PIN 9
 
-#elif defined(AUNITER_NANO)
-  // Defined by auniter.ini
-  //#define WIFI_SSID
-  //#define WIFI_PASSWORD
-
-  #define ENABLE_LOW_POWER 0
-  #define TIME_PROVIDER TIME_PROVIDER_DS3231
-  #define OLED_REMAP false
-  #define MODE_BUTTON_PIN 8
-  #define CHANGE_BUTTON_PIN 9
-#elif defined(AUNITER_MICRO)
+#elif defined(AUNITER_MICRO_OLED)
   // Defined by auniter.ini
   //#define WIFI_SSID
   //#define WIFI_PASSWORD
 
   #undef TIME_ZONE_TYPE
-  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_MANUAL
-  #define ENABLE_LOW_POWER 1
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
+  #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_DS3231
   #define OLED_REMAP true
-  #define MODE_BUTTON_PIN 8
-  #define CHANGE_BUTTON_PIN 9
+  #define MODE_BUTTON_PIN A2
+  #define CHANGE_BUTTON_PIN A3
 #elif defined(AUNITER_MED_MINDER8)
   // Defined by auniter.ini
   //#define WIFI_SSID

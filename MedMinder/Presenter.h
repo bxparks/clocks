@@ -56,8 +56,29 @@ class Presenter {
   private:
     void clearDisplay() { mOled.clear(); }
 
+    /**
+     * Set font and size.
+     *
+     *  0 - extra small size
+     *  1 - normal 1X
+     *  2 - double 2X
+     */
+    void setFont(uint8_t size) const {
+      if (size == 0) {
+        mOled.setFont(Adafruit5x7);
+        mOled.set1X();
+      } else if (size == 1) {
+        mOled.setFont(fixed_bold10x15);
+        mOled.set1X();
+      } else if (size == 2) {
+        mOled.setFont(fixed_bold10x15);
+        mOled.set2X();
+      }
+    }
+
     void displayData() const {
       mOled.home();
+      setFont(1);
 
       switch (mRenderingInfo.mode) {
         case Mode::kViewMed:
@@ -119,11 +140,15 @@ class Presenter {
       if (ENABLE_SERIAL_DEBUG == 1) {
         SERIAL_PORT_MONITOR.println(F("displayAbout()"));
       }
-      mOled.print(F("TZ:"));
+      setFont(0);
+      mOled.print(F("MM: "));
+      mOled.println(F(MED_MINDER_VERSION_STRING));
+      mOled.print(F("TZDB:"));
       mOled.println(zonedb::kTzDatabaseVersion);
-      mOled.println(F("AT:" ACE_TIME_VERSION_STRING));
-      mOled.println(F("AB:" ACE_BUTTON_VERSION_STRING));
-      mOled.println(F("AR:" ACE_ROUTINE_VERSION_STRING));
+      mOled.println(F("ATim:" ACE_TIME_VERSION_STRING));
+      mOled.println(F("ABut:" ACE_BUTTON_VERSION_STRING));
+      mOled.println(F("ARou:" ACE_ROUTINE_VERSION_STRING));
+      mOled.println(F("ACom:" ACE_COMMON_VERSION_STRING));
     }
 
     void displayChangeMed() const {
