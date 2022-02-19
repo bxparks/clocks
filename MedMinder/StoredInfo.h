@@ -14,6 +14,12 @@ struct StoredInfo {
 
   /** How often the pill should be taken. */
   ace_time::TimePeriod medInterval;
+
+  /**
+   * Contrast level for OLED dislay, [0, 9] -> [0, 255]. Essentially brightness
+   * because the background is black.
+   */
+  uint8_t contrastLevel;
 };
 
 #endif

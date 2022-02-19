@@ -36,6 +36,9 @@
 // Maximum Medication interval in hours
 #define MAX_MED_INTERVAL_HOURS 36
 
+// Initial contrast of OLED display.
+#define OLED_INITIAL_CONTRAST 0
+
 //------------------------------------------------------------------
 // Configuration of target environment. The environment is defined in
 // $HOME/.auniter.ini and the AUNITER_XXX macro is set by auniter.sh.
@@ -120,6 +123,7 @@ enum class Mode : uint8_t {
   kViewMed,
   kViewDateTime,
   kViewTimeZone,
+  kViewSettings,
   kViewAbout,
 
   // Change Med info
@@ -134,12 +138,16 @@ enum class Mode : uint8_t {
   kChangeMinute,
   kChangeSecond,
 
+  // TimeZone
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
   kChangeTimeZoneOffset,
   kChangeTimeZoneDst,
 #else
   kChangeTimeZoneName,
 #endif
+
+  // Settings: OLED brightness
+  kChangeSettingsContrast,
 };
 
 #endif

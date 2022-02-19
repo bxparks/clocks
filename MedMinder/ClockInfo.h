@@ -20,6 +20,12 @@ struct ClockInfo {
    * corresponding to "time until next med" information.
    */
   ace_time::TimePeriod medInterval;
+
+  /**
+   * Contrast level for OLED dislay, [0, 9] -> [25, 255]. Essentially brightness
+   * because the background is black.
+   */
+  uint8_t contrastLevel;
 };
 
 #endif

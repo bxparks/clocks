@@ -27,6 +27,7 @@ class Presenter {
         clearDisplay();
       }
       if (needsUpdate()) {
+        updateDisplaySettings();
         displayData();
       }
 
@@ -43,6 +44,7 @@ class Presenter {
       mRenderingInfo.timeZone = clockInfo.timeZone;
       mRenderingInfo.dateTime = clockInfo.dateTime;
       mRenderingInfo.timePeriod = clockInfo.medInterval;
+      mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
     }
 
     void prepareToSleep() {
@@ -76,7 +78,18 @@ class Presenter {
       }
     }
 
+    void clearToEOL() const {
+      mOled.clearToEOL();
+      mOled.println();
+    }
+
     void displayData() const {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.print(F("displayData(): "));
+        SERIAL_PORT_MONITOR.print(F("mode="));
+        SERIAL_PORT_MONITOR.println((uint8_t) mRenderingInfo.mode);
+      }
+
       mOled.home();
       setFont(1);
 
@@ -86,6 +99,12 @@ class Presenter {
           break;
 
         case Mode::kViewDateTime:
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
           displayDateTime();
           break;
 
@@ -108,13 +127,9 @@ class Presenter {
           displayChangeMed();
           break;
 
-        case Mode::kChangeYear:
-        case Mode::kChangeMonth:
-        case Mode::kChangeDay:
-        case Mode::kChangeHour:
-        case Mode::kChangeMinute:
-        case Mode::kChangeSecond:
-          displayDateTime();
+        case Mode::kViewSettings:
+        case Mode::kChangeSettingsContrast:
+          displaySettings();
           break;
 
         default:
@@ -123,7 +138,7 @@ class Presenter {
     }
 
     void displayMed() const {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("displayMed()"));
       }
 
@@ -133,11 +148,11 @@ class Presenter {
       } else {
         mRenderingInfo.timePeriod.printTo(mOled);
       }
-      mOled.clearToEOL();
+      clearToEOL();
     }
 
     void displayAbout() const {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("displayAbout()"));
       }
       setFont(0);
@@ -165,17 +180,15 @@ class Presenter {
       } else {
         mOled.print("  ");
       }
-
-      mOled.clearToEOL();
+      clearToEOL();
     }
 
     void displayDateTime() const {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("displayDateTime()"));
       }
 
       displayDate();
-      mOled.println();
       displayTime();
     }
 
@@ -203,7 +216,7 @@ class Presenter {
       } else{
         mOled.print("  ");
       }
-      mOled.clearToEOL();
+      clearToEOL();
     }
 
     void displayTime() const {
@@ -226,12 +239,11 @@ class Presenter {
       } else {
         mOled.print("  ");
       }
-      mOled.clearToEOL();
-      mOled.println();
+      clearToEOL();
 
       // week day
       mOled.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
-      mOled.clearToEOL();
+      clearToEOL();
     }
 
     void displayTimeZone() const {
@@ -256,8 +268,7 @@ class Presenter {
           typeString = F("unknown");
       }
       mOled.print(typeString);
-      mOled.clearToEOL();
-      mOled.println();
+      clearToEOL();
 
       switch (tz.getType()) {
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -268,14 +279,13 @@ class Presenter {
             TimeOffset offset = tz.getStdOffset();
             offset.printTo(mOled);
           }
-          mOled.clearToEOL();
+          clearToEOL();
 
-          mOled.println();
           mOled.print("DST: ");
           if (shouldShowFor(Mode::kChangeTimeZoneDst)) {
             mOled.print((tz.getDstOffset().isZero()) ? "off" : "on ");
           }
-          mOled.clearToEOL();
+          clearToEOL();
           break;
       #else
         case BasicZoneProcessor::kTypeBasic:
@@ -284,14 +294,26 @@ class Presenter {
           if (shouldShowFor(Mode::kChangeTimeZoneName)) {
             tz.printShortTo(mOled);
           }
-          mOled.clearToEOL();
+          clearToEOL();
           break;
       #endif
         default:
           mOled.print(F("<unknown>"));
-          mOled.clearToEOL();
+          clearToEOL();
           break;
       }
+    }
+
+    void displaySettings() const {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("displaySettings()"));
+      }
+
+      mOled.print(F("Contrast:"));
+      if (shouldShowFor(Mode::kChangeSettingsContrast)) {
+        mOled.println(mRenderingInfo.contrastLevel);
+      }
+      clearToEOL();
     }
 
     /**
@@ -312,6 +334,23 @@ class Presenter {
     bool needsUpdate() const {
       return mRenderingInfo != mPrevRenderingInfo;
     }
+
+    /** Update the display settings, e.g. brightness, backlight, etc. */
+    void updateDisplaySettings() {
+      if (mPrevRenderingInfo.mode == Mode::kUnknown
+          || mPrevRenderingInfo.contrastLevel != mRenderingInfo.contrastLevel) {
+        uint8_t value = toOledContrastValue(mRenderingInfo.contrastLevel);
+        mOled.setContrast(value);
+      }
+    }
+
+    /** Convert [0, 9] contrast level for OLED to a [0, 255] value. */
+    static uint8_t toOledContrastValue(uint8_t level) {
+      if (level > 9) level = 9;
+      return kOledContrastValues[level];
+    }
+
+    static const uint8_t kOledContrastValues[];
 
     SSD1306Ascii& mOled;
     RenderingInfo mRenderingInfo;

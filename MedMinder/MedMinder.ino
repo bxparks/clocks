@@ -127,6 +127,8 @@ void setupClocks() {
 //    - Change zone offset
 //    - Change zone dst
 //    - Change zone name
+// - Settings
+//    - Change contrast (OLED)
 // - About
 //
 // Operation:
@@ -198,11 +200,25 @@ const ModeGroup TIME_ZONE_MODE_GROUP = {
   nullptr /* childGroups */,
 };
 
+// List of Settings modes.
+const uint8_t SETTINGS_MODES[] = {
+  (uint8_t) Mode::kChangeSettingsContrast,
+};
+
+// ModeGroup for the Settings modes.
+const ModeGroup SETTINGS_MODE_GROUP = {
+  &ROOT_MODE_GROUP /* parentGroup */,
+  sizeof(SETTINGS_MODES) / sizeof(uint8_t),
+  SETTINGS_MODES /* modes */,
+  nullptr /* childGroups */,
+};
+
 // List of top level modes.
 const uint8_t TOP_LEVEL_MODES[] = {
   (uint8_t) Mode::kViewMed,
   (uint8_t) Mode::kViewDateTime,
   (uint8_t) Mode::kViewTimeZone,
+  (uint8_t) Mode::kViewSettings,
   (uint8_t) Mode::kViewAbout,
 };
 
@@ -212,6 +228,7 @@ const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
   &MED_INFO_MODE_GROUP,
   &DATE_TIME_MODE_GROUP,
   &TIME_ZONE_MODE_GROUP,
+  &SETTINGS_MODE_GROUP,
   nullptr /* About mode has no submodes */,
 };
 
