@@ -252,7 +252,7 @@ class Controller {
       #else
         case Mode::kChangeTimeZoneName:
       #endif
-          saveClockInfo();
+          saveChangingClockInfo();
           break;
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
@@ -267,7 +267,7 @@ class Controller {
         case Mode::kChangeSettingsLedOnOff:
         case Mode::kChangeSettingsLedBrightness:
       #endif
-          preserveClockInfo(mClockInfo);
+          saveClockInfo();
           break;
 
         default:
@@ -283,7 +283,7 @@ class Controller {
         // Switch 12/24 modes if in Mode::kDataTime
         case Mode::kViewDateTime:
           mClockInfo.hourMode ^= 0x1;
-          preserveClockInfo(mClockInfo);
+          saveClockInfo();
           break;
 
       #if ENABLE_DHT22
@@ -577,21 +577,21 @@ class Controller {
     }
 
     /** Transfer info from ChangingClockInfo to ClockInfo. */
+    void saveChangingClockInfo() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("saveChangingClockInfo()"));
+      }
+      mClockInfo = mChangingClockInfo;
+      saveClockInfo();
+    }
+
+    /** Save the clock info into EEPROM. */
     void saveClockInfo() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("saveClockInfo()"));
       }
-      mClockInfo = mChangingClockInfo;
-      preserveClockInfo(mClockInfo);
-    }
-
-    /** Save the clock info into EEPROM. */
-    void preserveClockInfo(const ClockInfo& clockInfo) {
-      if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("preserveClockInfo()"));
-      }
       StoredInfo storedInfo;
-      storedInfoFromClockInfo(storedInfo, clockInfo);
+      storedInfoFromClockInfo(storedInfo, mClockInfo);
       mPersistentStore.writeStoredInfo(storedInfo);
     }
 
@@ -658,7 +658,7 @@ class Controller {
         clockInfoFromStoredInfo(mClockInfo, storedInfo);
       } else {
         setupClockInfo();
-        preserveClockInfo(mClockInfo);
+        saveClockInfo();
       }
     }
 

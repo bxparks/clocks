@@ -15,4 +15,3 @@ const uint8_t Presenter::kOledContrastValues[10] = {
 };
 
 #endif
-
