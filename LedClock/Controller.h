@@ -417,7 +417,7 @@ class Controller {
 
     /** Save the clock info into EEPROM. */
     void preserveClockInfo(const ClockInfo& clockInfo) {
-      if (ENABLE_SERIAL_DEBUG == 1) {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("preserveClockInfo()"));
       }
       StoredInfo storedInfo;
