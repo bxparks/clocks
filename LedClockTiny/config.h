@@ -30,6 +30,10 @@
 #define TIME_ZONE_TYPE_EXTENDED 2
 #define TIME_ZONE_TYPE TIME_ZONE_TYPE_MANUAL
 
+// TimeZone offset
+#define TIME_STD_OFFSET_MINUTES (-8*60)
+#define TIME_DST_OFFSET_MINUTES (1*60)
+
 // List of clock types for the referenceClock and backupClock of the
 // SystemClock. Used as the value of the TIME_SOURCE_TYPE and
 // BACKUP_TIME_SOURCE_TYPE macros.

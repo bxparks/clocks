@@ -7,7 +7,7 @@
 #include "RenderingInfo.h"
 
 using ace_time::DateStrings;
-using ace_time::ZonedDateTime;
+using ace_time::OffsetDateTime;
 using ace_segment::kHexCharSpace;
 using ace_segment::kPatternSpace;
 using ace_segment::LedModule;
@@ -78,7 +78,7 @@ class Presenter {
     void clearDisplay() { mClockWriter.clear(); }
 
     void displayData() {
-      const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
+      const OffsetDateTime& dateTime = mRenderingInfo.dateTime;
       #if ENABLE_SERIAL_DEBUG >= 2
         SERIAL_PORT_MONITOR.print(F("displayData():"));
         dateTime.printTo(SERIAL_PORT_MONITOR);
@@ -127,7 +127,7 @@ class Presenter {
       }
     }
 
-    void displayHourMinute(const ZonedDateTime& dateTime) {
+    void displayHourMinute(const OffsetDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeHour)) {
         mNumberWriter.writeDec2At(0, dateTime.hour());
       } else {
@@ -142,7 +142,7 @@ class Presenter {
       mClockWriter.writeColon(true);
     }
 
-    void displaySecond(const ZonedDateTime& dateTime) {
+    void displaySecond(const OffsetDateTime& dateTime) {
       mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
 
       if (shouldShowFor(Mode::kChangeSecond)) {
@@ -153,7 +153,7 @@ class Presenter {
       }
     }
 
-    void displayYear(const ZonedDateTime& dateTime) {
+    void displayYear(const OffsetDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeYear)) {
         mNumberWriter.writeDec4At(0, dateTime.year());
       } else {
@@ -162,7 +162,7 @@ class Presenter {
       mClockWriter.writeColon(false);
     }
 
-    void displayMonth(const ZonedDateTime& dateTime) {
+    void displayMonth(const OffsetDateTime& dateTime) {
       mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
       if (shouldShowFor(Mode::kChangeMonth)) {
         mNumberWriter.writeDec2At(2, dateTime.month());
@@ -172,7 +172,7 @@ class Presenter {
       mClockWriter.writeColon(false);
     }
 
-    void displayDay(const ZonedDateTime& dateTime) {
+    void displayDay(const OffsetDateTime& dateTime) {
       mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
       if (shouldShowFor(Mode::kChangeDay)) {
         mNumberWriter.writeDec2At(2, dateTime.day());
@@ -182,7 +182,7 @@ class Presenter {
       mClockWriter.writeColon(false);
     }
 
-    void displayWeekday(const ZonedDateTime& dateTime) {
+    void displayWeekday(const OffsetDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeWeekday)) {
         uint8_t written = mStringWriter.writeStringAt(
             0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));

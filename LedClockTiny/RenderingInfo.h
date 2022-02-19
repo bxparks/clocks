@@ -11,9 +11,11 @@
 struct RenderingInfo {
   Mode mode = Mode::kUnknown; // display mode
   bool blinkShowState = true; // true if blinking info should be shown
+
   uint8_t hourMode = 0; // 12/24 mode
   uint8_t brightness = 1;
-  ace_time::ZonedDateTime dateTime;
+  bool isDst = false;
+  ace_time::OffsetDateTime dateTime;
 };
 
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {

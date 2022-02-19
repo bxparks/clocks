@@ -8,6 +8,9 @@
 struct StoredInfo {
   uint8_t hourMode;
   uint8_t brightness;
+  int16_t stdOffsetMinutes;
+  int16_t dstOffsetMinutes;
+
 };
 
 #endif

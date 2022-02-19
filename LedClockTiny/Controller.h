@@ -209,12 +209,12 @@ class Controller {
       switch ((Mode) mMode) {
         case Mode::kChangeHour:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
+          offset_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeMinute:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementMinute(
+          offset_date_time_mutation::incrementMinute(
               mChangingClockInfo.dateTime);
           break;
 
@@ -226,17 +226,18 @@ class Controller {
 
         case Mode::kChangeYear:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
+          offset_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeMonth:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
+          offset_date_time_mutation::incrementMonth(
+              mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeDay:
           mSuppressBlink = true;
-          zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
+          offset_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
 
         /*
@@ -251,13 +252,7 @@ class Controller {
 
         case Mode::kChangeBrightness:
           mSuppressBlink = true;
-          incrementModOffset(mClockInfo.brightness, (uint8_t) 7, (uint8_t) 1);
-          /*
-          incrementModOffset(
-              mClockInfo.brightness,
-              mBrightnessLevels,
-              mBrightnessMin);
-          */
+          incrementMod(mClockInfo.brightness, (uint8_t) 8);
           break;
 
         default:
@@ -301,8 +296,12 @@ class Controller {
 
   private:
     void updateDateTime() {
-      mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
-          mClock.getNow(), TimeZone());
+      int16_t totalOffset = TIME_STD_OFFSET_MINUTES;
+      totalOffset += mClockInfo.isDst ? TIME_DST_OFFSET_MINUTES : 0;
+      TimeOffset offset = TimeOffset::forMinutes(totalOffset);
+
+      mClockInfo.dateTime = OffsetDateTime::forEpochSeconds(
+          mClock.getNow(), offset);
 
       // If in CHANGE mode, and the 'second' field has not been cleared, update
       // the displayed time with the current second.
@@ -360,7 +359,6 @@ class Controller {
 
     /** Save the current UTC dateTime to the RTC. */
     void saveDateTime() {
-      mChangingClockInfo.dateTime.normalize();
       acetime_t epochSeconds = mChangingClockInfo.dateTime.toEpochSeconds();
       if (ENABLE_SERIAL_DEBUG >= 1) {
         Serial.print(F("saveDateTime(): epochSeconds:"));

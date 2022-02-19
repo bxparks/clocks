@@ -15,14 +15,14 @@ struct ClockInfo {
   /** 12/24 mode */
   uint8_t hourMode = kTwelve;
 
-  /** Brightness, 1 - 7 for Tm1636Display; 1 - SUBFIELDS for ScanningDisplay. */
+  /** Brightness, 0 - 7 for Tm1636Display. */
   uint8_t brightness = 1;
 
-  /** Desired timeZoneData. */
-  ace_time::TimeZoneData timeZoneData;
+  /** True if DST being observed. */
+  bool isDst;
 
   /** DateTime from the TimeKeeper. */
-  ace_time::ZonedDateTime dateTime;
+  ace_time::OffsetDateTime dateTime;
 };
 
 #endif
