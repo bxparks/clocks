@@ -8,6 +8,7 @@
 void Presenter::displayAbout() const {
   setFont(0);
 
+  mOled.println(F("WC: " WORLD_CLOCK_VERSION_STRING));
   mOled.print(F("TZDB:"));
   mOled.println(zonedb::kTzDatabaseVersion);
   mOled.println(F("ATim:" ACE_TIME_VERSION_STRING));

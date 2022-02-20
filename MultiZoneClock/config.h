@@ -7,6 +7,8 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
+#define MULTI_ZONE_CLOCK_VERSION_STRING "2022.02.19"
+
 // Set to >= 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
 #define ENABLE_SERIAL_DEBUG 0
@@ -176,7 +178,7 @@
   #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_WIRE_FAST
   #define SDA_PIN SDA
   #define SCL_PIN SCL
-  #define WIRE_BIT_DELAY 4
+  #define WIRE_BIT_DELAY 2
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL

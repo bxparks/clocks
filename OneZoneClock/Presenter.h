@@ -713,6 +713,7 @@ class Presenter {
       // Use F() macros for these longer strings. Seems to save both
       // flash memory and RAM.
       setFont(0);
+      mDisplay.println(F("OZC: " ONE_ZONE_CLOCK_VERSION_STRING));
       mDisplay.print(F("TZDB:"));
       mDisplay.println(zonedb::kTzDatabaseVersion);
       mDisplay.println(F("ATim:" ACE_TIME_VERSION_STRING));

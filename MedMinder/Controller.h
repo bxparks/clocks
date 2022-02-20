@@ -72,8 +72,6 @@ class Controller {
       // Set the current date time using the mClockInfo.timeZone.
       mClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
           nowSeconds, mClockInfo.timeZone);
-
-      mNavigator.setup();
     }
 
     void syncClock() {
@@ -114,7 +112,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
       }
 
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeMedHour:
         case Mode::kChangeMedMinute:
         case Mode::kChangeYear:
@@ -149,7 +147,7 @@ class Controller {
       }
 
       #if TIME_ZONE_TYPE != TIME_ZONE_TYPE_MANUAL
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeTimeZoneName:
           mZoneRegistryIndex = mZoneManager.indexForZoneId(
               mChangingClockInfo.timeZone.getZoneId());
@@ -184,7 +182,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
       }
 
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeMedHour:
         case Mode::kChangeMedMinute:
         case Mode::kChangeYear:
@@ -214,7 +212,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
       }
 
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeMedHour:
         case Mode::kChangeMedMinute:
           saveMedInterval();
@@ -276,7 +274,7 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeMedHour:
           mSuppressBlink = true;
           time_period_mutation::incrementHour(
@@ -373,7 +371,7 @@ class Controller {
     }
 
     void handleChangeButtonRelease() {
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -398,7 +396,7 @@ class Controller {
     }
 
     void handleChangeButtonLongPress() {
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kViewMed:
           mClockInfo.medStartTime = mClockInfo.dateTime.toEpochSeconds();
           saveClockInfo();
@@ -414,7 +412,7 @@ class Controller {
      * noticeable drift against the RTC which has a 1 second resolution.
      */
     void update() {
-      if (mNavigator.mode() == (uint8_t) Mode::kUnknown) return;
+      if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
       if (mIsPreparingToSleep) return;
       updateDateTime();
       updateBlinkState();
@@ -438,7 +436,7 @@ class Controller {
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update mChangingClockInfo.dateTime with the current second.
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -457,14 +455,14 @@ class Controller {
 
     /** Update the internal rendering info. */
     void updateRenderingInfo() {
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kViewDateTime:
         case Mode::kViewTimeZone:
         case Mode::kViewSettings:
         case Mode::kViewAbout:
         case Mode::kChangeSettingsContrast:
           mPresenter.setRenderingInfo(
-              (Mode) mNavigator.mode(),
+              (Mode) mNavigator.modeId(),
               mSuppressBlink || mBlinkShowState,
               mClockInfo);
           break;
@@ -484,7 +482,7 @@ class Controller {
         case Mode::kChangeMedHour:
         case Mode::kChangeMedMinute:
           mPresenter.setRenderingInfo(
-              (Mode) mNavigator.mode(),
+              (Mode) mNavigator.modeId(),
               mSuppressBlink || mBlinkShowState,
               mChangingClockInfo);
           break;
@@ -496,7 +494,7 @@ class Controller {
           mChangingClockInfo.medInterval = getRemainingTimePeriod();
 
           mPresenter.setRenderingInfo(
-              (Mode) mNavigator.mode(),
+              (Mode) mNavigator.modeId(),
               mSuppressBlink || mBlinkShowState,
               mChangingClockInfo);
           break;

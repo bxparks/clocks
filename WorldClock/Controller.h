@@ -64,7 +64,6 @@ class Controller {
         factoryReset = true;
       }
       restoreClockInfo(factoryReset);
-      mNavigator.setup();
       updateDateTime();
     }
 
@@ -87,7 +86,7 @@ class Controller {
      * and call the updatePresenterN() methods separately from the coroutine.
      */
     void update() {
-      if (mNavigator.mode() == (uint8_t) Mode::kUnknown) return;
+      if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
       updateDateTime();
       updateBlinkState();
       updateRenderingInfo();
@@ -132,7 +131,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
       }
 
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -193,7 +192,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
       }
 
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -224,7 +223,7 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
           mSuppressBlink = true;
         #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -331,7 +330,7 @@ class Controller {
     }
 
     void handleChangeButtonRelease() {
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -359,7 +358,7 @@ class Controller {
     void updateDateTime() {
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update the mChangingDateTime.second field with the current second.
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -392,13 +391,13 @@ class Controller {
     }
 
     void updateRenderingInfo() {
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kViewDateTime:
         case Mode::kViewSettings:
         case Mode::kViewAbout:
         {
           bool blinkShowState = mBlinkShowState || mSuppressBlink;
-          Mode mode = (Mode) mNavigator.mode();
+          Mode mode = (Mode) mNavigator.modeId();
           acetime_t now = mClock.getNow();
           mPresenter0.setRenderingInfo(
               mode, now, blinkShowState, mClockInfo0, mClockInfo0.timeZone);
@@ -422,7 +421,7 @@ class Controller {
         {
           acetime_t now = mChangingDateTime.toEpochSeconds();
           bool blinkShowState = mBlinkShowState || mSuppressBlink;
-          Mode mode = (Mode) mNavigator.mode();
+          Mode mode = (Mode) mNavigator.modeId();
           mPresenter0.setRenderingInfo(
               mode, now, blinkShowState, mClockInfo0, mClockInfo0.timeZone);
           mPresenter1.setRenderingInfo(
@@ -452,19 +451,19 @@ class Controller {
     void updateChangingDst(uint8_t clockId) {
       acetime_t now = mChangingDateTime.toEpochSeconds();
       mPresenter0.setRenderingInfo(
-          (Mode) mNavigator.mode(),
+          (Mode) mNavigator.modeId(),
           now,
           mBlinkShowState || clockId!=0,
           mClockInfo0,
           mClockInfo0.timeZone);
       mPresenter1.setRenderingInfo(
-          (Mode) mNavigator.mode(),
+          (Mode) mNavigator.modeId(),
           now,
           mBlinkShowState || clockId!=1,
           mClockInfo1,
           mClockInfo0.timeZone);
       mPresenter2.setRenderingInfo(
-          (Mode) mNavigator.mode(),
+          (Mode) mNavigator.modeId(),
           now,
           mBlinkShowState || clockId!=2,
           mClockInfo2,

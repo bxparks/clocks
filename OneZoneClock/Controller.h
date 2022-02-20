@@ -78,7 +78,6 @@ class Controller {
         factoryReset = true;
       }
       restoreClockInfo(factoryReset);
-      mNavigator.setup();
 
       // TODO: Move to Presenter?
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
@@ -93,7 +92,7 @@ class Controller {
      * noticeable drift against the RTC which has a 1 second resolution.
      */
     void update() {
-      if (mNavigator.mode() == (uint8_t) Mode::kUnknown) return;
+      if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
       updateDateTime();
       updateBlinkState();
       updateRenderingInfo();
@@ -117,7 +116,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
       }
 
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
       #if TIME_ZONE_TYPE != TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneName:
           mZoneRegistryIndex = mZoneManager.indexForZoneId(
@@ -158,7 +157,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
       }
 
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -202,7 +201,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
       }
 
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -236,7 +235,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
       }
 
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -279,7 +278,7 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         // Switch 12/24 modes if in Mode::kDataTime
         case Mode::kViewDateTime:
           mClockInfo.hourMode ^= 0x1;
@@ -440,13 +439,13 @@ class Controller {
       //    button is held down.
       //  * Each change of 12/24 mode causes a write to the EEPPROM, which
       //    causes wear and tear.
-      if (mNavigator.mode() != (uint8_t) Mode::kViewDateTime) {
+      if (mNavigator.modeId() != (uint8_t) Mode::kViewDateTime) {
         handleChangeButtonPress();
       }
     }
 
     void handleChangeButtonRelease() {
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -510,7 +509,7 @@ class Controller {
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update the mChangingDateTime.second field with the current second.
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -542,7 +541,7 @@ class Controller {
     void updateRenderingInfo() {
       ClockInfo* clockInfo;
 
-      switch ((Mode) mNavigator.mode()) {
+      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -567,7 +566,7 @@ class Controller {
 
       bool blinkShowState = mSuppressBlink || mBlinkShowState;
       mPresenter.setRenderingInfo(
-          (Mode) mNavigator.mode(), blinkShowState, *clockInfo);
+          (Mode) mNavigator.modeId(), blinkShowState, *clockInfo);
     }
 
     /** Save the current UTC dateTime to the RTC. */

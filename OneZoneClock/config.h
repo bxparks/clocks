@@ -7,6 +7,8 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
+#define ONE_ZONE_CLOCK_VERSION_STRING "2022.02.19"
+
 // Set to 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
 #define ENABLE_SERIAL_DEBUG 0

@@ -56,6 +56,7 @@ using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_utils::mode_group::ModeGroup;
+using ace_utils::mode_group::ModeRecord;
 
 //-----------------------------------------------------------------------------
 // Configure AceWire
@@ -305,8 +306,8 @@ void setupPresenter() {
 //    - Change backlight (LCD)
 //    - Change contrast (LCD)
 //    - Change bias (LCD)
-//    - Change contrast (OLED)
 //    - Invert display (OLED)
+//    - Change contrast (OLED)
 // - View SystemClock
 // - About
 //
@@ -330,96 +331,79 @@ void setupPresenter() {
 extern const ModeGroup ROOT_MODE_GROUP;
 
 // List of DateTime modes.
-const uint8_t DATE_TIME_MODES[] = {
-  (uint8_t) Mode::kChangeYear,
-  (uint8_t) Mode::kChangeMonth,
-  (uint8_t) Mode::kChangeDay,
-  (uint8_t) Mode::kChangeHour,
-  (uint8_t) Mode::kChangeMinute,
-  (uint8_t) Mode::kChangeSecond,
+const ModeRecord DATE_TIME_MODES[] = {
+  {(uint8_t) Mode::kChangeYear, nullptr},
+  {(uint8_t) Mode::kChangeMonth, nullptr},
+  {(uint8_t) Mode::kChangeDay, nullptr},
+  {(uint8_t) Mode::kChangeHour, nullptr},
+  {(uint8_t) Mode::kChangeMinute, nullptr},
+  {(uint8_t) Mode::kChangeSecond, nullptr},
+};
+
+// List of TimeZone modes.
+const ModeRecord TIME_ZONE_MODES[] = {
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+  {(uint8_t) Mode::kChangeTimeZoneOffset, nullptr},
+  {(uint8_t) Mode::kChangeTimeZoneDst, nullptr},
+#else
+  {(uint8_t) Mode::kChangeTimeZoneName, nullptr},
+#endif
+};
+
+// List of Settings modes.
+const ModeRecord SETTINGS_MODES[] = {
+#if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+  {(uint8_t) Mode::kChangeSettingsBacklight, nullptr},
+  {(uint8_t) Mode::kChangeSettingsContrast, nullptr},
+  {(uint8_t) Mode::kChangeSettingsBias, nullptr},
+#else
+  {(uint8_t) Mode::kChangeSettingsContrast, nullptr},
+  {(uint8_t) Mode::kChangeInvertDisplay, nullptr},
+#endif
+#if ENABLE_LED_DISPLAY
+  {(uint8_t) Mode::kChangeSettingsLedOnOff, nullptr},
+  {(uint8_t) Mode::kChangeSettingsLedBrightness, nullptr},
+#endif
 };
 
 // ModeGroup for the DateTime modes.
 const ModeGroup DATE_TIME_MODE_GROUP = {
   &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(DATE_TIME_MODES) / sizeof(uint8_t),
-  DATE_TIME_MODES /* modes */,
-  nullptr /* childGroups */,
-};
-
-// List of TimeZone modes.
-const uint8_t TIME_ZONE_MODES[] = {
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-  (uint8_t) Mode::kChangeTimeZoneOffset,
-  (uint8_t) Mode::kChangeTimeZoneDst,
-#else
-  (uint8_t) Mode::kChangeTimeZoneName,
-#endif
+  sizeof(DATE_TIME_MODES) / sizeof(ModeRecord),
+  DATE_TIME_MODES
 };
 
 // ModeGroup for the TimeZone modes.
 const ModeGroup TIME_ZONE_MODE_GROUP = {
   &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(TIME_ZONE_MODES) / sizeof(uint8_t),
-  TIME_ZONE_MODES /* modes */,
-  nullptr /* childGroups */,
-};
-
-// List of Settings modes.
-const uint8_t SETTINGS_MODES[] = {
-#if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-  (uint8_t) Mode::kChangeSettingsBacklight,
-  (uint8_t) Mode::kChangeSettingsContrast,
-  (uint8_t) Mode::kChangeSettingsBias,
-#else
-  (uint8_t) Mode::kChangeSettingsContrast,
-  (uint8_t) Mode::kChangeInvertDisplay,
-#endif
-#if ENABLE_LED_DISPLAY
-  (uint8_t) Mode::kChangeSettingsLedOnOff,
-  (uint8_t) Mode::kChangeSettingsLedBrightness,
-#endif
+  sizeof(TIME_ZONE_MODES) / sizeof(ModeRecord),
+  TIME_ZONE_MODES
 };
 
 // ModeGroup for the Settings modes.
 const ModeGroup SETTINGS_MODE_GROUP = {
   &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(SETTINGS_MODES) / sizeof(uint8_t),
-  SETTINGS_MODES /* modes */,
-  nullptr /* childGroups */,
+  sizeof(SETTINGS_MODES) / sizeof(ModeRecord),
+  SETTINGS_MODES
 };
 
 // List of top level modes.
-const uint8_t TOP_LEVEL_MODES[] = {
-  (uint8_t) Mode::kViewDateTime,
-  (uint8_t) Mode::kViewTimeZone,
+const ModeRecord TOP_LEVEL_MODES[] = {
+  {(uint8_t) Mode::kViewDateTime, &DATE_TIME_MODE_GROUP},
+  {(uint8_t) Mode::kViewTimeZone, &TIME_ZONE_MODE_GROUP},
 #if ENABLE_DHT22
-  (uint8_t) Mode::kViewTemperature,
+  {(uint8_t) Mode::kViewTemperature, nullptr},
 #endif
-  (uint8_t) Mode::kViewSettings,
-  (uint8_t) Mode::kViewSysclock,
-  (uint8_t) Mode::kViewAbout,
-};
-
-// List of children ModeGroups for each element in TOP_LEVEL_MODES, in the same
-// order.
-const ModeGroup* const TOP_LEVEL_CHILD_GROUPS[] = {
-  &DATE_TIME_MODE_GROUP,
-  &TIME_ZONE_MODE_GROUP,
-#if ENABLE_DHT22
-  nullptr /* Mode::kViewTemperature has no submodes */,
-#endif
-  &SETTINGS_MODE_GROUP,
-  nullptr /* Mode::kViewSysclock has no submodes */,
-  nullptr /* Mode::kViewAbout has no submodes */,
+  {(uint8_t) Mode::kViewSettings, &SETTINGS_MODE_GROUP},
+  {(uint8_t) Mode::kViewSysclock, nullptr},
+  {(uint8_t) Mode::kViewAbout, nullptr},
 };
 
 // Root mode group
 const ModeGroup ROOT_MODE_GROUP = {
   nullptr /* parentGroup */,
-  sizeof(TOP_LEVEL_MODES) / sizeof(uint8_t),
-  TOP_LEVEL_MODES /* modes */,
-  TOP_LEVEL_CHILD_GROUPS /* childGroups */,
+  sizeof(TOP_LEVEL_MODES) / sizeof(ModeRecord),
+  TOP_LEVEL_MODES
 };
 
 //-----------------------------------------------------------------------------

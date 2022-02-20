@@ -156,8 +156,7 @@ class Presenter {
         SERIAL_PORT_MONITOR.println(F("displayAbout()"));
       }
       setFont(0);
-      mOled.print(F("MM: "));
-      mOled.println(F(MED_MINDER_VERSION_STRING));
+      mOled.println(F("MM: " MED_MINDER_VERSION_STRING));
       mOled.print(F("TZDB:"));
       mOled.println(zonedb::kTzDatabaseVersion);
       mOled.println(F("ATim:" ACE_TIME_VERSION_STRING));

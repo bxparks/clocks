@@ -160,6 +160,7 @@ class Presenter {
       // on re-render.
     #else
       mDisplay.clearToEOL();
+      mDisplay.println();
     #endif
     }
 
@@ -442,7 +443,7 @@ class Presenter {
       if (clockInfo.hourMode == ClockInfo::kTwelve) {
         setSize(1);
         mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
-        clearToEOL();
+        mDisplay.clearToEOL();
       }
 
       // TimeZone
@@ -450,8 +451,6 @@ class Presenter {
       setCursorUnderAmPm();
       displayTimeZoneAbbrev(dateTime);
       clearToEOL();
-
-      mDisplay.println();
     }
 
     void displayTimeWithAbbrev(const ZonedDateTime& dateTime) {
@@ -484,7 +483,7 @@ class Presenter {
 
       mDisplay.print(' ');
       displayTimeZoneAbbrev(dateTime);
-      mDisplay.println();
+      clearToEOL();
     }
 
     // Timezone abbreviation. For Manual timezone, the abbreviation is just
@@ -498,7 +497,6 @@ class Presenter {
       } else {
         mDisplay.print(tz.getAbbrev(dateTime.toEpochSeconds()));
       }
-      clearToEOL();
     }
 
     void displayDate(const ZonedDateTime& dateTime) {
@@ -545,13 +543,11 @@ class Presenter {
       }
 
       clearToEOL();
-      mDisplay.println();
     }
 
     void displayWeekday(const ZonedDateTime& dateTime) {
       mDisplay.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
       clearToEOL();
-      mDisplay.println();
     }
 
     void displayTimeZoneMode() {
@@ -601,7 +597,6 @@ class Presenter {
         mDisplay.print(F("unknown"));
       #endif
       clearToEOL();
-      mDisplay.println();
     }
 
     void displayManualTimeZone(uint8_t pos, const TimeZoneData& zone,
@@ -660,7 +655,6 @@ class Presenter {
           clearToEOL();
           break;
       }
-      mDisplay.println();
     }
 
     void displaySettingsMode() {
@@ -751,6 +745,7 @@ class Presenter {
 
       // Use F() macros for these longer strings. Seems to save both
       // flash memory and RAM.
+      mDisplay.println(F("MZC: " MULTI_ZONE_CLOCK_VERSION_STRING));
       mDisplay.print(F("TZDB:"));
       mDisplay.println(zonedb::kTzDatabaseVersion);
       mDisplay.println(F("ATim:" ACE_TIME_VERSION_STRING));
