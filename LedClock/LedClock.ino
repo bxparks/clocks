@@ -572,8 +572,7 @@ COROUTINE(checkButtons) {
 
 #if defined(ESP8266) || defined(ESP32)
 
-// Number of millis to wait for a WiFi connection before doing a software
-// reboot.
+// Number of millis to wait for WiFi connection before doing a software reboot.
 static const unsigned long REBOOT_TIMEOUT_MILLIS = 15000;
 
 // Connect to WiFi. Sometimes the board will connect instantly. Sometimes it

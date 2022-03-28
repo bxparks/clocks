@@ -4,7 +4,7 @@
 # LDFLAGS := -lz
 APP_NAME := CommandLineClock
 ARDUINO_LIBS := EpoxyEepromEsp AceCommon AceCRC AceSorting AceTime \
-	AceTimeClock AceRoutine AceWire AceUtils
+	AceTimeClock AceRoutine AceWire AceUtils EpoxyMockSTM32RTC
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 
