@@ -303,7 +303,6 @@ class Controller {
         case Mode::kChangeHour:
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
-        case Mode::kChangeTimeZoneOffset:
         case Mode::kChangeBrightness:
           mSuppressBlink = false;
           break;
@@ -359,9 +358,6 @@ class Controller {
         case Mode::kChangeHour:
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
-        case Mode::kChangeTimeZoneOffset:
-        case Mode::kChangeTimeZoneDst:
-        case Mode::kChangeHourMode:
           clockInfo = &mChangingClockInfo;
           break;
 

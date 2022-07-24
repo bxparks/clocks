@@ -504,7 +504,6 @@
 enum class Mode : uint8_t {
   kUnknown = 0, // uninitialized
 
-  kViewDateTime,
   kViewHourMinute,
   kViewSecond,
   kViewYear,
@@ -520,10 +519,6 @@ enum class Mode : uint8_t {
   kChangeHour,
   kChangeMinute,
   kChangeSecond,
-
-  kChangeTimeZoneOffset,
-  kChangeTimeZoneDst,
-  kChangeHourMode,
 
   kChangeBrightness,
 };
