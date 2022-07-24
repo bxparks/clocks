@@ -504,6 +504,7 @@
 enum class Mode : uint8_t {
   kUnknown = 0, // uninitialized
 
+  kViewCountdown, // number of days to Christmas
   kViewHourMinute,
   kViewSecond,
   kViewYear,

@@ -9,6 +9,7 @@
 
 using ace_time::DateStrings;
 using ace_time::ZonedDateTime;
+using ace_time::daysUntil;
 using ace_segment::kHexCharSpace;
 using ace_segment::kPatternSpace;
 using ace_segment::LedModule;
@@ -89,6 +90,10 @@ class Presenter {
       #endif
 
       switch ((Mode) mRenderingInfo.mode) {
+        case Mode::kViewCountdown:
+          displayCountdown(dateTime);
+          break;
+
         case Mode::kViewHourMinute:
         case Mode::kChangeHour:
         case Mode::kChangeMinute:
@@ -130,6 +135,13 @@ class Presenter {
         default:
           break;
       }
+    }
+
+    /** Display number of days until Christmas. */
+    void displayCountdown(const ZonedDateTime& dateTime) {
+      int32_t days = daysUntil(dateTime.localDateTime().localDate(), 12, 25);
+      mNumberWriter.writeDec4At(0, (uint16_t) days, kPatternSpace);
+      mClockWriter.writeColon(false);
     }
 
     void displayHourMinute(const ZonedDateTime& dateTime) {

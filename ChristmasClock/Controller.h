@@ -44,7 +44,7 @@ class Controller {
         mBrightnessMin(brightnessMin),
         mBrightnessMax(brightnessMax)
     {
-      mMode = Mode::kViewHourMinute;
+      mMode = Mode::kViewCountdown;
     }
 
     void setup() {
@@ -87,6 +87,9 @@ class Controller {
       }
 
       switch ((Mode) mMode) {
+        case Mode::kViewCountdown:
+          mMode = Mode::kViewHourMinute;
+          break;
         case Mode::kViewHourMinute:
           mMode = Mode::kViewSecond;
           break;
@@ -106,7 +109,7 @@ class Controller {
           mMode = Mode::kViewBrightness;
           break;
         case Mode::kViewBrightness:
-          mMode = Mode::kViewHourMinute;
+          mMode = Mode::kViewCountdown;
           break;
 
         case Mode::kChangeHour:
