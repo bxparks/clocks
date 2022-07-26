@@ -1,14 +1,11 @@
 /*
-A simple digital clock using:
-  * a DS3231 RTC chip
-  * a 7-segment LED display
-  * 2 push buttons
+A clock that counts down the number of days to Christmas. Uses the following
+hardware:
 
-Supported boards are:
-  * SparkFun Pro Micro
-  * STM32 Blue Pill
-  * ESP8266 (e.g. NodeMCU or D1Mini)
-  * ESP32 (e.g. devkit v1)
+  * 1 x D1 Mini
+  * 1 x DS3231 RTC chip
+  * 1 x TM1637 4-digit 7-segment LED display
+  * 2 x push buttons
 */
 
 #include "config.h"
@@ -44,7 +41,7 @@ using namespace ace_wire;
 // Configure PersistentStore
 //------------------------------------------------------------------
 
-const uint32_t kContextId = 0xbe5af950; // random contextId
+const uint32_t kContextId = 0x34ce0b3e; // random contextId
 const uint16_t kStoredInfoEepromAddress = 0;
 
 PersistentStore persistentStore(kContextId, kStoredInfoEepromAddress);
