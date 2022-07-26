@@ -571,6 +571,8 @@ COROUTINE(checkButtons) {
 //------------------------------------------------------------------
 
 #if defined(ESP8266) || defined(ESP32)
+#if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP \
+    || TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_ESP_SNTP
 
 // Number of millis to wait for WiFi connection before doing a software reboot.
 static const unsigned long REBOOT_TIMEOUT_MILLIS = 15000;
@@ -613,6 +615,7 @@ void setupWiFi() {
   }
 }
 
+#endif
 #endif
 
 //------------------------------------------------------------------
