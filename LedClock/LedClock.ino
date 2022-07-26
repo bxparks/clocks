@@ -450,7 +450,7 @@ void setupRenderingInterrupt() {
 // Create an appropriate controller/presenter pair.
 //------------------------------------------------------------------
 
-Presenter presenter(ledModule);
+Presenter presenter(zoneManager, ledModule);
 Controller controller(systemClock, persistentStore, presenter, zoneManager,
     DISPLAY_ZONE, BRIGHTNESS_LEVELS, BRIGHTNESS_MIN, BRIGHTNESS_MAX);
 
