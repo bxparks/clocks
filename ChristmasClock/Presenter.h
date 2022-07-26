@@ -7,9 +7,17 @@
 #include "config.h"
 #include "RenderingInfo.h"
 
+using ace_time::acetime_t;
+using ace_time::daysUntil;
 using ace_time::DateStrings;
 using ace_time::ZonedDateTime;
-using ace_time::daysUntil;
+using ace_time::TimeZone;
+using ace_time::TimeZoneData;
+using ace_time::ManualZoneManager;
+using ace_time::BasicZoneManager;
+using ace_time::ExtendedZoneManager;
+using ace_time::BasicZoneProcessor;
+using ace_time::ExtendedZoneProcessor;
 using ace_segment::kHexCharSpace;
 using ace_segment::kPatternSpace;
 using ace_segment::LedModule;
@@ -21,7 +29,17 @@ using ace_segment::StringWriter;
 
 class Presenter {
   public:
-    Presenter(LedModule& ledModule):
+    Presenter(
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        ManualZoneManager& zoneManager,
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+        BasicZoneManager& zoneManager,
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+        ExtendedZoneManager& zoneManager,
+      #endif
+        LedModule& ledModule
+    ):
+        mZoneManager(zoneManager),
         mLedModule(ledModule),
         mClockWriter(ledModule),
         mNumberWriter(ledModule),
@@ -89,7 +107,7 @@ class Presenter {
         SERIAL_PORT_MONITOR.println();
       #endif
 
-      switch ((Mode) mRenderingInfo.mode) {
+      switch (mRenderingInfo.mode) {
         case Mode::kViewCountdown:
           displayCountdown(dateTime);
           break;
@@ -121,11 +139,16 @@ class Presenter {
           break;
 
         case Mode::kViewWeekday: {
-          uint8_t written = mStringWriter.writeStringAt(
+          mStringWriter.clear();
+          mStringWriter.writeStringAt(
               0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));
-          mStringWriter.clearToEnd(written);
           break;
         }
+
+        case Mode::kViewTimeZone:
+        case Mode::kChangeTimeZone:
+          displayTimeZone();
+          break;
 
         case Mode::kViewBrightness:
         case Mode::kChangeBrightness:
@@ -199,6 +222,31 @@ class Presenter {
       mClockWriter.writeColon(false);
     }
 
+    void displayTimeZone() {
+      TimeZone tz = mZoneManager.createForTimeZoneData(
+          mRenderingInfo.timeZoneData);
+      acetime_t epochSeconds = mRenderingInfo.dateTime.toEpochSeconds();
+      if (shouldShowFor(Mode::kChangeTimeZone)) {
+        const char* name;
+        switch (tz.getType()) {
+          case BasicZoneProcessor::kTypeBasic:
+          case ExtendedZoneProcessor::kTypeExtended:
+            name = tz.getAbbrev(epochSeconds);
+            break;
+
+          case TimeZone::kTypeManual:
+          default:
+            name = "----";
+            break;
+        }
+        mStringWriter.clear();
+        mStringWriter.writeStringAt(0, name);
+      } else  {
+        clearDisplay();
+      }
+      mClockWriter.writeColon(false);
+    }
+
     void displayBrightness() {
       mCharWriter.writeCharAt(0, 'b');
       mCharWriter.writeCharAt(1, 'r');
@@ -220,6 +268,14 @@ class Presenter {
     // Disable copy-constructor and assignment operator
     Presenter(const Presenter&) = delete;
     Presenter& operator=(const Presenter&) = delete;
+
+  #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+    ManualZoneManager& mZoneManager;
+  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+    BasicZoneManager& mZoneManager;
+  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+    ExtendedZoneManager& mZoneManager;
+  #endif
 
     LedModule& mLedModule;
     ClockWriter<LedModule> mClockWriter;

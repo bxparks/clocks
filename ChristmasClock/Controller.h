@@ -106,6 +106,9 @@ class Controller {
           mMode = Mode::kViewWeekday;
           break;
         case Mode::kViewWeekday:
+          mMode = Mode::kViewTimeZone;
+          break;
+        case Mode::kViewTimeZone:
           mMode = Mode::kViewBrightness;
           break;
         case Mode::kViewBrightness:
@@ -177,6 +180,14 @@ class Controller {
           mMode = Mode::kChangeDay;
           break;
 
+        case Mode::kViewTimeZone:
+          mChangingClockInfo = mClockInfo;
+          initChangingClock();
+          mZoneRegistryIndex = mZoneManager.indexForZoneId(
+              mChangingClockInfo.timeZoneData.zoneId);
+          mMode = Mode::kChangeTimeZone;
+          break;
+
         case Mode::kViewBrightness:
           mMode = Mode::kChangeBrightness;
           break;
@@ -209,6 +220,11 @@ class Controller {
         case Mode::kChangeSecond:
           saveDateTime();
           mMode = Mode::kViewSecond;
+          break;
+
+        case Mode::kChangeTimeZone:
+          saveClockInfo();
+          mMode = Mode::kViewTimeZone;
           break;
 
         case Mode::kChangeBrightness:
@@ -268,6 +284,19 @@ class Controller {
           zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
 
+        case Mode::kChangeTimeZone: {
+          mSuppressBlink = true;
+          mZoneRegistryIndex++;
+          if (mZoneRegistryIndex >= mZoneManager.zoneRegistrySize()) {
+            mZoneRegistryIndex = 0;
+          }
+          TimeZone tz = mZoneManager.createForZoneIndex(mZoneRegistryIndex);
+          mChangingClockInfo.timeZoneData = tz.toTimeZoneData();
+          mChangingClockInfo.dateTime =
+              mChangingClockInfo.dateTime.convertToTimeZone(tz);
+          break;
+        }
+
         case Mode::kChangeBrightness:
           mSuppressBlink = true;
           incrementModOffset(
@@ -306,6 +335,7 @@ class Controller {
         case Mode::kChangeHour:
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
+        case Mode::kChangeTimeZone:
         case Mode::kChangeBrightness:
           mSuppressBlink = false;
           break;
@@ -361,6 +391,7 @@ class Controller {
         case Mode::kChangeHour:
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
+        case Mode::kChangeTimeZone:
           clockInfo = &mChangingClockInfo;
           break;
 
@@ -446,6 +477,11 @@ class Controller {
     Clock& mClock;
     PersistentStore& mPersistentStore;
     Presenter& mPresenter;
+
+    // Navigation
+    Mode mMode = Mode::kUnknown; // current mode
+
+    // TimeZone
   #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
     ManualZoneManager& mZoneManager;
   #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
@@ -454,6 +490,9 @@ class Controller {
     ExtendedZoneManager& mZoneManager;
   #endif
     TimeZoneData mInitialTimeZoneData;
+    uint16_t mZoneRegistryIndex;
+
+    // LED brightness
     uint8_t const mBrightnessLevels;
     uint8_t const mBrightnessMin;
     uint8_t const mBrightnessMax;
@@ -461,11 +500,10 @@ class Controller {
     ClockInfo mClockInfo; // current clock
     ClockInfo mChangingClockInfo; // the target clock
 
-    Mode mMode = Mode::kUnknown; // current mode
-
     bool mSecondFieldCleared;
-    bool mSuppressBlink; // true if blinking should be suppressed
 
+    // Handle blinking
+    bool mSuppressBlink; // true if blinking should be suppressed
     bool mBlinkShowState = true; // true means actually show
     uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
 };

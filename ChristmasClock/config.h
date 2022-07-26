@@ -182,6 +182,8 @@ enum class Mode : uint8_t {
   kChangeMinute,
   kChangeSecond,
 
+  kChangeTimeZone,
+
   kChangeBrightness,
 };
 
