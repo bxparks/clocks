@@ -1,0 +1,203 @@
+# ChristmasClock
+
+This is a countdown clock that displays the number of days until the next
+Christmas:
+
+![ChristmasClock Stacked](pics/christmasclock-stacked.jpg)
+
+I found the original item at an estate sale:
+
+![ChristmasClock Original](pics/christmasclock-original.jpg)
+
+At first glance, I thought that it automatically updated the countdown days.
+When I discovered that I had to manually update it with chalk, I laughed. This
+begged to be automated. I added a microcontroller, a DS3231 RTC, and an LED
+display like this:
+
+![ChristmasClock Front](pics/christmasclock-front.jpg)
+
+![ChristmasClock Back](pics/christmasclock-back.jpg)
+
+![ChristmasClock Unpacked Front](pics/christmasclock-unpacked-front.jpg)
+
+![ChristmasClock Unpacked Back](pics/christmasclock-unpacked-back.jpg)
+
+The hardware and software were derived from the [LedClock](../LedClock) project.
+
+## Schematic
+
+Here is the rough schematic:
+
+```
+                3V3
+                / \
+                | |
+D1Mini          R R
++-------+       | |        DS3231
+|       |       | |        +--------+
+| SCL/D1|-------+-.--------|SCL     |
+| SDA/D2|-------.-+--------|SDA     |
+|       |                  +--------+
+|       |          
+|       |                  TM1637 4-digit
+|       |                  7-segment LED
+|       |                  +--------+
+|    D5 |------------------|CLK     |
+|    D7 |------------------|DIO     |
+|       |                  +--------+
+|    D3 |----S1---+
+|    D4 |----S2---+
++-------+         |
+                  |
+                 GND
+
+R = 10k Ohms
+S1, S2 = momentary buttons
+```
+
+My TM1637 LED module already contained a pull-up resistor, so I did not add
+additional ones.
+
+## Configuration and Compiling
+
+Various pins are defined in `config.h`.
+
+If you are using the Arduino IDE (as most people probably are), the
+configuration parameters are inside the following section:
+
+```C++
+[...]
+#elif ! defined(AUNITER)
+  #warning Arduino IDE detected. Check config parameters.
+
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN D3
+  #define CHANGE_BUTTON_PIN D4
+  [...]
+#elif
+```
+
+If using [AUniter](https://github.com/bxparks/AUniter), the compilation commands
+are:
+
+```
+$ auniter verify christmasclock
+$ auniter upload christmasclock:USB0
+```
+
+## Installation
+
+The following libraries are required:
+
+* AceTime (https://github.com/bxparks/AceTime)
+* AceTimeClock (https://github.com/bxparks/AceTimeClock)
+* AceButton (https://github.com/bxparks/AceButton)
+* AceRoutine (https://github.com/bxparks/AceRoutine)
+* AceCommon (https://github.com/bxparks/AceCommon)
+* AceUtils (https://github.com/bxparks/AceUtils)
+* AceCRC (https://github.com/bxparks/AceCRC)
+* AceSegment (https://github.com/bxparks/AceSegment)
+* AceSegmentWriter (https://github.com/bxparks/AceSegmentWriter)
+
+## User Guide
+
+Once the program is uploaded and running, 2 buttons are used to set the clock:
+
+* `Mode`
+* `Change`
+
+Clicking on the `Mode` button cycles through various display modes:
+
+* Countdown Days: Number of days until the next Christmas.
+* Hour/Minute
+* Seconds
+* Year
+* Month
+* Day
+* Day of Week
+* TimeZone (PST, MST, CST, EST)
+* LED Brightness: 1 to 7
+
+The `Change` button is used only in Edit mode to change the values of various
+date, time and time zone fields.
+
+### Setting the Date and Time
+
+1. Press on the `Mode` button until the date and time are shown.
+1. Press-and-Hold the `Mode` button to enter Edit mode.
+    * The **year** field will start to blink.
+    * Release the `Mode` button.
+    * Press the `Change` button to increment the year by one.
+    * When the year goes to 2099, it will cycle back to 2000.
+    * Press-and-Hold the `Change` button to rapidly increase the year.
+    * Release the `Change` button to stop the automatic increment of the year.
+1. When the desired year is set, press the `Mode` button.
+    * The **month** will start to blink.
+    * Press the `Change` button to increment the month by one.
+    * When the month goes to 12, it will cycle back to 1.
+    * Press-and-Hold the `Change` button to rapidly increase the month.
+    * Release the `Change` button to stop the automatic increment of the month.
+1. When the desired month is set, press the `Mode` button.
+    * The **day** will start to blink.
+    * Use the `Change` button to set the **day**.
+1. When the desired day is set, press the `Mode` button.
+    * The **hour** will start to blink.
+    * Press the `Change` button to set the hour.
+1. When the desired hour is set, press the `Mode` button.
+    * The **minute** will start to blink.
+    * Press the `Change` button to set the minute.
+1. When all the date and time fields are set to the desired values,
+1. Press-and-Hold the `Mode` button to save the new values. The display should
+   no longer blink.
+
+### Setting the Time Zone (Basic and Extended TimeZone Type)
+
+If `TIME_ZONE_TYPE` is set to either one of the following in `config.h`:
+
+```C++
+#define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
+#define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
+```
+
+(The `TIME_ZONE_TYPE_MANUAL` is defined in `config.h` due to its origins from
+LedClock, this functionality is not supported in ChristmasClock.)
+
+the UTC offset and the DST shift rules are automatically calculated
+from the TZ Database using the AceTime library.
+
+The time zone can be selected using the buttons on the clock from a menu of
+choices which are compiled into the program as defined in the
+`ChristmasClock.ino` file:
+
+```C++
+  &zonedb::kZoneAmerica_Los_Angeles,
+  &zonedb::kZoneAmerica_Denver,
+  &zonedb::kZoneAmerica_Chicago,
+  &zonedb::kZoneAmerica_New_York,
+```
+
+1. Press the `Mode` button until the timezone is shown (`PST`, `MST`, `CST`,
+   or `EST`).
+1. Press-and-Hold the `Mode` button until the display starts blinking.
+1. Press the `Change` button to cycle through the time zones.
+1. Press-and-Hold the `Mode` button to save the new timezone. The display should
+   no longer blink.
+
+### Setting the LED Brightness
+
+1. Press the `Mode` button until the `br: N` screen is shown. The `N` brightness
+   value will be between `1` and `7`.
+1. Press-and-Hold the `Mode` button until the `N` starts blinking.
+   `. Press the `Change` button to increment the brightness value.
+1. Press-and-Hold the `Mode` button to save the new setting. The display should
+   no longer blink.
+
+### Persistence
+
+The LED brightness and timezone settings are preserved in EEPROM and restored
+upon reboot.
+
+The date and time values are tracked using the DS3231. Some DS3231 modules
+contain a backup battery to maintain timekeeping without power. My DS3231 module
+uses a super-capacitor which retains the timekeeping for a few days without
+power.
