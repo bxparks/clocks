@@ -2,9 +2,11 @@
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 
 APP_NAME := MultiZoneClock
-ARDUINO_LIBS := EpoxyFS EpoxyEepromEsp AceCommon AceButton AceCRC \
+ARDUINO_LIBS := EpoxyFS EpoxyEepromEsp EpoxyMockSTM32RTC \
+	EpoxyMockDigitalWriteFast \
+	AceCommon AceButton AceCRC \
 	AceSorting AceTime AceTimeClock AceTimePro AceRoutine AceUtils AceWire \
-	SSD1306Ascii EpoxyMockDigitalWriteFast
+	SSD1306Ascii
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 

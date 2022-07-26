@@ -2,9 +2,10 @@
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 
 APP_NAME := OneZoneClock
-ARDUINO_LIBS := EpoxyEepromEsp AceCommon AceCRC AceButton AceSorting \
-	AceTime AceTimeClock AceRoutine AceUtils AceWire SSD1306Ascii \
-	EpoxyMockDigitalWriteFast
+ARDUINO_LIBS := EpoxyEepromEsp EpoxyMockSTM32RTC EpoxyMockDigitalWriteFast \
+	AceCommon AceCRC AceButton AceSorting \
+	AceTime AceTimeClock AceRoutine AceUtils AceWire \
+	SSD1306Ascii
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 
