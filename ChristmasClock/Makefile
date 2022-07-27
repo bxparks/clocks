@@ -2,9 +2,19 @@
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 
 APP_NAME := ChristmasClock
-ARDUINO_LIBS := EpoxyEepromEsp EpoxyMockDigitalWriteFast EpoxyMockSTM32RTC \
-	AUnit AceCommon AceCRC AceButton AceSorting AceTime AceTimeClock \
-	AceRoutine AceUtils AceSPI AceTMI AceWire AceSegment AceSegmentWriter
+ARDUINO_LIBS := EpoxyEepromEsp EpoxyMockSTM32RTC \
+	AceButton \
+	AceCRC \
+	AceCommon \
+	AceRoutine \
+	AceSegment \
+	AceSegmentWriter \
+	AceSorting \
+	AceTMI \
+	AceTime \
+	AceTimeClock \
+	AceUtils \
+	AceWire
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 
