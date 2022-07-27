@@ -215,7 +215,7 @@ clock:
 The LED brightness can also be configured at runtime:
 
 1. Press the `Mode` button until the `br: N` screen is shown. The `N` brightness
-   value will be between `1` and `7`.
+   value will be between `0` and `7`.
 1. Press-and-Hold the `Mode` button until the `N` starts blinking.
 1. Press the `Change` button to increment the brightness value.
 1. Press-and-Hold the `Mode` button to save the new setting. The display should
