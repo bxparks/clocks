@@ -24,7 +24,7 @@ display like this:
 
 The hardware and software were derived from the [LedClock](../LedClock) project.
 
-## Schematic
+## Hardware Schematic
 
 Here is the rough schematic:
 
@@ -55,12 +55,35 @@ R = 10k Ohms
 S1, S2 = momentary buttons
 ```
 
-My TM1637 LED module already contained a pull-up resistor, so I did not add
-additional ones.
+My TM1637 LED module included 10k pull-up resistors for the CLK and DIO lines,
+so I did not add external ones.
 
-## Configuration and Compiling
+## Software
 
-Various pins are defined in `config.h`.
+### Installation
+
+Clone this repository:
+https://github.com/bxparks/clocks
+
+Install the following dependent libraries, either from the Arduino Library
+Manager or cloning directly from the GitHub repo:
+
+* AceButton (https://github.com/bxparks/AceButton)
+* AceCRC (https://github.com/bxparks/AceCRC)
+* AceCommon (https://github.com/bxparks/AceCommon)
+* AceRoutine (https://github.com/bxparks/AceRoutine)
+* AceSegment (https://github.com/bxparks/AceSegment)
+* AceSegmentWriter (https://github.com/bxparks/AceSegmentWriter)
+* AceSorting (https://github.com/bxparks/AceSorting)
+* AceTMI (https://github.com/bxparks/AceTMI)
+* AceTime (https://github.com/bxparks/AceTime)
+* AceTimeClock (https://github.com/bxparks/AceTimeClock)
+* AceUtils (https://github.com/bxparks/AceUtils)
+* AceWire (https://github.com/bxparks/AceTMI)
+
+### Configuration
+
+Various pins and timing parameters are defined in `config.h`.
 
 If you are using the Arduino IDE (as most people probably are), the
 configuration parameters are inside the following section:
@@ -77,27 +100,29 @@ configuration parameters are inside the following section:
 #elif
 ```
 
-If using [AUniter](https://github.com/bxparks/AUniter), the compilation commands
-are:
+If using [AUniter](https://github.com/bxparks/AUniter), the configuration
+parameters are defined in the `AUNITER_CHRISTMAS_CLOCK` section. The
+`auniter.ini` file should contain something like the following:
+
+```
+[boards]
+  d1mini = esp8266:esp8266:d1_mini:xtal=80,vt=flash,exception=disabled,ssl=all,eesz=4M2M,ip=lm2f,dbg=Disabled,lvl=None____,wipe=none,baud=921600
+
+[env:christmasclock]
+  board = d1mini
+  preprocessor = -D AUNITER_CHRISTMAS_CLOCK
+```
+
+### Compiling
+
+If using the Arduino IDE, compile and upload the software in the usual way.
+
+If using AUniter, use the following commands:
 
 ```
 $ auniter verify christmasclock
 $ auniter upload christmasclock:USB0
 ```
-
-## Installation
-
-The following libraries are required:
-
-* AceTime (https://github.com/bxparks/AceTime)
-* AceTimeClock (https://github.com/bxparks/AceTimeClock)
-* AceButton (https://github.com/bxparks/AceButton)
-* AceRoutine (https://github.com/bxparks/AceRoutine)
-* AceCommon (https://github.com/bxparks/AceCommon)
-* AceUtils (https://github.com/bxparks/AceUtils)
-* AceCRC (https://github.com/bxparks/AceCRC)
-* AceSegment (https://github.com/bxparks/AceSegment)
-* AceSegmentWriter (https://github.com/bxparks/AceSegmentWriter)
 
 ## User Guide
 
@@ -116,7 +141,7 @@ Clicking on the `Mode` button cycles through various display modes:
 * Day
 * Day of Week
 * TimeZone (PST, MST, CST, EST)
-* LED Brightness: 1 to 7
+* LED Brightness: 0 to 7
 
 The `Change` button is used only in Edit mode to change the values of various
 date, time and time zone fields.
@@ -188,7 +213,7 @@ choices which are compiled into the program as defined in the
 1. Press the `Mode` button until the `br: N` screen is shown. The `N` brightness
    value will be between `1` and `7`.
 1. Press-and-Hold the `Mode` button until the `N` starts blinking.
-   `. Press the `Change` button to increment the brightness value.
+1. Press the `Change` button to increment the brightness value.
 1. Press-and-Hold the `Mode` button to save the new setting. The display should
    no longer blink.
 
@@ -199,5 +224,5 @@ upon reboot.
 
 The date and time values are tracked using the DS3231. Some DS3231 modules
 contain a backup battery to maintain timekeeping without power. My DS3231 module
-uses a super-capacitor which retains the timekeeping for a few days without
-power.
+uses a 0.22F super-capacitor which retains the timekeeping for a few days
+without power.
