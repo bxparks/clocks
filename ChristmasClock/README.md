@@ -83,10 +83,11 @@ Manager or cloning directly from the GitHub repo:
 
 ### Configuration
 
-Various pins and timing parameters are defined in `config.h`.
+Most of the options (various pins and timing parameters) are defined in
+`config.h`. Some are defined in `ChristmasClock.ino`.
 
 If you are using the Arduino IDE (as most people probably are), the
-configuration parameters are inside the following section:
+configuration parameters are inside the following section in `config.h`:
 
 ```C++
 [...]
@@ -101,8 +102,9 @@ configuration parameters are inside the following section:
 ```
 
 If using [AUniter](https://github.com/bxparks/AUniter), the configuration
-parameters are defined in the `AUNITER_CHRISTMAS_CLOCK` section. The
-`auniter.ini` file should contain something like the following:
+parameters are defined in the `AUNITER_CHRISTMAS_CLOCK` section in `config.h`.
+The `auniter.ini` file used by AUniter should contain something like the
+following:
 
 ```
 [boards]
@@ -111,6 +113,27 @@ parameters are defined in the `AUNITER_CHRISTMAS_CLOCK` section. The
 [env:christmasclock]
   board = d1mini
   preprocessor = -D AUNITER_CHRISTMAS_CLOCK
+```
+
+Set the `TIME_ZONE_TYPE` parameter in `config.h` to one of the following:
+
+```C++
+#define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
+#define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
+```
+
+The UTC offset and the DST shift rules will be automatically calculated from the
+TZ Database using the AceTime library. (The `TIME_ZONE_TYPE_MANUAL` is carried
+over from the LedClock project, but this functionality is not supported in
+ChristmasClock.)
+
+The menu of timezone choices are defined in `ChristmasClock.ino`:
+
+```C++
+  &zonedb::kZoneAmerica_Los_Angeles,
+  &zonedb::kZoneAmerica_Denver,
+  &zonedb::kZoneAmerica_Chicago,
+  &zonedb::kZoneAmerica_New_York,
 ```
 
 ### Compiling
@@ -177,29 +200,8 @@ date, time and time zone fields.
 
 ### Setting the Time Zone (Basic and Extended TimeZone Type)
 
-If `TIME_ZONE_TYPE` is set to either one of the following in `config.h`:
-
-```C++
-#define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
-#define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
-```
-
-(The `TIME_ZONE_TYPE_MANUAL` is defined in `config.h` due to its origins from
-LedClock, this functionality is not supported in ChristmasClock.)
-
-the UTC offset and the DST shift rules are automatically calculated
-from the TZ Database using the AceTime library.
-
-The time zone can be selected using the buttons on the clock from a menu of
-choices which are compiled into the program as defined in the
-`ChristmasClock.ino` file:
-
-```C++
-  &zonedb::kZoneAmerica_Los_Angeles,
-  &zonedb::kZoneAmerica_Denver,
-  &zonedb::kZoneAmerica_Chicago,
-  &zonedb::kZoneAmerica_New_York,
-```
+The time zone can be selected from a menu of choices using the buttons on the
+clock:
 
 1. Press the `Mode` button until the timezone is shown (`PST`, `MST`, `CST`,
    or `EST`).
@@ -209,6 +211,8 @@ choices which are compiled into the program as defined in the
    no longer blink.
 
 ### Setting the LED Brightness
+
+The LED brightness can also be configured at runtime:
 
 1. Press the `Mode` button until the `br: N` screen is shown. The `N` brightness
    value will be between `1` and `7`.
@@ -222,7 +226,7 @@ choices which are compiled into the program as defined in the
 The LED brightness and timezone settings are preserved in EEPROM and restored
 upon reboot.
 
-The date and time values are tracked using the DS3231. Some DS3231 modules
-contain a backup battery to maintain timekeeping without power. My DS3231 module
-uses a 0.22F super-capacitor which retains the timekeeping for a few days
-without power.
+The date and time values are maintained by the DS3231 RTC module. Some DS3231
+modules contain a backup battery to maintain timekeeping without power. This
+works well until the battery dies. I added a 0.22F super-capacitor instead which
+is sufficient to retain the timekeeping function for a few days without power.
