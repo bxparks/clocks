@@ -9,7 +9,6 @@ hardware:
 */
 
 #include "config.h"
-#include <AceSPI.h>
 #include <AceTMI.h>
 #include <AceWire.h>
 #include <AceSegment.h>
@@ -20,20 +19,11 @@ hardware:
 #include "PersistentStore.h"
 #include "Controller.h"
 
-#if defined(ARDUINO_ARCH_AVR) || defined(EPOXY_DUINO)
-#include <digitalWriteFast.h>
-#include <ace_spi/SimpleSpiFastInterface.h>
-#include <ace_tmi/SimpleTmi1637FastInterface.h>
-#include <ace_wire/SimpleWireFastInterface.h>
-#include <ace_segment/direct/DirectFast4Module.h>
-#endif
-
 using namespace ace_segment;
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
-using namespace ace_spi;
 using namespace ace_tmi;
 using namespace ace_wire;
 
@@ -195,8 +185,8 @@ const uint8_t FRAMES_PER_SECOND = 60;
 
   const uint8_t NUM_DIGITS = 4;
   Tm1637Module<TmiInterface, NUM_DIGITS> ledModule(tmiInterface);
-  const uint8_t BRIGHTNESS_LEVELS = 7;
-  const uint8_t BRIGHTNESS_MIN = 1;
+  const uint8_t BRIGHTNESS_LEVELS = 8;
+  const uint8_t BRIGHTNESS_MIN = 0;
   const uint8_t BRIGHTNESS_MAX = 7;
 
 #else
