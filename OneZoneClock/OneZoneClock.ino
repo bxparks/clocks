@@ -253,7 +253,7 @@ void setupDht22() {
 
 #if ENABLE_LED_DISPLAY
 
-TmiInterface tmiInterface(DIO_PIN, CLK_PIN, BIT_DELAY);
+TmiInterface tmiInterface(DIO_PIN, CLK_PIN, TMI_BIT_DELAY);
 LedDisplay ledModule(tmiInterface);
 const uint8_t BRIGHTNESS_LEVELS = 7;
 const uint8_t BRIGHTNESS_MIN = 1;
