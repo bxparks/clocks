@@ -527,6 +527,12 @@ void setup() {
 
   SERIAL_PORT_MONITOR.begin(115200);
   while (!SERIAL_PORT_MONITOR); // Wait until ready - Leonardo/Micro
+
+#if defined(EPOXY_DUINO)
+  SERIAL_PORT_MONITOR.setLineModeUnix();
+  enableTerminalEcho();
+#endif
+
   SERIAL_PORT_MONITOR.println(F("setup(): begin"));
 
   SERIAL_PORT_MONITOR.print(F("sizeof(StoredInfo): "));
