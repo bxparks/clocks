@@ -294,27 +294,9 @@ class Controller {
 
         case Mode::kChangeYear:
           mSuppressBlink = true;
-          #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-            zoned_date_time_mutation::incrementYear(
-                mChangingClockInfo.dateTime);
-          #else
-            {
-              auto& dateTime = mChangingClockInfo.dateTime;
-              int16_t year = dateTime.year();
-              year++;
-              // Keep the year within the bounds of zonedb or zonedbx files.
-              #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-              if (year >= zonedb::kZoneContext.untilYear) {
-                year = zonedb::kZoneContext.startYear;
-              }
-              #else
-              if (year >= zonedbx::kZoneContext.untilYear) {
-                year = zonedbx::kZoneContext.startYear;
-              }
-              #endif
-              dateTime.year(year);
-            }
-          #endif
+          // Keep year between [2000,2100).
+          zoned_date_time_mutation::incrementYear(
+              mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeMonth:
           mSuppressBlink = true;

@@ -354,7 +354,7 @@
   #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_WIRE
   #define SDA_PIN SDA
   #define SCL_PIN SCL
-  #define WIRE_BIT_DELAY 4
+  #define WIRE_BIT_DELAY 0
 
   // Button parameters
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -366,7 +366,7 @@
     #define DISPLAY_TYPE DISPLAY_TYPE_OLED
     #define OLED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_WIRE
     #define OLED_INITIAL_CONTRAST 0
-    #define OLED_REMAP false
+    #define OLED_REMAP true
   #else
     #define DISPLAY_TYPE DISPLAY_TYPE_LCD
     #define LCD_SPI_DATA_COMMAND_PIN D4
