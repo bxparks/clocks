@@ -428,7 +428,7 @@ void setupPersistentStore() {
     DISPLAY_ZONE, &ROOT_MODE_GROUP, &dht);
 #else
   Controller controller(systemClock, persistentStore, presenter, zoneManager,
-    DISPLAY_ZONE, &ROOT_MODE_GROUP, nullptr /*dht*/);
+    DISPLAY_ZONE, &ROOT_MODE_GROUP);
 #endif
 
 void setupController(bool factoryReset) {

@@ -199,7 +199,9 @@ class Controller {
     ExtendedZoneProcessorCache<1> mExtendedZoneProcessorCache;
     ExtendedZoneManager mExtendedZoneManager;
   #endif
+  #if ! ENABLE_TIME_ZONE_TYPE_BASIC && ! ENABLE_TIME_ZONE_TYPE_EXTENDED
     ManualZoneManager mManualZoneManager;
+  #endif
 
     TimeZone mTimeZone;
     StoredInfo mStoredInfo;

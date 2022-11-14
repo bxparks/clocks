@@ -168,8 +168,6 @@ void setupClocks() {
 // Configure LED display using AceSegment.
 //------------------------------------------------------------------
 
-const uint8_t FRAMES_PER_SECOND = 60;
-
 // The chain of resources.
 #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_TM1637
   #if LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_TMI

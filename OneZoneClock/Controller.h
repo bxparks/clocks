@@ -50,27 +50,31 @@ class Controller {
      * @param dht pointer to DHT22 object if enabled
      */
     Controller(
-        SystemClock& clock,
-        PersistentStore& persistentStore,
-        Presenter& presenter,
+        SystemClock& clock
+        , PersistentStore& persistentStore
+        , Presenter& presenter
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        ManualZoneManager& zoneManager,
+        , ManualZoneManager& zoneManager
       #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-        BasicZoneManager& zoneManager,
+        , BasicZoneManager& zoneManager
       #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
-        ExtendedZoneManager& zoneManager,
+        , ExtendedZoneManager& zoneManager
       #endif
-        TimeZoneData initialTimeZoneData,
-        ModeGroup const* rootModeGroup,
-        DHT* dht
+        , TimeZoneData initialTimeZoneData
+        , ModeGroup const* rootModeGroup
+      #if ENABLE_DHT22
+        , DHT* dht
+      #endif
     ) :
-        mClock(clock),
-        mPersistentStore(persistentStore),
-        mPresenter(presenter),
-        mZoneManager(zoneManager),
-        mInitialTimeZoneData(initialTimeZoneData),
-        mNavigator(rootModeGroup),
-        mDht(dht)
+        mClock(clock)
+        , mPersistentStore(persistentStore)
+        , mPresenter(presenter)
+        , mZoneManager(zoneManager),
+        mInitialTimeZoneData(initialTimeZoneData)
+        , mNavigator(rootModeGroup)
+      #if ENABLE_DHT22
+        , mDht(dht)
+      #endif
     {}
 
     void setup(bool factoryReset) {
@@ -675,7 +679,9 @@ class Controller {
   #endif
     TimeZoneData mInitialTimeZoneData;
     ModeNavigator mNavigator;
+  #if ENABLE_DHT22
     DHT* const mDht;
+  #endif
 
     ClockInfo mClockInfo; // current clock
     ClockInfo mChangingClockInfo; // the target clock
