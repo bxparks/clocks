@@ -7,7 +7,7 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
-#define WORLD_CLOCK_VERSION_STRING "2022.02.19"
+#define WORLD_CLOCK_VERSION_STRING "2022.11.16"
 
 #ifndef ENABLE_SERIAL_DEBUG
 #define ENABLE_SERIAL_DEBUG 0

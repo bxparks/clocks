@@ -7,7 +7,7 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
-#define MULTI_ZONE_CLOCK_VERSION_STRING "2022.02.19"
+#define MULTI_ZONE_CLOCK_VERSION_STRING "2022.11.16"
 
 // Set to >= 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
