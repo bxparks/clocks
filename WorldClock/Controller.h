@@ -104,9 +104,9 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
-      performLeavingModeAction();
+      // performModeButtonPressAction() - does nothing in this app
       mNavigator.changeMode();
-      performEnteringModeAction();
+      performNewModeRecordAction();
     }
 
     /** Toggle edit mode. The editable field will start blinking. */
@@ -115,11 +115,10 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
       }
 
-      performLeavingModeAction();
-      performLeavingModeGroupAction();
+      performModeLongPressAction();
       mNavigator.changeGroup();
-      performEnteringModeGroupAction();
-      performEnteringModeAction();
+      performNewModeGroupAction();
+      performNewModeRecordAction();
     }
 
     /**
@@ -148,12 +147,11 @@ class Controller {
         case Mode::kChangeTimeZoneDst1:
         case Mode::kChangeTimeZoneDst2:
       #endif
-          // Throw away the changes and just change the mode group.
-          //performLeavingModeAction();
-          //performLeavingModeGroupAction();
+          // Don't perform any action, throw away the changes and just change
+          // the mode group.
           mNavigator.changeGroup();
-          performEnteringModeGroupAction();
-          performEnteringModeAction();
+          performNewModeGroupAction();
+          performNewModeRecordAction();
           break;
 
         default:
@@ -161,21 +159,17 @@ class Controller {
       }
     }
 
-    void performEnteringModeAction() {
+    /** Perform the action of the current ModeRecord. */
+    void performNewModeRecordAction() {
       if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
+        SERIAL_PORT_MONITOR.println(F("performNewModeRecordAction()"));
       }
     }
 
-    void performLeavingModeAction() {
+    /** Do action associated with entering a ModeGroup due to a LongPress. */
+    void performNewModeGroupAction() {
       if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("performLeavingModeAction()"));
-      }
-    }
-
-    void performEnteringModeGroupAction() {
-      if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
+        SERIAL_PORT_MONITOR.println(F("performNewModeGroupAction()"));
       }
 
       // Update mChangingDateTime for all modes. Even when changing only the
@@ -187,9 +181,9 @@ class Controller {
       mSecondFieldCleared = false;
     }
 
-    void performLeavingModeGroupAction() {
+    void performModeLongPressAction() {
       if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
+        SERIAL_PORT_MONITOR.println(F("performModeLongPressAction()"));
       }
 
       switch ((Mode) mNavigator.modeId()) {

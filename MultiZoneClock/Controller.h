@@ -100,14 +100,14 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
-      performLeavingModeAction();
       mNavigator.changeMode();
-      performEnteringModeAction();
+      performNewModeRecordAction();
     }
 
-    void performEnteringModeAction() {
+    /** Perform the action of the current ModeRecord. */
+    void performNewModeRecordAction() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("performEnteringModeAction()"));
+        SERIAL_PORT_MONITOR.println(F("performNewModeRecordAction()"));
       }
 
       switch ((Mode) mNavigator.modeId()) {
@@ -156,22 +156,15 @@ class Controller {
       }
     }
 
-    void performLeavingModeAction() {
-      if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("performLeavingModeAction()"));
-      }
-    }
-
     void handleModeButtonLongPress() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
       }
 
-      performLeavingModeAction();
-      performLeavingModeGroupAction();
+      performModeLongPressAction();
       mNavigator.changeGroup();
-      performEnteringModeGroupAction();
-      performEnteringModeAction();
+      performNewModeGroupAction();
+      performNewModeRecordAction();
     }
 
     /**
@@ -214,11 +207,10 @@ class Controller {
         case Mode::kChangeInvertDisplay:
       #endif
           // Throw away the changes and just change the mode group.
-          //performLeavingModeAction();
-          //performLeavingModeGroupAction();
+          //performModeLongPressAction();
           mNavigator.changeGroup();
-          performEnteringModeGroupAction();
-          performEnteringModeAction();
+          performNewModeGroupAction();
+          performNewModeRecordAction();
           break;
 
         default:
@@ -227,9 +219,9 @@ class Controller {
     }
 
     /** Do action associated with entering a ModeGroup due to a LongPress. */
-    void performEnteringModeGroupAction() {
+    void performNewModeGroupAction() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("performEnteringModeGroupAction()"));
+        SERIAL_PORT_MONITOR.println(F("performNewModeGroupAction()"));
       }
 
       switch ((Mode) mNavigator.modeId()) {
@@ -269,10 +261,10 @@ class Controller {
       }
     }
 
-    /** Do action associated with leaving a ModeGroup due to a LongPress. */
-    void performLeavingModeGroupAction() {
+    /** Do action associated with the given ModeGroup due to a LongPress. */
+    void performModeLongPressAction() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("performLeavingModeGroupAction()"));
+        SERIAL_PORT_MONITOR.println(F("performModeLongPressAction()"));
       }
 
       switch ((Mode) mNavigator.modeId()) {
