@@ -18,6 +18,7 @@ using ace_time::BasicZoneManager;
 using ace_time::ExtendedZoneManager;
 using ace_time::BasicZoneProcessor;
 using ace_time::ExtendedZoneProcessor;
+using ace_time::ZonedExtra;
 using ace_segment::kHexCharSpace;
 using ace_segment::kPatternSpace;
 using ace_segment::LedModule;
@@ -228,10 +229,12 @@ class Presenter {
       acetime_t epochSeconds = mRenderingInfo.dateTime.toEpochSeconds();
       if (shouldShowFor(Mode::kChangeTimeZone)) {
         const char* name;
+        ZonedExtra ze;
         switch (tz.getType()) {
           case BasicZoneProcessor::kTypeBasic:
           case ExtendedZoneProcessor::kTypeExtended:
-            name = tz.getAbbrev(epochSeconds);
+            ze = ZonedExtra::forEpochSeconds(epochSeconds, tz);
+            name = ze.abbrev();
             break;
 
           case TimeZone::kTypeManual:

@@ -495,7 +495,9 @@ class Presenter {
       if (tz.getType() == TimeZone::kTypeManual) {
         tz.printShortTo(mDisplay);
       } else {
-        mDisplay.print(tz.getAbbrev(dateTime.toEpochSeconds()));
+        ZonedExtra ze = ZonedExtra::forEpochSeconds(
+            dateTime.toEpochSeconds(), tz);
+        mDisplay.print(ze.abbrev());
       }
     }
 

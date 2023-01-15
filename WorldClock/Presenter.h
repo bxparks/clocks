@@ -240,8 +240,9 @@ class Presenter {
       clearToEOL();
 
       // place name
-      acetime_t epochSeconds = dateTime.toEpochSeconds();
-      mOled.print(dateTime.timeZone().getAbbrev(epochSeconds));
+      ZonedExtra ze = ZonedExtra::forEpochSeconds(
+          mRenderingInfo.now, dateTime.timeZone());
+      mOled.print(ze.abbrev());
       mOled.print(' ');
       mOled.print('(');
       mOled.print(clockInfo.name);
@@ -326,7 +327,9 @@ class Presenter {
       clearToEOL();
 
       // abbreviation and place name
-      mOled.print(dateTime.timeZone().getAbbrev(mRenderingInfo.now));
+      ZonedExtra ze = ZonedExtra::forEpochSeconds(
+          mRenderingInfo.now, dateTime.timeZone());
+      mOled.print(ze.abbrev());
       mOled.print(' ');
       mOled.print('(');
       mOled.print(clockInfo.name);
