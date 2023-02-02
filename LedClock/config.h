@@ -396,6 +396,26 @@
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
 
+// EzSBC ESP32 board in a box, with OLED and TM1637
+#elif defined(AUNITER_ESP32)
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN 2
+  #define CHANGE_BUTTON_PIN 4
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_WIRE
+  #define SDA_PIN SDA
+  #define SCL_PIN SCL
+  #define WIRE_BIT_DELAY 1
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_TM1637
+  #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_TMI
+  #define CLK_PIN 33
+  #define DIO_PIN 32
+  #define TMI_BIT_DELAY 4
+
+// ESP32 dev board using TM1637
 #elif defined(AUNITER_ESP32_TM1637)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
@@ -420,6 +440,7 @@
   #define DIO_PIN 13
   #define TMI_BIT_DELAY 100
 
+// ESP32 dev board using MAX7219
 #elif defined(AUNITER_ESP32_MAX7219)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
@@ -444,6 +465,7 @@
   #define DATA_PIN 13
   #define CLOCK_PIN 14
 
+// ESP32 dev board using HT16K33
 #elif defined(AUNITER_ESP32_HT16K33)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
@@ -469,6 +491,7 @@
   #define SCL_PIN SCL
   #define WIRE_BIT_DELAY 4
 
+// ESP32 dev board using 74HC595
 #elif defined(AUNITER_ESP32_HC595)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
   #define MODE_BUTTON_PIN 0
