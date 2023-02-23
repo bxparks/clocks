@@ -106,8 +106,8 @@
   #define ENABLE_LOW_POWER 0
   #define TIME_PROVIDER TIME_PROVIDER_NTP
   #define OLED_REMAP false
-  #define MODE_BUTTON_PIN 2
-  #define CHANGE_BUTTON_PIN 4
+  #define MODE_BUTTON_PIN 15
+  #define CHANGE_BUTTON_PIN 14
 #else
   #error Unsupported AUNITER environment
 #endif
