@@ -4,12 +4,12 @@ package main
 
 import (
 	//"github.com/bxparks/AceTimeGo/acetime"
+	"github.com/bxparks/AceTimeGo/acetime"
+	"github.com/bxparks/AceTimeGo/zonedb"
 	"gitlab.com/bxparks/coding/tinygo/button"
 	"gitlab.com/bxparks/coding/tinygo/ds3231"
 	"gitlab.com/bxparks/coding/tinygo/segwriter"
 	"gitlab.com/bxparks/coding/tinygo/tm1637"
-	"github.com/bxparks/AceTimeGo/acetime"
-	"github.com/bxparks/AceTimeGo/zonedb"
 	"machine"
 	"time"
 	"tinygo.org/x/drivers/i2csoft"
@@ -63,7 +63,7 @@ var lastRTCMillis uint16
 
 func syncRTC() {
 	millis := uint16(time.Now().UnixMilli())
-	if millis - lastRTCMillis > 100 {
+	if millis-lastRTCMillis > 100 {
 		lastRTCMillis = millis
 		dt, err := rtc.ReadTime()
 		if err != nil {
@@ -77,7 +77,7 @@ func syncRTC() {
 			dt.Hour,
 			dt.Minute,
 			dt.Second,
-			0 /*Fold*/,
+			0, /*Fold*/
 		}
 		clockInfo.dateTime = acetime.NewZonedDateTimeFromLocalDateTime(&ldt, &tz)
 		updateDisplay()
@@ -89,15 +89,15 @@ func syncRTC() {
 //-----------------------------------------------------------------------------
 
 var clockInfo = ClockInfo{
-	hourMode: hourMode24,
-	clockMode: clockModeHourMinute,
+	hourMode:   hourMode24,
+	clockMode:  clockModeHourMinute,
 	brightness: 1,
 }
 
 var prevClockInfo ClockInfo
 
 func nextClockMode() {
-	clockInfo.clockMode = ClockMode(uint8(clockInfo.clockMode + 1) % 5)
+	clockInfo.clockMode = ClockMode(uint8(clockInfo.clockMode+1) % 5)
 	println("clockMode: ", clockInfo.clockMode)
 }
 

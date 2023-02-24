@@ -23,7 +23,7 @@ const (
 
 type ClockInfo struct {
 	hourMode   HourMode              // 12/24 mode
-	clockMode  ClockMode						 // clock display mode
+	clockMode  ClockMode             // clock display mode
 	brightness uint8                 // [0,7] for Tm1637Display
 	zoneId     uint32                // desired timeZoneData.
 	dateTime   acetime.ZonedDateTime // DateTime
