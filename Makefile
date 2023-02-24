@@ -16,10 +16,10 @@ clean:
 #------------------------------------------------------------------------------
 
 # Use TinyGo to compile to ESP32.
-$(CMD_NAME).esp32.out: $(CMD_NAME).go Makefile
+$(CMD_NAME).esp32.out: $(CMD_NAME).go clockinfo.go Makefile
 	tinygo build \
 		-size full \
-		-print-allocs=bxparks \
+		-print-allocs=.*bxparks.* \
 		-target=esp32-coreboard-v2 \
-		-o $@ $< \
+		-o $@ \
 		> $(CMD_NAME).esp32.size.txt
