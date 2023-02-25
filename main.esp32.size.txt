@@ -1,26 +1,25 @@
    code  rodata    data     bss |   flash     ram | package
 ------------------------------- | --------------- | -------
-   1982     290       0      14 |    2272      14 | (unknown)
+   2054     289       0       6 |    2343       6 | (unknown)
       0       0       0    4096 |       0    4096 | C stack
      67       0       0       0 |      67       0 | Go interface method
      66       0       0       0 |      66       0 | device/esp
-   5832      34       0       0 |    5866       0 | github.com/bxparks/AceTimeGo/acetime
-    204       0       0       0 |     204       0 | github.com/bxparks/AceTimeGo/strbuild
+   5515      24       0       0 |    5539       0 | github.com/bxparks/AceTimeGo/acetime
       0    9400       0       0 |    9400       0 | github.com/bxparks/AceTimeGo/zonedb
-    190       0       0       0 |     190       0 | github.com/bxparks/AceTimeGo/zoneinfo
-    985       0       0       0 |     985       0 | gitlab.com/bxparks/coding/tinygo/button
-    407       0       0       0 |     407       0 | gitlab.com/bxparks/coding/tinygo/ds3231
-    267      18       0       0 |     285       0 | gitlab.com/bxparks/coding/tinygo/segwriter
+    193       0       0       0 |     193       0 | github.com/bxparks/AceTimeGo/zoneinfo
+   1000       0       0       0 |    1000       0 | gitlab.com/bxparks/coding/tinygo/button
+    405       0       0       0 |     405       0 | gitlab.com/bxparks/coding/tinygo/ds3231
+    233      18       0       0 |     251       0 | gitlab.com/bxparks/coding/tinygo/segwriter
     473       0       0       0 |     473       0 | gitlab.com/bxparks/coding/tinygo/tm1637
      60       0       0       0 |      60       0 | internal/bytealg
     331      24       0       8 |     355       8 | internal/task
     601       0       0       0 |     601       0 | machine
-   1680     165    2104       8 |    3949    2112 | main
-   2247     128       0      58 |    2375      58 | runtime
+   1849     136    2104      96 |    4089    2200 | main
+   2248     128       0      58 |    2376      58 | runtime
      55       0       0       0 |      55       0 | runtime/interrupt
     141       0       0       0 |     141       0 | runtime/volatile
-    415     108       0       0 |     523       0 | strings
-    195       0       0       0 |     195       0 | time
-   1020      32       8       0 |    1060       8 | tinygo.org/x/drivers/i2csoft
+    365     108       0       0 |     473       0 | strings
+   2051       0       0      64 |    2051      64 | time
+   1015      32       8       0 |    1055       8 | tinygo.org/x/drivers/i2csoft
 ------------------------------- | --------------- | -------
-  17218   10199    2112    4184 |   29529    6296 | total
+  18722   10159    2112    4328 |   30993    6440 | total

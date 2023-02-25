@@ -35,13 +35,14 @@ func setupDisplay() {
 	tm.Clear()
 }
 
-var lastFlushMillis uint16
+var lastFlushTime = time.Now()
 
 // Flush LED display every 100 millis
 func flushDisplay() {
-	millis := uint16(time.Now().UnixMilli())
-	if millis-lastFlushMillis > 100 {
-		lastFlushMillis = millis
+	now := time.Now()
+	elapsed := now.Sub(lastFlushTime)
+	if elapsed.Milliseconds() > 100 {
+		lastFlushTime = now
 		tm.Flush()
 	}
 }
@@ -60,12 +61,13 @@ func setupRTC() {
 	//rtc.SetTime(dt)
 }
 
-var lastRTCMillis uint16
+var lastSyncRTCTime = time.Now()
 
 func syncRTC() {
-	millis := uint16(time.Now().UnixMilli())
-	if millis-lastRTCMillis > 100 {
-		lastRTCMillis = millis
+	now := time.Now()
+	elapsed := now.Sub(lastSyncRTCTime)
+	if elapsed.Milliseconds() > 100 {
+		lastSyncRTCTime = now
 		controller.syncRTC()
 	}
 }
@@ -77,12 +79,13 @@ func syncRTC() {
 var presenter = NewPresenter(&numWriter)
 var controller = NewController(&presenter, &rtc)
 
-var lastUpdateDisplayMillis uint16
+var lastUpdateDisplayTime = time.Now()
 
 func updateDisplay() {
-	millis := uint16(time.Now().UnixMilli())
-	if millis-lastUpdateDisplayMillis > 100 {
-		lastUpdateDisplayMillis = millis
+	now := time.Now()
+	elapsed := now.Sub(lastUpdateDisplayTime)
+	if elapsed.Milliseconds() > 100 {
+		lastUpdateDisplayTime = now
 		presenter.updateDisplay()
 	}
 }
@@ -142,13 +145,14 @@ func setupButtons() {
 	config.SetFeature(button.FeatureSuppressAfterRepeatPress)
 }
 
-var lastButtonMillis uint16
+var lastCheckButtonsTime = time.Now()
 
 // Check buttons every 5 milliseconds
 func checkButtons() {
-	millis := uint16(time.Now().UnixMilli())
-	if millis-lastButtonMillis > 5 {
-		lastButtonMillis = millis
+	now := time.Now()
+	elapsed := now.Sub(lastCheckButtonsTime)
+	if elapsed.Milliseconds() > 5 {
+		lastCheckButtonsTime = now
 		modeButton.Check()
 		changeButton.Check()
 	}
