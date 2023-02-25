@@ -16,11 +16,11 @@ func NewPresenter(numWriter *segwriter.NumberWriter) Presenter {
 	}
 }
 
-func (p *Presenter) setClockInfo(info *ClockInfo) {
+func (p *Presenter) SetClockInfo(info *ClockInfo) {
 	p.currInfo = *info
 }
 
-func (p *Presenter) updateDisplay() {
+func (p *Presenter) UpdateDisplay() {
 	if p.prevInfo == p.currInfo {
 		return
 	}

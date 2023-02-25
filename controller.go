@@ -24,7 +24,7 @@ func NewController(presenter *Presenter, rtc *ds3231.Device) Controller {
 	}
 }
 
-func (c *Controller) handleModePress() {
+func (c *Controller) HandleModePress() {
 	switch c.currInfo.clockMode {
 	case modeViewYear:
 		c.currInfo.clockMode = modeViewMonth
@@ -56,7 +56,7 @@ func (c *Controller) handleModePress() {
 	c.updatePresenter()
 }
 
-func (c *Controller) handleModeLongPress() {
+func (c *Controller) HandleModeLongPress() {
 	switch c.currInfo.clockMode {
 	// Change to edit mode
 	case modeViewYear:
@@ -100,7 +100,7 @@ func (c *Controller) handleModeLongPress() {
 	c.updatePresenter()
 }
 
-func (c *Controller) handleChangePress() {
+func (c *Controller) HandleChangePress() {
 	switch c.currInfo.clockMode {
 	case modeChangeYear:
 		c.changingInfo.dateTime.Year++
@@ -138,7 +138,7 @@ func (c *Controller) handleChangePress() {
 	c.updatePresenter()
 }
 
-func (c *Controller) syncRTC() {
+func (c *Controller) SyncRTC() {
 	dt, err := c.rtc.ReadTime()
 	if err != nil {
 		return
@@ -191,5 +191,5 @@ func (c *Controller) updatePresenter() {
 	default:
 		clockInfo = &c.currInfo
 	}
-	c.presenter.setClockInfo(clockInfo)
+	c.presenter.SetClockInfo(clockInfo)
 }

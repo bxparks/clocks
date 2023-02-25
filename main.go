@@ -68,7 +68,7 @@ func syncRTC() {
 	elapsed := now.Sub(lastSyncRTCTime)
 	if elapsed.Milliseconds() > 100 {
 		lastSyncRTCTime = now
-		controller.syncRTC()
+		controller.SyncRTC()
 	}
 }
 
@@ -86,7 +86,7 @@ func updateDisplay() {
 	elapsed := now.Sub(lastUpdateDisplayTime)
 	if elapsed.Milliseconds() > 100 {
 		lastUpdateDisplayTime = now
-		presenter.updateDisplay()
+		presenter.UpdateDisplay()
 	}
 }
 
@@ -114,16 +114,16 @@ func (h *ButtonHandler) Handle(b *button.Button, e button.Event, state bool) {
 		switch e {
 		case button.EventReleased:
 			println("Mode Pressed")
-			controller.handleModePress()
+			controller.HandleModePress()
 		case button.EventLongPressed:
-			controller.handleModeLongPress()
+			controller.HandleModeLongPress()
 		default:
 		}
 	case changePin:
 		switch e {
 		case button.EventPressed, button.EventRepeatPressed:
 			println("Change Pressed")
-			controller.handleChangePress()
+			controller.HandleChangePress()
 		default:
 		}
 	default:
