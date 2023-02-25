@@ -52,6 +52,7 @@ func (c *Controller) handleModePress() {
 	}
 	println("Controller: clockMode: ", c.currInfo.clockMode)
 
+	c.changingInfo.clockMode = c.currInfo.clockMode
 	c.updatePresenter()
 }
 
@@ -76,25 +77,64 @@ func (c *Controller) handleModeLongPress() {
 
 	// Save edit and change back to normal mode.
 	case modeChangeYear:
-		c.currInfo = c.changingInfo
+		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewYear
 	case modeChangeMonth:
-		c.currInfo = c.changingInfo
+		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewMonth
 	case modeChangeDay:
-		c.currInfo = c.changingInfo
+		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewDay
 	case modeChangeHour:
-		c.currInfo = c.changingInfo
+		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewHourMinute
 	case modeChangeMinute:
-		c.currInfo = c.changingInfo
+		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewHourMinute
 	case modeChangeSecond:
-		c.currInfo = c.changingInfo
+		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewSecond
 	}
 
+	c.changingInfo.clockMode = c.currInfo.clockMode
+	c.updatePresenter()
+}
+
+func (c *Controller) handleChangePress() {
+	switch c.currInfo.clockMode {
+	case modeChangeYear:
+		c.changingInfo.dateTime.Year++
+		if c.changingInfo.dateTime.Year >= 2100 {
+			c.changingInfo.dateTime.Year = 2000
+		}
+	case modeChangeMonth:
+		c.changingInfo.dateTime.Month++
+		if c.changingInfo.dateTime.Month > 12 {
+			c.changingInfo.dateTime.Month = 1
+		}
+	case modeChangeDay:
+		c.changingInfo.dateTime.Day++
+		if c.changingInfo.dateTime.Day > 31 {
+			c.changingInfo.dateTime.Day = 1
+		}
+	case modeChangeHour:
+		c.changingInfo.dateTime.Hour++
+		if c.changingInfo.dateTime.Hour >= 24 {
+			c.changingInfo.dateTime.Hour = 0
+		}
+	case modeChangeMinute:
+		c.changingInfo.dateTime.Minute++
+		if c.changingInfo.dateTime.Minute >= 60 {
+			c.changingInfo.dateTime.Minute = 0
+		}
+	case modeChangeSecond:
+		c.changingInfo.dateTime.Second++
+		if c.changingInfo.dateTime.Second >= 60 {
+			c.changingInfo.dateTime.Second = 0
+		}
+	}
+
+	c.changingInfo.clockMode = c.currInfo.clockMode
 	c.updatePresenter()
 }
 
@@ -116,6 +156,29 @@ func (c *Controller) syncRTC() {
 	zdt := acetime.NewZonedDateTimeFromLocalDateTime(&ldt, &tz)
 	c.currInfo.dateTime = zdt
 	c.updatePresenter()
+}
+
+func (c *Controller) saveClockInfo() {
+	c.currInfo = c.changingInfo
+	c.saveRTC(&c.currInfo)
+}
+
+func (c *Controller) saveRTC(info *ClockInfo) {
+	println("saveRTC()")
+	ldt := info.dateTime.LocalDateTime()
+	dt := ds3231.DateTime{
+		Year:    uint8(ldt.Year - 2000),
+		Month:   ldt.Month,
+		Day:     ldt.Day,
+		Hour:    ldt.Hour,
+		Minute:  ldt.Minute,
+		Second:  ldt.Second,
+		Weekday: acetime.LocalDateToDayOfWeek(ldt.Year, ldt.Month, ldt.Day),
+	}
+	err := c.rtc.SetTime(dt)
+	if err != nil {
+		println("saveRTC(): Error writing to RTC")
+	}
 }
 
 // Update the presenter

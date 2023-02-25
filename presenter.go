@@ -29,23 +29,22 @@ func (p *Presenter) updateDisplay() {
 	zdt := &p.currInfo.dateTime
 
 	switch p.currInfo.clockMode {
-	case modeViewYear:
+	case modeViewYear, modeChangeYear:
 		p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
-	case modeViewMonth:
+	case modeViewMonth, modeChangeMonth:
 		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
 		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 		p.numWriter.WriteDec2(2, zdt.Month, 0)
-	case modeViewDay:
+	case modeViewDay, modeChangeDay:
 		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
 		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 		p.numWriter.WriteDec2(2, zdt.Day, 0)
-	case modeViewHourMinute:
+	case modeViewHourMinute, modeChangeHour, modeChangeMinute:
 		p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
-	case modeViewSecond:
+	case modeViewSecond, modeChangeSecond:
 		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
 		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 		p.numWriter.WriteDec2(2, zdt.Second, 0)
 		p.numWriter.WriteColon(true)
-	default:
 	}
 }

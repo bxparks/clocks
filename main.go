@@ -56,8 +56,8 @@ var rtc = ds3231.New(i2c)
 func setupRTC() {
 	i2c.Configure(i2csoft.I2CConfig{Frequency: 400e3})
 	rtc.Configure()
-	dt := ds3231.DateTime{23, 2, 25, 9, 51, 0, 7 /*Weekday*/}
-	rtc.SetTime(dt)
+	//dt := ds3231.DateTime{23, 2, 25, 9, 51, 0, 7 /*Weekday*/}
+	//rtc.SetTime(dt)
 }
 
 var lastRTCMillis uint16
@@ -109,17 +109,20 @@ func (h *ButtonHandler) Handle(b *button.Button, e button.Event, state bool) {
 	switch b.GetPin() {
 	case modePin:
 		switch e {
-		case button.EventPressed:
 		case button.EventReleased:
 			println("Mode Pressed")
 			controller.handleModePress()
 		case button.EventLongPressed:
 			controller.handleModeLongPress()
-		case button.EventRepeatPressed:
-		case button.EventLongReleased:
 		default:
 		}
 	case changePin:
+		switch e {
+		case button.EventPressed, button.EventRepeatPressed:
+			println("Change Pressed")
+			controller.handleChangePress()
+		default:
+		}
 	default:
 	}
 }
