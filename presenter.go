@@ -29,22 +29,69 @@ func (p *Presenter) UpdateDisplay() {
 	zdt := &p.currInfo.dateTime
 
 	switch p.currInfo.clockMode {
-	case modeViewYear, modeChangeYear:
+	case modeViewYear:
 		p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
-	case modeViewMonth, modeChangeMonth:
+	case modeChangeYear:
+		if p.currInfo.blinkShowState {
+			p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
+		} else {
+			p.numWriter.Module().Clear()
+		}
+	case modeViewMonth:
 		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
 		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 		p.numWriter.WriteDec2(2, zdt.Month, 0)
-	case modeViewDay, modeChangeDay:
+	case modeChangeMonth:
+		if p.currInfo.blinkShowState {
+			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
+			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
+			p.numWriter.WriteDec2(2, zdt.Month, 0)
+		} else {
+			p.numWriter.Module().Clear()
+		}
+	case modeViewDay:
 		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
 		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 		p.numWriter.WriteDec2(2, zdt.Day, 0)
-	case modeViewHourMinute, modeChangeHour, modeChangeMinute:
+	case modeChangeDay:
+		if p.currInfo.blinkShowState {
+			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
+			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
+			p.numWriter.WriteDec2(2, zdt.Day, 0)
+		} else {
+			p.numWriter.Module().Clear()
+		}
+	case modeViewHourMinute:
 		p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
-	case modeViewSecond, modeChangeSecond:
+	case modeChangeHour:
+		if p.currInfo.blinkShowState {
+			p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
+		} else {
+			p.numWriter.Module().Clear()
+			p.numWriter.WriteDec2(2, zdt.Minute, 0)
+			p.numWriter.WriteColon(true)
+		}
+	case modeChangeMinute:
+		if p.currInfo.blinkShowState {
+			p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
+		} else {
+			p.numWriter.Module().Clear()
+			p.numWriter.WriteDec2(0, zdt.Hour, 0)
+			p.numWriter.WriteColon(true)
+		}
+	case modeViewSecond:
 		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
 		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 		p.numWriter.WriteDec2(2, zdt.Second, 0)
 		p.numWriter.WriteColon(true)
+	case modeChangeSecond:
+		if p.currInfo.blinkShowState {
+			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
+			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
+			p.numWriter.WriteDec2(2, zdt.Second, 0)
+			p.numWriter.WriteColon(true)
+		} else {
+			p.numWriter.Module().Clear()
+		}
 	}
 }

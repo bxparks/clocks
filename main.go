@@ -159,6 +159,21 @@ func checkButtons() {
 }
 
 //-----------------------------------------------------------------------------
+// Blinking
+//-----------------------------------------------------------------------------
+
+var lastBlinkTime = time.Now()
+
+func blinkDisplay() {
+	now := time.Now()
+	elapsed := now.Sub(lastBlinkTime)
+	if elapsed.Milliseconds() >= 500 {
+		lastBlinkTime = now
+		controller.Blink()
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Main loop
 //-----------------------------------------------------------------------------
 
@@ -174,6 +189,7 @@ func main() {
 	for {
 		checkButtons()
 		syncRTC()
+		blinkDisplay()
 		updateDisplay()
 		flushDisplay()
 		time.Sleep(time.Millisecond * 1)

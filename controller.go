@@ -158,6 +158,12 @@ func (c *Controller) SyncRTC() {
 	c.updatePresenter()
 }
 
+func (c *Controller) Blink() {
+	c.currInfo.blinkShowState = !c.currInfo.blinkShowState
+	c.changingInfo.blinkShowState = !c.changingInfo.blinkShowState
+	c.updatePresenter()
+}
+
 func (c *Controller) saveClockInfo() {
 	c.currInfo = c.changingInfo
 	c.saveRTC(&c.currInfo)
