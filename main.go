@@ -16,6 +16,7 @@ import (
 )
 
 //-----------------------------------------------------------------------------
+// Presenter using:
 // TM1637 LED Module
 //-----------------------------------------------------------------------------
 
@@ -79,54 +80,26 @@ func syncRTC() {
 			dt.Second,
 			0, /*Fold*/
 		}
-		clockInfo.dateTime = acetime.NewZonedDateTimeFromLocalDateTime(&ldt, &tz)
-		updateDisplay()
+		zdt := acetime.NewZonedDateTimeFromLocalDateTime(&ldt, &tz)
+		controller.updateDateTime(&zdt)
 	}
 }
 
 //-----------------------------------------------------------------------------
-// Presenter
+// Controller
 //-----------------------------------------------------------------------------
 
-var clockInfo = ClockInfo{
-	hourMode:   hourMode24,
-	clockMode:  clockModeHourMinute,
-	brightness: 1,
-}
+var presenter = NewPresenter(&numWriter)
 
-var prevClockInfo ClockInfo
+var controller = NewController(&presenter)
 
-func nextClockMode() {
-	clockInfo.clockMode = ClockMode(uint8(clockInfo.clockMode+1) % 5)
-	println("clockMode: ", clockInfo.clockMode)
-}
+var lastUpdateDisplayMillis uint16
 
 func updateDisplay() {
-	if prevClockInfo == clockInfo {
-		return
-	}
-	prevClockInfo = clockInfo
-	zdt := &clockInfo.dateTime
-
-	switch clockInfo.clockMode {
-	case clockModeYear:
-		numWriter.WriteDec4(0, uint16(zdt.Year), 0)
-	case clockModeMonth:
-		numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-		numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-		numWriter.WriteDec2(2, zdt.Month, 0)
-	case clockModeDay:
-		numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-		numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-		numWriter.WriteDec2(2, zdt.Day, 0)
-	case clockModeHourMinute:
-		numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
-	case clockModeSecond:
-		numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-		numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-		numWriter.WriteDec2(2, zdt.Second, 0)
-		numWriter.WriteColon(true)
-	default:
+	millis := uint16(time.Now().UnixMilli())
+	if millis-lastUpdateDisplayMillis > 100 {
+		lastUpdateDisplayMillis = millis
+		presenter.updateDisplay()
 	}
 }
 
@@ -148,17 +121,16 @@ const (
 
 type ButtonHandler struct{}
 
-func (h *ButtonHandler) Handle(
-	b *button.Button, event button.Event, state bool) {
-
+func (h *ButtonHandler) Handle(b *button.Button, e button.Event, state bool) {
 	switch b.GetPin() {
 	case modePin:
-		switch event {
+		switch e {
 		case button.EventPressed:
 		case button.EventReleased:
 			println("Mode Pressed")
-			nextClockMode()
+			controller.handleModePress()
 		case button.EventLongPressed:
+			controller.handleModeLongPress()
 		case button.EventRepeatPressed:
 		case button.EventLongReleased:
 		default:
@@ -166,7 +138,6 @@ func (h *ButtonHandler) Handle(
 	case changePin:
 	default:
 	}
-
 }
 
 // Configure buttons
@@ -212,6 +183,7 @@ func main() {
 	for {
 		checkButtons()
 		syncRTC()
+		updateDisplay()
 		flushDisplay()
 		time.Sleep(time.Millisecond * 1)
 	}

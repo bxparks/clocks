@@ -2,6 +2,7 @@ CMD_NAME := main
 TARGETS_UNIX := $(CMD_NAME).out
 TARGETS_TINY := $(CMD_NAME).tiny.out
 TARGETS_TINY_ESP32 := $(CMD_NAME).esp32.out
+SRCS := $(CMD_NAME).go controller.go presenter.go clockinfo.go
 
 .PHONY := build tiny tinyesp32 flashesp32 all clean help
 
@@ -16,7 +17,7 @@ clean:
 #------------------------------------------------------------------------------
 
 # Use TinyGo to compile to ESP32.
-$(CMD_NAME).esp32.out: $(CMD_NAME).go clockinfo.go Makefile
+$(CMD_NAME).esp32.out: $(SRCS) Makefile
 	tinygo build \
 		-size full \
 		-print-allocs=.*bxparks.* \

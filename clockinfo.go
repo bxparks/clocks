@@ -14,17 +14,25 @@ const (
 type ClockMode uint8
 
 const (
-	clockModeYear ClockMode = iota
-	clockModeMonth
-	clockModeDay
-	clockModeHourMinute
-	clockModeSecond
+	modeUnknown = iota
+	modeViewYear
+	modeViewMonth
+	modeViewDay
+	modeViewHourMinute
+	modeViewSecond
+
+	modeChangeYear
+	modeChangeMonth
+	modeChangeDay
+	modeChangeHour
+	modeChangeMinute
+	modeChangeSecond
 )
 
 type ClockInfo struct {
-	hourMode   HourMode              // 12/24 mode
-	clockMode  ClockMode             // clock display mode
-	brightness uint8                 // [0,7] for Tm1637Display
-	zoneId     uint32                // desired timeZoneData.
-	dateTime   acetime.ZonedDateTime // DateTime
+	dateTime       acetime.ZonedDateTime // DateTime
+	clockMode      ClockMode             // clock display mode
+	hourMode       HourMode              // 12/24 mode
+	brightness     uint8                 // [0,7] for Tm1637Display
+	blinkShowState bool                  // true = show element
 }
