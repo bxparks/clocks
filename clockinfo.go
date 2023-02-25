@@ -30,9 +30,10 @@ const (
 )
 
 type ClockInfo struct {
-	dateTime       acetime.ZonedDateTime // DateTime
-	clockMode      ClockMode             // clock display mode
-	hourMode       HourMode              // 12/24 mode
-	brightness     uint8                 // [0,7] for Tm1637Display
-	blinkShowState bool                  // true = show element
+	dateTime        acetime.ZonedDateTime // DateTime
+	clockMode       ClockMode             // clock display mode
+	hourMode        HourMode              // 12/24 mode
+	brightness      uint8                 // [0,7] for Tm1637Display
+	blinkShowState  bool                  // true = show element
+	blinkSuppressed bool                  // true = suppress blinking
 }

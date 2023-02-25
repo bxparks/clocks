@@ -24,7 +24,6 @@ func (p *Presenter) UpdateDisplay() {
 	if p.prevInfo == p.currInfo {
 		return
 	}
-	println("Presenter(): clockMode: ", p.currInfo.clockMode)
 	p.prevInfo = p.currInfo
 	zdt := &p.currInfo.dateTime
 
@@ -32,7 +31,7 @@ func (p *Presenter) UpdateDisplay() {
 	case modeViewYear:
 		p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
 	case modeChangeYear:
-		if p.currInfo.blinkShowState {
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
 			p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
 		} else {
 			p.numWriter.Module().Clear()
@@ -42,7 +41,7 @@ func (p *Presenter) UpdateDisplay() {
 		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 		p.numWriter.WriteDec2(2, zdt.Month, 0)
 	case modeChangeMonth:
-		if p.currInfo.blinkShowState {
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
 			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
 			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 			p.numWriter.WriteDec2(2, zdt.Month, 0)
@@ -54,7 +53,7 @@ func (p *Presenter) UpdateDisplay() {
 		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 		p.numWriter.WriteDec2(2, zdt.Day, 0)
 	case modeChangeDay:
-		if p.currInfo.blinkShowState {
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
 			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
 			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 			p.numWriter.WriteDec2(2, zdt.Day, 0)
@@ -64,7 +63,7 @@ func (p *Presenter) UpdateDisplay() {
 	case modeViewHourMinute:
 		p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
 	case modeChangeHour:
-		if p.currInfo.blinkShowState {
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
 			p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
 		} else {
 			p.numWriter.Module().Clear()
@@ -72,7 +71,7 @@ func (p *Presenter) UpdateDisplay() {
 			p.numWriter.WriteColon(true)
 		}
 	case modeChangeMinute:
-		if p.currInfo.blinkShowState {
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
 			p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
 		} else {
 			p.numWriter.Module().Clear()
@@ -85,7 +84,7 @@ func (p *Presenter) UpdateDisplay() {
 		p.numWriter.WriteDec2(2, zdt.Second, 0)
 		p.numWriter.WriteColon(true)
 	case modeChangeSecond:
-		if p.currInfo.blinkShowState {
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
 			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
 			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 			p.numWriter.WriteDec2(2, zdt.Second, 0)

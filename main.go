@@ -113,7 +113,6 @@ func (h *ButtonHandler) Handle(b *button.Button, e button.Event, state bool) {
 	case modePin:
 		switch e {
 		case button.EventReleased:
-			println("Mode Pressed")
 			controller.HandleModePress()
 		case button.EventLongPressed:
 			controller.HandleModeLongPress()
@@ -122,8 +121,9 @@ func (h *ButtonHandler) Handle(b *button.Button, e button.Event, state bool) {
 	case changePin:
 		switch e {
 		case button.EventPressed, button.EventRepeatPressed:
-			println("Change Pressed")
 			controller.HandleChangePress()
+		case button.EventReleased, button.EventLongReleased:
+			controller.HandleChangeRelease()
 		default:
 		}
 	default:

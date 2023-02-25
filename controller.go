@@ -50,7 +50,6 @@ func (c *Controller) HandleModePress() {
 	case modeChangeSecond:
 		c.currInfo.clockMode = modeChangeYear
 	}
-	println("Controller: clockMode: ", c.currInfo.clockMode)
 
 	c.changingInfo.clockMode = c.currInfo.clockMode
 	c.updatePresenter()
@@ -101,6 +100,9 @@ func (c *Controller) HandleModeLongPress() {
 }
 
 func (c *Controller) HandleChangePress() {
+	c.currInfo.blinkSuppressed = true
+	c.changingInfo.blinkSuppressed = true
+
 	switch c.currInfo.clockMode {
 	case modeChangeYear:
 		c.changingInfo.dateTime.Year++
@@ -138,6 +140,11 @@ func (c *Controller) HandleChangePress() {
 	c.updatePresenter()
 }
 
+func (c *Controller) HandleChangeRelease() {
+	c.currInfo.blinkSuppressed = false
+	c.changingInfo.blinkSuppressed = false
+}
+
 func (c *Controller) SyncRTC() {
 	dt, err := c.rtc.ReadTime()
 	if err != nil {
@@ -170,7 +177,6 @@ func (c *Controller) saveClockInfo() {
 }
 
 func (c *Controller) saveRTC(info *ClockInfo) {
-	println("saveRTC()")
 	ldt := info.dateTime.LocalDateTime()
 	dt := ds3231.DateTime{
 		Year:    uint8(ldt.Year - 2000),
