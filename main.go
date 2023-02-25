@@ -1,4 +1,4 @@
-// An LED clock, bring togehter: AceTimeGo/acetime, button, and tm1637.
+// An LED clock, bring together: AceTimeGo/acetime, button, and tm1637.
 
 package main
 
@@ -56,7 +56,7 @@ var rtc = ds3231.New(i2c)
 func setupRTC() {
 	i2c.Configure(i2csoft.I2CConfig{Frequency: 400e3})
 	rtc.Configure()
-	dt := ds3231.DateTime{23, 2, 24, 11, 21, 0, 5 /*Weekday*/}
+	dt := ds3231.DateTime{23, 2, 25, 9, 51, 0, 7 /*Weekday*/}
 	rtc.SetTime(dt)
 }
 
@@ -66,22 +66,7 @@ func syncRTC() {
 	millis := uint16(time.Now().UnixMilli())
 	if millis-lastRTCMillis > 100 {
 		lastRTCMillis = millis
-		dt, err := rtc.ReadTime()
-		if err != nil {
-			return
-		}
-
-		ldt := acetime.LocalDateTime{
-			2000 + int16(dt.Year),
-			dt.Month,
-			dt.Day,
-			dt.Hour,
-			dt.Minute,
-			dt.Second,
-			0, /*Fold*/
-		}
-		zdt := acetime.NewZonedDateTimeFromLocalDateTime(&ldt, &tz)
-		controller.updateDateTime(&zdt)
+		controller.syncRTC()
 	}
 }
 
@@ -90,8 +75,7 @@ func syncRTC() {
 //-----------------------------------------------------------------------------
 
 var presenter = NewPresenter(&numWriter)
-
-var controller = NewController(&presenter)
+var controller = NewController(&presenter, &rtc)
 
 var lastUpdateDisplayMillis uint16
 

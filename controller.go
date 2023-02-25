@@ -2,17 +2,20 @@ package main
 
 import (
 	"github.com/bxparks/AceTimeGo/acetime"
+	"gitlab.com/bxparks/coding/tinygo/ds3231"
 )
 
 type Controller struct {
 	presenter    *Presenter
+	rtc          *ds3231.Device
 	currInfo     ClockInfo
 	changingInfo ClockInfo
 }
 
-func NewController(presenter *Presenter) Controller {
+func NewController(presenter *Presenter, rtc *ds3231.Device) Controller {
 	return Controller{
 		presenter: presenter,
+		rtc:       rtc,
 		currInfo: ClockInfo{
 			hourMode:   hourMode24,
 			clockMode:  modeViewHourMinute,
@@ -95,8 +98,23 @@ func (c *Controller) handleModeLongPress() {
 	c.updatePresenter()
 }
 
-func (c *Controller) updateDateTime(zdt *acetime.ZonedDateTime) {
-	c.currInfo.dateTime = *zdt
+func (c *Controller) syncRTC() {
+	dt, err := c.rtc.ReadTime()
+	if err != nil {
+		return
+	}
+
+	ldt := acetime.LocalDateTime{
+		2000 + int16(dt.Year),
+		dt.Month,
+		dt.Day,
+		dt.Hour,
+		dt.Minute,
+		dt.Second,
+		0, /*Fold*/
+	}
+	zdt := acetime.NewZonedDateTimeFromLocalDateTime(&ldt, &tz)
+	c.currInfo.dateTime = zdt
 	c.updatePresenter()
 }
 
@@ -106,7 +124,6 @@ func (c *Controller) updatePresenter() {
 	switch c.currInfo.clockMode {
 	case modeChangeYear, modeChangeMonth, modeChangeDay, modeChangeHour,
 		modeChangeMinute, modeChangeSecond:
-
 		clockInfo = &c.changingInfo
 	default:
 		clockInfo = &c.currInfo
