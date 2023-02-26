@@ -172,6 +172,8 @@ func (c *Controller) SetupSystemTimeFromRTC() {
 		time.UTC)
 	nowSystem := time.Now()
 	offset := nowRtc.Sub(nowSystem)
+
+	// See https://github.com/tinygo-org/tinygo/pull/3402 for usage info.
 	runtime.AdjustTimeOffset(int64(offset))
 }
 
