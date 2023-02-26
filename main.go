@@ -60,6 +60,23 @@ func setupRTC() {
 }
 
 //-----------------------------------------------------------------------------
+// Temperature, read every 10 seconds. The DS3231 updates every 64 seconds. But
+// sometimes, the first ReadTemp() fails, so it's nice to try again about 10
+// seconds after the failure.
+//-----------------------------------------------------------------------------
+
+var lastReadTempTime = time.Now()
+
+func readTemperature() {
+	now := time.Now()
+	elapsed := now.Sub(lastReadTempTime)
+	if elapsed.Milliseconds() >= 10000 {
+		lastReadTempTime = now
+		controller.ReadTemp()
+	}
+}
+
+//-----------------------------------------------------------------------------
 // System Time
 //-----------------------------------------------------------------------------
 
@@ -145,7 +162,7 @@ func setupButtons() {
 	config.SetFeature(button.FeatureRepeatPress)
 	config.SetFeature(button.FeatureSuppressAfterLongPress)
 	config.SetFeature(button.FeatureSuppressAfterRepeatPress)
-	config.RepeatPressInterval = 125
+	config.RepeatPressInterval = 250
 }
 
 var lastCheckButtonsTime = time.Now()
@@ -193,6 +210,7 @@ func main() {
 	for {
 		checkButtons()
 		syncSystemTime()
+		readTemperature()
 		blinkDisplay()
 		updateDisplay()
 		flushDisplay()

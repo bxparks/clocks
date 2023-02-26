@@ -37,6 +37,8 @@ func (c *Controller) HandleModePress() {
 	case modeViewHourMinute:
 		c.currInfo.clockMode = modeViewSecond
 	case modeViewSecond:
+		c.currInfo.clockMode = modeViewTemperature
+	case modeViewTemperature:
 		c.currInfo.clockMode = modeViewYear
 
 	case modeChangeYear:
@@ -182,6 +184,18 @@ func (c *Controller) Blink() {
 	c.changingInfo.blinkShowState = !c.changingInfo.blinkShowState
 	c.updatePresenter()
 }
+
+func (c *Controller) ReadTemp() {
+	rawTemp, err := c.rtc.ReadTemp()
+	if err != nil {
+		return
+	}
+	c.currInfo.tempCentiC = ds3231.ToCentiC(rawTemp)
+	c.currInfo.tempCentiF = ds3231.ToCentiF(rawTemp)
+	c.updatePresenter()
+}
+
+//-----------------------------------------------------------------------------
 
 func (c *Controller) saveClockInfo() {
 	c.currInfo = c.changingInfo

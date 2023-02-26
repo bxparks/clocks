@@ -1,6 +1,6 @@
    code  rodata    data     bss |   flash     ram | package
 ------------------------------- | --------------- | -------
-   2287     311       4       6 |    2602      10 | (unknown)
+   2335     323       4       6 |    2662      10 | (unknown)
       0       0       0    4096 |       0    4096 | C stack
      92       0       0       0 |      92       0 | Go interface method
      66       0       0       0 |      66       0 | device/esp
@@ -8,18 +8,18 @@
       0    9400       0       0 |    9400       0 | github.com/bxparks/AceTimeGo/zonedb
     163       0       0       0 |     163       0 | github.com/bxparks/AceTimeGo/zoneinfo
    1002       0       0       0 |    1002       0 | gitlab.com/bxparks/coding/tinygo/button
-    413       0       0       0 |     413       0 | gitlab.com/bxparks/coding/tinygo/ds3231
-    297      18       0       0 |     315       0 | gitlab.com/bxparks/coding/tinygo/segwriter
+    498       0       0       0 |     498       0 | gitlab.com/bxparks/coding/tinygo/ds3231
+    429      18       0       0 |     447       0 | gitlab.com/bxparks/coding/tinygo/segwriter
     484       0       0       0 |     484       0 | gitlab.com/bxparks/coding/tinygo/tm1637
      60       0       0       0 |      60       0 | internal/bytealg
     331      24       0       8 |     355       8 | internal/task
     601       0       0       0 |     601       0 | machine
-   1819      54    2120     120 |    3993    2240 | main
-   2134     128       0      66 |    2262      66 | runtime
+   2150      59    2136     144 |    4345    2280 | main
+   2240     128       0      66 |    2368      66 | runtime
      55       0       0       0 |      55       0 | runtime/interrupt
     141       0       0       0 |     141       0 | runtime/volatile
     380     108       0       0 |     488       0 | strings
    2651      52       0      64 |    2703      64 | time
-   1014      32       8       0 |    1054       8 | tinygo.org/x/drivers/i2csoft
+   1016      32       8       0 |    1056       8 | tinygo.org/x/drivers/i2csoft
 ------------------------------- | --------------- | -------
-  19931   10151    2140    4360 |   32222    6500 | total
+  20635   10168    2156    4384 |   32959    6540 | total
