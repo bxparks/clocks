@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/bxparks/AceTimeGo/acetime"
 	"gitlab.com/bxparks/coding/tinygo/ds3231"
+	"gitlab.com/bxparks/coding/tinygo/tm1637"
 	"runtime"
 	"time"
 )
@@ -10,14 +11,18 @@ import (
 type Controller struct {
 	presenter    *Presenter
 	rtc          *ds3231.Device
+	tm           *tm1637.Device
 	currInfo     ClockInfo
 	changingInfo ClockInfo
 }
 
-func NewController(presenter *Presenter, rtc *ds3231.Device) Controller {
+func NewController(
+	presenter *Presenter, rtc *ds3231.Device, tm *tm1637.Device) Controller {
+
 	return Controller{
 		presenter: presenter,
 		rtc:       rtc,
+		tm:        tm,
 		currInfo: ClockInfo{
 			hourMode:   hourMode24,
 			clockMode:  modeViewHourMinute,
@@ -142,6 +147,11 @@ func (c *Controller) HandleChangePress() {
 
 	c.changingInfo.clockMode = c.currInfo.clockMode
 	c.updatePresenter()
+
+	// Flush the TM1637 immediately because if we wait until the next tm.Flush()
+	// from main.go, the beat frequency between the button.Handle() events and the
+	// tm.Flush() events causes a noticeable irregularity in the display update.
+	c.tm.Flush()
 }
 
 func (c *Controller) HandleChangeRelease() {

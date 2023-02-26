@@ -32,8 +32,8 @@ const (
 
 type ClockInfo struct {
 	dateTime        acetime.ZonedDateTime // DateTime
-	tempCentiC		  int16						      // centi Celsius
-	tempCentiF		  int16						      // centi Fahrenheit
+	tempCentiC      int16                 // centi Celsius
+	tempCentiF      int16                 // centi Fahrenheit
 	clockMode       ClockMode             // clock display mode
 	hourMode        HourMode              // 12/24 mode
 	brightness      uint8                 // [0,7] for Tm1637Display

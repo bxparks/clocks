@@ -96,7 +96,7 @@ func syncSystemTime() {
 //-----------------------------------------------------------------------------
 
 var presenter = NewPresenter(&numWriter)
-var controller = NewController(&presenter, &rtc)
+var controller = NewController(&presenter, &rtc, &tm)
 
 var lastUpdateDisplayTime = time.Now()
 
@@ -162,7 +162,7 @@ func setupButtons() {
 	config.SetFeature(button.FeatureRepeatPress)
 	config.SetFeature(button.FeatureSuppressAfterLongPress)
 	config.SetFeature(button.FeatureSuppressAfterRepeatPress)
-	config.RepeatPressInterval = 250
+	//config.RepeatPressInterval = 100
 }
 
 var lastCheckButtonsTime = time.Now()
