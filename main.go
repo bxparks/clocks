@@ -57,18 +57,20 @@ var rtc = ds3231.New(i2c)
 func setupRTC() {
 	i2c.Configure(i2csoft.I2CConfig{Frequency: 400e3})
 	rtc.Configure()
-	//dt := ds3231.DateTime{23, 2, 25, 9, 51, 0, 7 /*Weekday*/}
-	//rtc.SetTime(dt)
 }
+
+//-----------------------------------------------------------------------------
+// System Time
+//-----------------------------------------------------------------------------
 
 var lastSyncRTCTime = time.Now()
 
-func syncRTC() {
+func syncSystemTime() {
 	now := time.Now()
 	elapsed := now.Sub(lastSyncRTCTime)
 	if elapsed.Milliseconds() > 100 {
 		lastSyncRTCTime = now
-		controller.SyncRTC()
+		controller.SyncSystemTime()
 	}
 }
 
@@ -143,6 +145,7 @@ func setupButtons() {
 	config.SetFeature(button.FeatureRepeatPress)
 	config.SetFeature(button.FeatureSuppressAfterLongPress)
 	config.SetFeature(button.FeatureSuppressAfterRepeatPress)
+	config.RepeatPressInterval = 125
 }
 
 var lastCheckButtonsTime = time.Now()
@@ -181,6 +184,7 @@ func main() {
 	setupButtons()
 	setupDisplay()
 	setupRTC()
+	controller.SetupSystemTimeFromRTC()
 
 	time.Sleep(time.Millisecond * 500)
 	println("Checking for buttons...")
@@ -188,7 +192,7 @@ func main() {
 	tm.Flush()
 	for {
 		checkButtons()
-		syncRTC()
+		syncSystemTime()
 		blinkDisplay()
 		updateDisplay()
 		flushDisplay()

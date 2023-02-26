@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/bxparks/AceTimeGo/acetime"
 	"gitlab.com/bxparks/coding/tinygo/ds3231"
+	"runtime"
+	"time"
 )
 
 type Controller struct {
@@ -145,24 +147,32 @@ func (c *Controller) HandleChangeRelease() {
 	c.changingInfo.blinkSuppressed = false
 }
 
-func (c *Controller) SyncRTC() {
-	dt, err := c.rtc.ReadTime()
+func (c *Controller) SyncSystemTime() {
+	now := time.Now()
+	zdt := acetime.NewZonedDateTimeFromEpochSeconds(
+		acetime.ATime(now.Unix()), &tz)
+	c.currInfo.dateTime = zdt
+	c.updatePresenter()
+}
+
+// Read the RTC and adjust the system time to match.
+func (c *Controller) SetupSystemTimeFromRTC() {
+	dt, err := rtc.ReadTime()
 	if err != nil {
 		return
 	}
-
-	ldt := acetime.LocalDateTime{
-		2000 + int16(dt.Year),
-		dt.Month,
-		dt.Day,
-		dt.Hour,
-		dt.Minute,
-		dt.Second,
-		0, /*Fold*/
-	}
-	zdt := acetime.NewZonedDateTimeFromLocalDateTime(&ldt, &tz)
-	c.currInfo.dateTime = zdt
-	c.updatePresenter()
+	nowRtc := time.Date(
+		2000+int(dt.Year),
+		time.Month(dt.Month),
+		int(dt.Day),
+		int(dt.Hour),
+		int(dt.Minute),
+		int(dt.Second),
+		0, /*ns*/
+		time.UTC)
+	nowSystem := time.Now()
+	offset := nowRtc.Sub(nowSystem)
+	runtime.AdjustTimeOffset(int64(offset))
 }
 
 func (c *Controller) Blink() {
@@ -174,18 +184,29 @@ func (c *Controller) Blink() {
 func (c *Controller) saveClockInfo() {
 	c.currInfo = c.changingInfo
 	c.saveRTC(&c.currInfo)
+	c.SetupSystemTimeFromRTC()
 }
 
 func (c *Controller) saveRTC(info *ClockInfo) {
-	ldt := info.dateTime.LocalDateTime()
+	// Convert to UTC DateTime.
+	udt := info.dateTime.ConvertToTimeZone(&acetime.TimeZoneUTC)
+	ldt := udt.LocalDateTime()
+
+	// Convert to DS3231 DateTime.
+	year := ldt.Year - 2000
+	var century uint8
+	if year >= 100 {
+		century = 1
+	}
 	dt := ds3231.DateTime{
-		Year:    uint8(ldt.Year - 2000),
+		Year:    uint8(year),
 		Month:   ldt.Month,
 		Day:     ldt.Day,
 		Hour:    ldt.Hour,
 		Minute:  ldt.Minute,
 		Second:  ldt.Second,
 		Weekday: acetime.LocalDateToDayOfWeek(ldt.Year, ldt.Month, ldt.Day),
+		Century: century,
 	}
 	err := c.rtc.SetTime(dt)
 	if err != nil {
