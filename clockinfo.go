@@ -21,6 +21,7 @@ const (
 	modeViewHourMinute
 	modeViewSecond
 	modeViewTimeZone
+	modeViewBrightness
 	modeViewTemperature
 
 	modeChangeYear
@@ -30,6 +31,7 @@ const (
 	modeChangeMinute
 	modeChangeSecond
 	modeChangeTimeZone
+	modeChangeBrightness
 )
 
 type ClockInfo struct {

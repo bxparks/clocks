@@ -29,6 +29,10 @@ func (p *Presenter) UpdateDisplay() {
 	if p.prevInfo == p.currInfo {
 		return
 	}
+	if p.prevInfo.brightness != p.currInfo.brightness {
+		p.numWriter.Module().SetBrightness(p.currInfo.brightness)
+	}
+
 	p.prevInfo = p.currInfo
 	zdt := &p.currInfo.dateTime
 
@@ -108,6 +112,18 @@ func (p *Presenter) UpdateDisplay() {
 			p.charWriter.ClearToEnd(uint8(len(tzName)))
 		} else {
 			p.numWriter.Module().Clear()
+		}
+	case modeViewBrightness:
+		p.charWriter.WriteString(0, "br")
+		p.charWriter.WriteDecimalPoint(1, true)
+		p.numWriter.WriteDec2(2, p.currInfo.brightness, segwriter.HexCharSpace)
+	case modeChangeBrightness:
+		p.charWriter.WriteString(0, "br")
+		p.charWriter.WriteDecimalPoint(1, true)
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
+			p.numWriter.WriteDec2(2, p.currInfo.brightness, segwriter.HexCharSpace)
+		} else {
+			p.charWriter.ClearToEnd(2)
 		}
 	case modeViewTemperature:
 		t := int8(p.currInfo.tempCentiC / 100)

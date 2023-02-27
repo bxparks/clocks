@@ -44,6 +44,8 @@ func (c *Controller) HandleModePress() {
 	case modeViewSecond:
 		c.currInfo.clockMode = modeViewTimeZone
 	case modeViewTimeZone:
+		c.currInfo.clockMode = modeViewBrightness
+	case modeViewBrightness:
 		c.currInfo.clockMode = modeViewTemperature
 	case modeViewTemperature:
 		c.currInfo.clockMode = modeViewYear
@@ -87,6 +89,9 @@ func (c *Controller) HandleModeLongPress() {
 	case modeViewTimeZone:
 		c.currInfo.clockMode = modeChangeTimeZone
 		c.changingInfo = c.currInfo
+	case modeViewBrightness:
+		c.currInfo.clockMode = modeChangeBrightness
+		c.changingInfo = c.currInfo
 
 	// Save edit and change back to normal mode.
 	case modeChangeYear:
@@ -110,6 +115,9 @@ func (c *Controller) HandleModeLongPress() {
 	case modeChangeTimeZone:
 		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewTimeZone
+	case modeChangeBrightness:
+		c.saveClockInfo()
+		c.currInfo.clockMode = modeViewBrightness
 	}
 
 	c.changingInfo.clockMode = c.currInfo.clockMode
@@ -155,6 +163,11 @@ func (c *Controller) HandleChangePress() {
 		c.changingInfo.zoneIndex++
 		if int(c.changingInfo.zoneIndex) >= len(zones) {
 			c.changingInfo.zoneIndex = 0
+		}
+	case modeChangeBrightness:
+		c.changingInfo.brightness++
+		if int(c.changingInfo.brightness) >= 8 {
+			c.changingInfo.brightness = 0
 		}
 	}
 
@@ -266,7 +279,8 @@ func (c *Controller) updatePresenter() {
 	var clockInfo *ClockInfo
 	switch c.currInfo.clockMode {
 	case modeChangeYear, modeChangeMonth, modeChangeDay, modeChangeHour,
-		modeChangeMinute, modeChangeSecond, modeChangeTimeZone:
+		modeChangeMinute, modeChangeSecond, modeChangeTimeZone,
+		modeChangeBrightness:
 		clockInfo = &c.changingInfo
 	default:
 		clockInfo = &c.currInfo

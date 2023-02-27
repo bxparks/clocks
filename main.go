@@ -121,20 +121,21 @@ func updateDisplay() {
 // is important because some time zones have abbreviations which have changed
 // over time.
 type ZoneInfo struct {
-	tz	 *acetime.TimeZone
+	tz   *acetime.TimeZone
 	name string
 }
 
 // This implementation allocates the 4 TimeZone objects at startup time. The
-// TinyGo compiler (through LLVM probably) seems able to determine that the only
-// a small subset of the zonedb database is accessed, and allocates flash memory
-// only to the required subset. This reduces the zonedb flash size from ~70kB to
+// TinyGo compiler (through LLVM probably) seems able to determine that only a
+// small subset of the zonedb database is accessed, and loads into flash memory
+// only the required subset. This reduces the zonedb flash size from ~70kB to
 // ~9kB.
 //
-// If instead we do not pre-allocate the timezones and store only the zoneIDs
-// in the `zones` array, (which at first glance seems to be more memory
-// efficient), then the compiler is not able to optimize away the zones which
-// are never used, and must load the entire zonedb database (~70kB) into flash.
+// If instead we store only the zoneIDs in the `zones` array and dynamically
+// create the TimeZone objects on-demand (which at first glance seems to be more
+// memory efficient), then the compiler is not able to optimize away the zones
+// which are never used, and must load the entire zonedb database (~70kB) into
+// flash.
 //
 // For small number of time zones, it seems better to preallocate the timezones
 // which will be used by the application. But if the application needs to
