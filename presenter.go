@@ -37,38 +37,6 @@ func (p *Presenter) UpdateDisplay() {
 	zdt := &p.currInfo.dateTime
 
 	switch p.currInfo.clockMode {
-	case modeViewYear:
-		p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
-	case modeChangeYear:
-		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
-		} else {
-			p.numWriter.Module().Clear()
-		}
-	case modeViewMonth:
-		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-		p.numWriter.WriteDec2(2, zdt.Month, 0)
-	case modeChangeMonth:
-		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-			p.numWriter.WriteDec2(2, zdt.Month, 0)
-		} else {
-			p.numWriter.Module().Clear()
-		}
-	case modeViewDay:
-		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-		p.numWriter.WriteDec2(2, zdt.Day, 0)
-	case modeChangeDay:
-		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-			p.numWriter.WriteDec2(2, zdt.Day, 0)
-		} else {
-			p.numWriter.Module().Clear()
-		}
 	case modeViewHourMinute:
 		p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
 	case modeChangeHour:
@@ -98,6 +66,38 @@ func (p *Presenter) UpdateDisplay() {
 			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
 			p.numWriter.WriteDec2(2, zdt.Second, 0)
 			p.numWriter.WriteColon(true)
+		} else {
+			p.numWriter.Module().Clear()
+		}
+	case modeViewYear:
+		p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
+	case modeChangeYear:
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
+			p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
+		} else {
+			p.numWriter.Module().Clear()
+		}
+	case modeViewMonth:
+		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
+		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
+		p.numWriter.WriteDec2(2, zdt.Month, 0)
+	case modeChangeMonth:
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
+			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
+			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
+			p.numWriter.WriteDec2(2, zdt.Month, 0)
+		} else {
+			p.numWriter.Module().Clear()
+		}
+	case modeViewDay:
+		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
+		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
+		p.numWriter.WriteDec2(2, zdt.Day, 0)
+	case modeChangeDay:
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
+			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
+			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
+			p.numWriter.WriteDec2(2, zdt.Day, 0)
 		} else {
 			p.numWriter.Module().Clear()
 		}

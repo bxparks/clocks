@@ -33,35 +33,35 @@ func NewController(
 
 func (c *Controller) HandleModePress() {
 	switch c.currInfo.clockMode {
+	case modeViewHourMinute:
+		c.currInfo.clockMode = modeViewSecond
+	case modeViewSecond:
+		c.currInfo.clockMode = modeViewYear
 	case modeViewYear:
 		c.currInfo.clockMode = modeViewMonth
 	case modeViewMonth:
 		c.currInfo.clockMode = modeViewDay
 	case modeViewDay:
-		c.currInfo.clockMode = modeViewHourMinute
-	case modeViewHourMinute:
-		c.currInfo.clockMode = modeViewSecond
-	case modeViewSecond:
 		c.currInfo.clockMode = modeViewTimeZone
 	case modeViewTimeZone:
 		c.currInfo.clockMode = modeViewBrightness
 	case modeViewBrightness:
 		c.currInfo.clockMode = modeViewTemperature
 	case modeViewTemperature:
-		c.currInfo.clockMode = modeViewYear
+		c.currInfo.clockMode = modeViewHourMinute
 
-	case modeChangeYear:
-		c.currInfo.clockMode = modeChangeMonth
-	case modeChangeMonth:
-		c.currInfo.clockMode = modeChangeDay
-	case modeChangeDay:
-		c.currInfo.clockMode = modeChangeHour
 	case modeChangeHour:
 		c.currInfo.clockMode = modeChangeMinute
 	case modeChangeMinute:
 		c.currInfo.clockMode = modeChangeSecond
 	case modeChangeSecond:
 		c.currInfo.clockMode = modeChangeYear
+	case modeChangeYear:
+		c.currInfo.clockMode = modeChangeMonth
+	case modeChangeMonth:
+		c.currInfo.clockMode = modeChangeDay
+	case modeChangeDay:
+		c.currInfo.clockMode = modeChangeHour
 	}
 
 	c.changingInfo.clockMode = c.currInfo.clockMode
@@ -71,6 +71,12 @@ func (c *Controller) HandleModePress() {
 func (c *Controller) HandleModeLongPress() {
 	switch c.currInfo.clockMode {
 	// Change to edit mode
+	case modeViewHourMinute:
+		c.currInfo.clockMode = modeChangeHour
+		c.changingInfo = c.currInfo
+	case modeViewSecond:
+		c.currInfo.clockMode = modeChangeSecond
+		c.changingInfo = c.currInfo
 	case modeViewYear:
 		c.currInfo.clockMode = modeChangeYear
 		c.changingInfo = c.currInfo
@@ -80,12 +86,6 @@ func (c *Controller) HandleModeLongPress() {
 	case modeViewDay:
 		c.currInfo.clockMode = modeChangeDay
 		c.changingInfo = c.currInfo
-	case modeViewHourMinute:
-		c.currInfo.clockMode = modeChangeHour
-		c.changingInfo = c.currInfo
-	case modeViewSecond:
-		c.currInfo.clockMode = modeChangeSecond
-		c.changingInfo = c.currInfo
 	case modeViewTimeZone:
 		c.currInfo.clockMode = modeChangeTimeZone
 		c.changingInfo = c.currInfo
@@ -94,15 +94,6 @@ func (c *Controller) HandleModeLongPress() {
 		c.changingInfo = c.currInfo
 
 	// Save edit and change back to normal mode.
-	case modeChangeYear:
-		c.saveClockInfo()
-		c.currInfo.clockMode = modeViewYear
-	case modeChangeMonth:
-		c.saveClockInfo()
-		c.currInfo.clockMode = modeViewMonth
-	case modeChangeDay:
-		c.saveClockInfo()
-		c.currInfo.clockMode = modeViewDay
 	case modeChangeHour:
 		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewHourMinute
@@ -112,6 +103,15 @@ func (c *Controller) HandleModeLongPress() {
 	case modeChangeSecond:
 		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewSecond
+	case modeChangeYear:
+		c.saveClockInfo()
+		c.currInfo.clockMode = modeViewYear
+	case modeChangeMonth:
+		c.saveClockInfo()
+		c.currInfo.clockMode = modeViewMonth
+	case modeChangeDay:
+		c.saveClockInfo()
+		c.currInfo.clockMode = modeViewDay
 	case modeChangeTimeZone:
 		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewTimeZone
@@ -129,21 +129,6 @@ func (c *Controller) HandleChangePress() {
 	c.changingInfo.blinkSuppressed = true
 
 	switch c.currInfo.clockMode {
-	case modeChangeYear:
-		c.changingInfo.dateTime.Year++
-		if c.changingInfo.dateTime.Year >= 2100 {
-			c.changingInfo.dateTime.Year = 2000
-		}
-	case modeChangeMonth:
-		c.changingInfo.dateTime.Month++
-		if c.changingInfo.dateTime.Month > 12 {
-			c.changingInfo.dateTime.Month = 1
-		}
-	case modeChangeDay:
-		c.changingInfo.dateTime.Day++
-		if c.changingInfo.dateTime.Day > 31 {
-			c.changingInfo.dateTime.Day = 1
-		}
 	case modeChangeHour:
 		c.changingInfo.dateTime.Hour++
 		if c.changingInfo.dateTime.Hour >= 24 {
@@ -158,6 +143,21 @@ func (c *Controller) HandleChangePress() {
 		c.changingInfo.dateTime.Second++
 		if c.changingInfo.dateTime.Second >= 60 {
 			c.changingInfo.dateTime.Second = 0
+		}
+	case modeChangeYear:
+		c.changingInfo.dateTime.Year++
+		if c.changingInfo.dateTime.Year >= 2100 {
+			c.changingInfo.dateTime.Year = 2000
+		}
+	case modeChangeMonth:
+		c.changingInfo.dateTime.Month++
+		if c.changingInfo.dateTime.Month > 12 {
+			c.changingInfo.dateTime.Month = 1
+		}
+	case modeChangeDay:
+		c.changingInfo.dateTime.Day++
+		if c.changingInfo.dateTime.Day > 31 {
+			c.changingInfo.dateTime.Day = 1
 		}
 	case modeChangeTimeZone:
 		c.changingInfo.zoneIndex++

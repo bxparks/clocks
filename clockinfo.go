@@ -15,21 +15,21 @@ type ClockMode uint8
 
 const (
 	modeUnknown = iota
+	modeViewHourMinute
+	modeViewSecond
 	modeViewYear
 	modeViewMonth
 	modeViewDay
-	modeViewHourMinute
-	modeViewSecond
 	modeViewTimeZone
 	modeViewBrightness
 	modeViewTemperature
 
-	modeChangeYear
-	modeChangeMonth
-	modeChangeDay
 	modeChangeHour
 	modeChangeMinute
 	modeChangeSecond
+	modeChangeYear
+	modeChangeMonth
+	modeChangeDay
 	modeChangeTimeZone
 	modeChangeBrightness
 )
