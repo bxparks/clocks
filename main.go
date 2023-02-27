@@ -41,7 +41,7 @@ var lastFlushTime = time.Now()
 func flushDisplay() {
 	now := time.Now()
 	elapsed := now.Sub(lastFlushTime)
-	if elapsed.Milliseconds() > 100 {
+	if elapsed.Milliseconds() >= 100 {
 		lastFlushTime = now
 		tm.Flush()
 	}
@@ -85,7 +85,7 @@ var lastSyncRTCTime = time.Now()
 func syncSystemTime() {
 	now := time.Now()
 	elapsed := now.Sub(lastSyncRTCTime)
-	if elapsed.Milliseconds() > 100 {
+	if elapsed.Milliseconds() >= 100 {
 		lastSyncRTCTime = now
 		controller.SyncSystemTime()
 	}
@@ -103,7 +103,7 @@ var lastUpdateDisplayTime = time.Now()
 func updateDisplay() {
 	now := time.Now()
 	elapsed := now.Sub(lastUpdateDisplayTime)
-	if elapsed.Milliseconds() > 100 {
+	if elapsed.Milliseconds() >= 100 {
 		lastUpdateDisplayTime = now
 		presenter.UpdateDisplay()
 	}
@@ -171,7 +171,7 @@ var lastCheckButtonsTime = time.Now()
 func checkButtons() {
 	now := time.Now()
 	elapsed := now.Sub(lastCheckButtonsTime)
-	if elapsed.Milliseconds() > 5 {
+	if elapsed.Milliseconds() >= 5 {
 		lastCheckButtonsTime = now
 		modeButton.Check()
 		changeButton.Check()
