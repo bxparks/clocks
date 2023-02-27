@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/bxparks/AceTimeGo/acetime"
 	"gitlab.com/bxparks/coding/tinygo/segwriter"
 )
 
@@ -101,6 +102,12 @@ func (p *Presenter) UpdateDisplay() {
 		} else {
 			p.numWriter.Module().Clear()
 		}
+	case modeViewWeekday:
+		dt := p.currInfo.dateTime
+		weekday := acetime.LocalDateToWeekday(dt.Year, dt.Month, dt.Day)
+		weekdayName := weekday.Name()[:3]
+		p.charWriter.WriteString(0, weekdayName)
+		p.charWriter.Module().SetPattern(3, 0)
 	case modeViewTimeZone:
 		tzName := zones[p.currInfo.zoneIndex].name
 		p.charWriter.WriteString(0, tzName)

@@ -20,6 +20,7 @@ const (
 	modeViewYear
 	modeViewMonth
 	modeViewDay
+	modeViewWeekday
 	modeViewTimeZone
 	modeViewBrightness
 	modeViewTemperature

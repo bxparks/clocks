@@ -42,6 +42,8 @@ func (c *Controller) HandleModePress() {
 	case modeViewMonth:
 		c.currInfo.clockMode = modeViewDay
 	case modeViewDay:
+		c.currInfo.clockMode = modeViewWeekday
+	case modeViewWeekday:
 		c.currInfo.clockMode = modeViewTimeZone
 	case modeViewTimeZone:
 		c.currInfo.clockMode = modeViewBrightness
@@ -265,7 +267,7 @@ func (c *Controller) saveRTC(info *ClockInfo) {
 		Hour:    ldt.Hour,
 		Minute:  ldt.Minute,
 		Second:  ldt.Second,
-		Weekday: acetime.LocalDateToDayOfWeek(ldt.Year, ldt.Month, ldt.Day),
+		Weekday: uint8(acetime.LocalDateToWeekday(ldt.Year, ldt.Month, ldt.Day)),
 		Century: century,
 	}
 	err := c.rtc.SetTime(dt)
