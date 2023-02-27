@@ -48,8 +48,10 @@ func (c *Controller) HandleModePress() {
 	case modeViewTimeZone:
 		c.currInfo.clockMode = modeViewBrightness
 	case modeViewBrightness:
-		c.currInfo.clockMode = modeViewTemperature
-	case modeViewTemperature:
+		c.currInfo.clockMode = modeViewTempC
+	case modeViewTempC:
+		c.currInfo.clockMode = modeViewTempF
+	case modeViewTempF:
 		c.currInfo.clockMode = modeViewHourMinute
 
 	case modeChangeHour:
@@ -229,8 +231,8 @@ func (c *Controller) ReadTemp() {
 	if err != nil {
 		return
 	}
-	c.currInfo.tempCentiC = ds3231.ToCentiC(rawTemp)
-	c.currInfo.tempCentiF = ds3231.ToCentiF(rawTemp)
+	c.currInfo.tempCentiC = rawTemp.CentiC()
+	c.currInfo.tempCentiF = rawTemp.CentiF()
 	c.updatePresenter()
 }
 

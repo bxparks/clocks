@@ -23,7 +23,8 @@ const (
 	modeViewWeekday
 	modeViewTimeZone
 	modeViewBrightness
-	modeViewTemperature
+	modeViewTempF
+	modeViewTempC
 
 	modeChangeHour
 	modeChangeMinute
