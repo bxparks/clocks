@@ -94,7 +94,7 @@ func (p *Presenter) UpdateDisplay() {
 		}
 	case modeViewTemperature:
 		t := int8(p.currInfo.tempCentiC / 100)
-		p.numWriter.WriteInt3(0, t, segwriter.HexCharSpace)
+		p.numWriter.WriteSignedDec3(0, t, segwriter.HexCharSpace)
 		p.numWriter.WriteHexChar(3, 0xC)
 	}
 }
