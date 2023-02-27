@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/bxparks/AceTimeGo/acetime"
 	"gitlab.com/bxparks/coding/tinygo/segwriter"
 )
 
@@ -99,20 +98,14 @@ func (p *Presenter) UpdateDisplay() {
 			p.numWriter.Module().Clear()
 		}
 	case modeViewTimeZone:
-		epochSeconds := p.currInfo.dateTime.EpochSeconds()
-		extra := acetime.NewZonedExtraFromEpochSeconds(
-			epochSeconds, p.currInfo.dateTime.Tz)
-		abbrev := extra.Abbrev
-		p.charWriter.WriteString(0, abbrev)
-		p.charWriter.ClearToEnd(uint8(len(abbrev)))
+		tzName := zones[p.currInfo.zoneIndex].name
+		p.charWriter.WriteString(0, tzName)
+		p.charWriter.ClearToEnd(uint8(len(tzName)))
 	case modeChangeTimeZone:
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			epochSeconds := p.currInfo.dateTime.EpochSeconds()
-			extra := acetime.NewZonedExtraFromEpochSeconds(
-				epochSeconds, p.currInfo.dateTime.Tz)
-			abbrev := extra.Abbrev
-			p.charWriter.WriteString(0, abbrev)
-			p.charWriter.ClearToEnd(uint8(len(abbrev)))
+			tzName := zones[p.currInfo.zoneIndex].name
+			p.charWriter.WriteString(0, tzName)
+			p.charWriter.ClearToEnd(uint8(len(tzName)))
 		} else {
 			p.numWriter.Module().Clear()
 		}

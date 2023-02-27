@@ -156,8 +156,6 @@ func (c *Controller) HandleChangePress() {
 		if int(c.changingInfo.zoneIndex) >= len(zones) {
 			c.changingInfo.zoneIndex = 0
 		}
-		newTz := zones[c.changingInfo.zoneIndex]
-		c.changingInfo.dateTime = c.changingInfo.dateTime.ConvertToTimeZone(newTz)
 	}
 
 	c.changingInfo.clockMode = c.currInfo.clockMode
@@ -176,7 +174,7 @@ func (c *Controller) HandleChangeRelease() {
 
 func (c *Controller) SyncSystemTime() {
 	now := time.Now()
-	tz := zones[c.currInfo.zoneIndex]
+	tz := zones[c.currInfo.zoneIndex].tz
 	zdt := acetime.NewZonedDateTimeFromEpochSeconds(
 		acetime.ATime(now.Unix()), tz)
 	c.currInfo.dateTime = zdt
@@ -225,7 +223,7 @@ func (c *Controller) ReadTemp() {
 
 func (c *Controller) saveClockInfo() {
 	if c.currInfo.zoneIndex != c.changingInfo.zoneIndex {
-		newTz := zones[c.changingInfo.zoneIndex]
+		newTz := zones[c.changingInfo.zoneIndex].tz
 		newZdt := c.currInfo.dateTime.ConvertToTimeZone(newTz)
 		c.currInfo = c.changingInfo
 		c.currInfo.dateTime = newZdt

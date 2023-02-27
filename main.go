@@ -115,16 +115,42 @@ func updateDisplay() {
 // AceTimeGo
 //-----------------------------------------------------------------------------
 
+// An entry of the timezone supported by this app. The `name` field allows the
+// application to display a human-readable name of the timezone, that is short
+// and stable, and does not require the TimeZone object to be constructed. This
+// is important because some time zones have abbreviations which have changed
+// over time.
+type ZoneInfo struct {
+	tz	 *acetime.TimeZone
+	name string
+}
+
+// This implementation allocates the 4 TimeZone objects at startup time. The
+// TinyGo compiler (through LLVM probably) seems able to determine that the only
+// a small subset of the zonedb database is accessed, and allocates flash memory
+// only to the required subset. This reduces the zonedb flash size from ~70kB to
+// ~9kB.
+//
+// If instead we do not pre-allocate the timezones and store only the zoneIDs
+// in the `zones` array, (which at first glance seems to be more memory
+// efficient), then the compiler is not able to optimize away the zones which
+// are never used, and must load the entire zonedb database (~70kB) into flash.
+//
+// For small number of time zones, it seems better to preallocate the timezones
+// which will be used by the application. But if the application needs to
+// support a significant number of timezones, potentiallly determined by user
+// input, then it's better to let the ZoneManager create the TimeZone objects
+// on-demand.
 var manager = acetime.NewZoneManager(&zonedb.DataContext)
 var tz0 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Los_Angeles)
 var tz1 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Denver)
 var tz2 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Chicago)
 var tz3 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_New_York)
-var zones = []*acetime.TimeZone{
-	&tz0,
-	&tz1,
-	&tz2,
-	&tz3,
+var zones = []ZoneInfo{
+	{&tz0, "PST"},
+	{&tz1, "MST"},
+	{&tz2, "CST"},
+	{&tz3, "EST"},
 }
 
 //-----------------------------------------------------------------------------
