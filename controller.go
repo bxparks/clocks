@@ -256,12 +256,10 @@ func (c *Controller) saveRTC(info *ClockInfo) {
 	udt := info.dateTime.ConvertToTimeZone(&acetime.TimeZoneUTC)
 	ldt := udt.LocalDateTime()
 
-	// Convert to DS3231 DateTime.
+	// Convert to DS3231 DateTime. The Century field is unused because the DS3231
+	// chip does not account for that field when calculating leap years, so
+	// setting it does not mean that the year is 2100.
 	year := ldt.Year - 2000
-	var century uint8
-	if year >= 100 {
-		century = 1
-	}
 	dt := ds3231.DateTime{
 		Year:    uint8(year),
 		Month:   ldt.Month,
@@ -270,7 +268,7 @@ func (c *Controller) saveRTC(info *ClockInfo) {
 		Minute:  ldt.Minute,
 		Second:  ldt.Second,
 		Weekday: uint8(acetime.LocalDateToWeekday(ldt.Year, ldt.Month, ldt.Day)),
-		Century: century,
+		Century: 0,
 	}
 	err := c.rtc.SetTime(dt)
 	if err != nil {
