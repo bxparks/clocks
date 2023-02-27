@@ -1,18 +1,24 @@
 package main
 
 import (
+	"github.com/bxparks/AceTimeGo/acetime"
 	"gitlab.com/bxparks/coding/tinygo/segwriter"
 )
 
 type Presenter struct {
-	numWriter *segwriter.NumberWriter
-	currInfo  ClockInfo
-	prevInfo  ClockInfo
+	numWriter  *segwriter.NumberWriter
+	charWriter *segwriter.CharWriter
+	currInfo   ClockInfo
+	prevInfo   ClockInfo
 }
 
-func NewPresenter(numWriter *segwriter.NumberWriter) Presenter {
+func NewPresenter(
+	numWriter *segwriter.NumberWriter,
+	charWriter *segwriter.CharWriter) Presenter {
+
 	return Presenter{
-		numWriter: numWriter,
+		numWriter:  numWriter,
+		charWriter: charWriter,
 	}
 }
 
@@ -92,6 +98,13 @@ func (p *Presenter) UpdateDisplay() {
 		} else {
 			p.numWriter.Module().Clear()
 		}
+	case modeViewTimeZone:
+		epochSeconds := p.currInfo.dateTime.EpochSeconds()
+		extra := acetime.NewZonedExtraFromEpochSeconds(
+			epochSeconds, p.currInfo.dateTime.Tz)
+		abbrev := extra.Abbrev
+		p.charWriter.WriteString(0, abbrev)
+		p.charWriter.ClearToEnd(uint8(len(abbrev)))
 	case modeViewTemperature:
 		t := int8(p.currInfo.tempCentiC / 100)
 		p.numWriter.WriteSignedDec3(0, t, segwriter.HexCharSpace)

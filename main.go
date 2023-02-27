@@ -3,7 +3,6 @@
 package main
 
 import (
-	//"github.com/bxparks/AceTimeGo/acetime"
 	"github.com/bxparks/AceTimeGo/acetime"
 	"github.com/bxparks/AceTimeGo/zonedb"
 	"gitlab.com/bxparks/coding/tinygo/button"
@@ -29,6 +28,7 @@ const (
 
 var tm = tm1637.New(clkPin, dioPin, delayMicros, numDigits)
 var numWriter = segwriter.NewNumberWriter(&tm)
+var charWriter = segwriter.NewCharWriter(&tm)
 
 func setupDisplay() {
 	tm.Configure()
@@ -95,7 +95,7 @@ func syncSystemTime() {
 // Controller
 //-----------------------------------------------------------------------------
 
-var presenter = NewPresenter(&numWriter)
+var presenter = NewPresenter(&numWriter, &charWriter)
 var controller = NewController(&presenter, &rtc, &tm)
 
 var lastUpdateDisplayTime = time.Now()
@@ -114,7 +114,16 @@ func updateDisplay() {
 //-----------------------------------------------------------------------------
 
 var manager = acetime.NewZoneManager(&zonedb.DataContext)
-var tz = manager.TimeZoneFromName("America/Los_Angeles")
+var tz0 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Los_Angeles)
+var tz1 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Denver)
+var tz2 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Chicago)
+var tz3 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_New_York)
+var zones = []*acetime.TimeZone{
+	&tz0,
+	&tz1,
+	&tz2,
+	&tz3,
+}
 
 //-----------------------------------------------------------------------------
 // Buttons

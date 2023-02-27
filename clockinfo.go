@@ -20,6 +20,7 @@ const (
 	modeViewDay
 	modeViewHourMinute
 	modeViewSecond
+	modeViewTimeZone
 	modeViewTemperature
 
 	modeChangeYear
@@ -39,4 +40,5 @@ type ClockInfo struct {
 	brightness      uint8                 // [0,7] for Tm1637Display
 	blinkShowState  bool                  // true = show element
 	blinkSuppressed bool                  // true = suppress blinking
+	zoneIndex       uint8                 // index into []zones
 }

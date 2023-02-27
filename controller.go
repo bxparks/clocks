@@ -42,6 +42,8 @@ func (c *Controller) HandleModePress() {
 	case modeViewHourMinute:
 		c.currInfo.clockMode = modeViewSecond
 	case modeViewSecond:
+		c.currInfo.clockMode = modeViewTimeZone
+	case modeViewTimeZone:
 		c.currInfo.clockMode = modeViewTemperature
 	case modeViewTemperature:
 		c.currInfo.clockMode = modeViewYear
@@ -161,8 +163,9 @@ func (c *Controller) HandleChangeRelease() {
 
 func (c *Controller) SyncSystemTime() {
 	now := time.Now()
+	tz := zones[c.currInfo.zoneIndex]
 	zdt := acetime.NewZonedDateTimeFromEpochSeconds(
-		acetime.ATime(now.Unix()), &tz)
+		acetime.ATime(now.Unix()), tz)
 	c.currInfo.dateTime = zdt
 	c.updatePresenter()
 }
