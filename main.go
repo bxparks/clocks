@@ -31,6 +31,7 @@ var numWriter = segwriter.NewNumberWriter(&tm)
 var charWriter = segwriter.NewCharWriter(&tm)
 
 func setupDisplay() {
+	println("setupDisplay()")
 	tm.Configure()
 	tm.Clear()
 }
@@ -55,6 +56,7 @@ var i2c = i2csoft.New(machine.SCL_PIN, machine.SDA_PIN)
 var rtc = ds3231.New(i2c)
 
 func setupRTC() {
+	println("setupRTC()")
 	i2c.Configure(i2csoft.I2CConfig{Frequency: 400e3})
 	rtc.Configure()
 }
@@ -164,6 +166,7 @@ var modeButton = button.NewButton(&config, modePin)
 var changeButton = button.NewButton(&config, changePin)
 
 func setupButtons() {
+	println("setupButtons()")
 	modePin.Configure(machine.PinConfig{Mode: machine.PinInputPullup})
 	changePin.Configure(machine.PinConfig{Mode: machine.PinInputPullup})
 
@@ -207,15 +210,15 @@ func blinkDisplay() {
 //-----------------------------------------------------------------------------
 
 func main() {
+	time.Sleep(time.Millisecond * 500)
+
 	setupButtons()
 	setupDisplay()
 	setupRTC()
 	controller.SetupSystemTimeFromRTC()
-
-	time.Sleep(time.Millisecond * 500)
-	println("Checking for buttons...")
-
 	tm.Flush()
+
+	println("Entering event loop...")
 	for {
 		checkButtons()
 		syncSystemTime()

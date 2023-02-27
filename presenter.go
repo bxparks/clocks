@@ -105,6 +105,17 @@ func (p *Presenter) UpdateDisplay() {
 		abbrev := extra.Abbrev
 		p.charWriter.WriteString(0, abbrev)
 		p.charWriter.ClearToEnd(uint8(len(abbrev)))
+	case modeChangeTimeZone:
+		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
+			epochSeconds := p.currInfo.dateTime.EpochSeconds()
+			extra := acetime.NewZonedExtraFromEpochSeconds(
+				epochSeconds, p.currInfo.dateTime.Tz)
+			abbrev := extra.Abbrev
+			p.charWriter.WriteString(0, abbrev)
+			p.charWriter.ClearToEnd(uint8(len(abbrev)))
+		} else {
+			p.numWriter.Module().Clear()
+		}
 	case modeViewTemperature:
 		t := int8(p.currInfo.tempCentiC / 100)
 		p.numWriter.WriteSignedDec3(0, t, segwriter.HexCharSpace)

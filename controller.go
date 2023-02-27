@@ -84,6 +84,9 @@ func (c *Controller) HandleModeLongPress() {
 	case modeViewSecond:
 		c.currInfo.clockMode = modeChangeSecond
 		c.changingInfo = c.currInfo
+	case modeViewTimeZone:
+		c.currInfo.clockMode = modeChangeTimeZone
+		c.changingInfo = c.currInfo
 
 	// Save edit and change back to normal mode.
 	case modeChangeYear:
@@ -104,6 +107,9 @@ func (c *Controller) HandleModeLongPress() {
 	case modeChangeSecond:
 		c.saveClockInfo()
 		c.currInfo.clockMode = modeViewSecond
+	case modeChangeTimeZone:
+		c.saveClockInfo()
+		c.currInfo.clockMode = modeViewTimeZone
 	}
 
 	c.changingInfo.clockMode = c.currInfo.clockMode
@@ -145,6 +151,13 @@ func (c *Controller) HandleChangePress() {
 		if c.changingInfo.dateTime.Second >= 60 {
 			c.changingInfo.dateTime.Second = 0
 		}
+	case modeChangeTimeZone:
+		c.changingInfo.zoneIndex++
+		if int(c.changingInfo.zoneIndex) >= len(zones) {
+			c.changingInfo.zoneIndex = 0
+		}
+		newTz := zones[c.changingInfo.zoneIndex]
+		c.changingInfo.dateTime = c.changingInfo.dateTime.ConvertToTimeZone(newTz)
 	}
 
 	c.changingInfo.clockMode = c.currInfo.clockMode
@@ -211,7 +224,14 @@ func (c *Controller) ReadTemp() {
 //-----------------------------------------------------------------------------
 
 func (c *Controller) saveClockInfo() {
-	c.currInfo = c.changingInfo
+	if c.currInfo.zoneIndex != c.changingInfo.zoneIndex {
+		newTz := zones[c.changingInfo.zoneIndex]
+		newZdt := c.currInfo.dateTime.ConvertToTimeZone(newTz)
+		c.currInfo = c.changingInfo
+		c.currInfo.dateTime = newZdt
+	} else {
+		c.currInfo = c.changingInfo
+	}
 	c.saveRTC(&c.currInfo)
 	c.SetupSystemTimeFromRTC()
 }
@@ -248,7 +268,7 @@ func (c *Controller) updatePresenter() {
 	var clockInfo *ClockInfo
 	switch c.currInfo.clockMode {
 	case modeChangeYear, modeChangeMonth, modeChangeDay, modeChangeHour,
-		modeChangeMinute, modeChangeSecond:
+		modeChangeMinute, modeChangeSecond, modeChangeTimeZone:
 		clockInfo = &c.changingInfo
 	default:
 		clockInfo = &c.currInfo

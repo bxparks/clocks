@@ -29,6 +29,7 @@ const (
 	modeChangeHour
 	modeChangeMinute
 	modeChangeSecond
+	modeChangeTimeZone
 )
 
 type ClockInfo struct {
