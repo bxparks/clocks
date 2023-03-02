@@ -47,8 +47,6 @@ using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
-using ace_utils::mode_group::ModeGroup;
-using ace_utils::mode_group::ModeRecord;
 
 //-----------------------------------------------------------------------------
 // Configure AceWire
@@ -346,6 +344,7 @@ void setupPresenter() {
 // easier to maintain.
 //-----------------------------------------------------------------------------
 
+#if 0
 // The Arduino compiler becomes confused without this.
 extern const ModeGroup ROOT_MODE_GROUP;
 
@@ -426,6 +425,7 @@ const ModeGroup ROOT_MODE_GROUP = {
   sizeof(TOP_LEVEL_MODES) / sizeof(ModeRecord),
   TOP_LEVEL_MODES,
 };
+#endif
 
 //-----------------------------------------------------------------------------
 // Create persistent store.
@@ -445,8 +445,7 @@ void setupPersistentStore() {
 //-----------------------------------------------------------------------------
 
 Controller controller(
-    persistentStore, systemClock, presenter, zoneManager,
-    DISPLAY_ZONES, &ROOT_MODE_GROUP
+    persistentStore, systemClock, presenter, zoneManager, DISPLAY_ZONES
 );
 
 void setupController(bool factoryReset) {
@@ -732,8 +731,6 @@ void setup() {
     SERIAL_PORT_MONITOR.println(sizeof(ClockInfo));
     SERIAL_PORT_MONITOR.print(F("sizeof(StoredInfo): "));
     SERIAL_PORT_MONITOR.println(sizeof(StoredInfo));
-    SERIAL_PORT_MONITOR.print(F("sizeof(RenderingInfo): "));
-    SERIAL_PORT_MONITOR.println(sizeof(RenderingInfo));
   }
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP \

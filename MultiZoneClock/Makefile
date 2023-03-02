@@ -11,7 +11,6 @@ DEPS:= ClockInfo.h \
 	Controller.h \
 	PersistentStore.h \
 	Presenter.h \
-	RenderingInfo.h \
 	StoredInfo.h \
 	config.h \
 	Presenter.cpp

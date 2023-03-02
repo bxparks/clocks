@@ -15,6 +15,9 @@ struct ClockInfo {
   /** 00:00:00 - 23:59:59 */
   static uint8_t const kTwentyFour = 1;
 
+  /** display mode */
+  Mode mode = Mode::kUnknown;
+
   /** Blinking info should be shown. Should be toggled every 0.5 sec. */
   bool blinkShowState = false;
 
@@ -85,7 +88,8 @@ struct ClockInfo {
 
 inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
   // Fields most likely to change are compared earlier than later.
-  bool isEqual = a.blinkShowState == b.blinkShowState
+  bool isEqual = a.mode == b.mode
+    && a.blinkShowState == b.blinkShowState
     && a.suppressBlink == b.suppressBlink
     && a.dateTime == b.dateTime
     && a.prevSync == b.prevSync
