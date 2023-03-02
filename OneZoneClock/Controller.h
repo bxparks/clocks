@@ -10,7 +10,6 @@
 #include <AceCommon.h> // incrementMod()
 #include <AceTime.h>
 #include <AceUtils.h>
-#include <mode_group/mode_group.h> // from AceUtils
 #include "ClockInfo.h"
 #include "RenderingInfo.h"
 #include "StoredInfo.h"
@@ -20,8 +19,6 @@
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_common::incrementMod;
-using ace_utils::mode_group::ModeGroup;
-using ace_utils::mode_group::ModeNavigator;
 
 /**
  * Class responsible for updating the ClockInfo with the latest information:
@@ -46,7 +43,6 @@ class Controller {
      * @param zoneManager optional zoneManager for TIME_ZONE_TYPE_BASIC or
      *        TIME_ZONE_TYPE_EXTENDED
      * @param displayZones array of TimeZoneData with NUM_TIME_ZONES elements
-     * @param rootModeGroup poniter to the top level ModeGroup object
      * @param dht pointer to DHT22 object if enabled
      */
     Controller(
@@ -61,7 +57,6 @@ class Controller {
         , ExtendedZoneManager& zoneManager
       #endif
         , TimeZoneData initialTimeZoneData
-        , ModeGroup const* rootModeGroup
       #if ENABLE_DHT22
         , DHT* dht
       #endif
@@ -71,11 +66,12 @@ class Controller {
         , mPresenter(presenter)
         , mZoneManager(zoneManager),
         mInitialTimeZoneData(initialTimeZoneData)
-        , mNavigator(rootModeGroup)
       #if ENABLE_DHT22
         , mDht(dht)
       #endif
-    {}
+    {
+      mClockInfo.mode = Mode::kViewDateTime;
+    }
 
     void setup(bool factoryReset) {
       if (FORCE_INITIALIZE == 1) {
@@ -96,7 +92,7 @@ class Controller {
      * noticeable drift against the RTC which has a 1 second resolution.
      */
     void update() {
-      if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
+      if (mClockInfo.mode == Mode::kUnknown) return;
       updateDateTime();
       updatePresenter();
       mPresenter.updateDisplay();
@@ -115,28 +111,106 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
-      // performModeButtonPressAction() - does nothing in this app
-      mNavigator.changeMode();
-      performNewModeRecordAction();
-    }
 
-    /** Perform the action of the current ModeRecord. */
-    void performNewModeRecordAction() {
-      if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("performNewModeRecordAction()"));
-      }
+      switch (mClockInfo.mode) {
+        case Mode::kViewDateTime:
+          mClockInfo.mode = Mode::kViewTimeZone;
+          break;
+        case Mode::kViewTimeZone:
+      #if ENABLE_DHT22
+          mClockInfo.mode = Mode::kViewTemperature;
+          break;
+        case Mode::kViewTemperature:
+      #endif
+          mClockInfo.mode = Mode::kViewSettings;
+          break;
+        case Mode::kViewSettings:
+          mClockInfo.mode = Mode::kViewSysclock;
+          break;
+        case Mode::kViewSysclock:
+          mClockInfo.mode = Mode::kViewAbout;
+          break;
+        case Mode::kViewAbout:
+          mClockInfo.mode = Mode::kViewDateTime;
+          break;
 
-      switch ((Mode) mNavigator.modeId()) {
-      #if TIME_ZONE_TYPE != TIME_ZONE_TYPE_MANUAL
+        // Date/Time
+        case Mode::kChangeHour:
+          mClockInfo.mode = Mode::kChangeMinute;
+          break;
+        case Mode::kChangeMinute:
+          mClockInfo.mode = Mode::kChangeSecond;
+          break;
+        case Mode::kChangeSecond:
+          mClockInfo.mode = Mode::kChangeYear;
+          break;
+        case Mode::kChangeYear:
+          mClockInfo.mode = Mode::kChangeMonth;
+          break;
+        case Mode::kChangeMonth:
+          mClockInfo.mode = Mode::kChangeDay;
+          break;
+        case Mode::kChangeDay:
+          mClockInfo.mode = Mode::kChangeHour;
+          break;
+
+        // TimeZone
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        case Mode::kChangeTimeZoneOffset:
+          mClockInfo.mode = Mode::kChangeTimeZoneDst;
+          break;
+        case Mode::kChangeTimeZoneDst:
+          mClockInfo.mode = Mode::kChangeTimeZoneOffset;
+          break;
+      #else
         case Mode::kChangeTimeZoneName:
-          mZoneRegistryIndex = mZoneManager.indexForZoneId(
-              mChangingClockInfo.timeZoneData.zoneId);
+          break;
+      #endif
+
+        // Display settings
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        case Mode::kChangeSettingsBacklight:
+          mClockInfo.mode = Mode::kChangeSettingsContrast;
+          break;
+        case Mode::kChangeSettingsContrast:
+          mClockInfo.mode = Mode::kChangeSettingsBias;
+          break;
+        case Mode::kChangeSettingsBias:
+          mClockInfo.mode = Mode::kChangeSettingsBacklight;
+          break;
+      #else
+        case Mode::kChangeSettingsContrast:
+          mClockInfo.mode = Mode::kChangeInvertDisplay;
+          break;
+        case Mode::kChangeInvertDisplay:
+          mClockInfo.mode = Mode::kChangeSettingsContrast;
+          break;
+      #endif
+      // TODO: I think this needs to be merged into the above somehow.
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        case Mode::kChangeSettingsLedOnOff:
+          mClockInfo.mode = Mode::kChangeSettingsLedBrightness;
+          break;
+        case Mode::kChangeSettingsLedBrightness:
+          mClockInfo.mode = Mode::kChangeSettingsLedOnOff;
           break;
       #endif
 
         default:
           break;
       }
+
+      #if TIME_ZONE_TYPE != TIME_ZONE_TYPE_MANUAL
+      switch (mClockInfo.mode) {
+        case Mode::kChangeTimeZoneName:
+          mZoneRegistryIndex = mZoneManager.indexForZoneId(
+              mChangingClockInfo.timeZoneData.zoneId);
+          break;
+
+        default:
+          break;
+      }
+      #endif
     }
 
     /** Toggle edit mode. The editable field will start blinking. */
@@ -145,99 +219,35 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
       }
 
-      performModeLongPressAction();
-      mNavigator.changeGroup();
-      performNewModeGroupAction();
-      performNewModeRecordAction();
-    }
-
-    /**
-     * Exit the edit mode while throwing away all changes. Does nothing if not
-     * already in edit mode.
-     */
-    void handleModeButtonDoubleClick() {
-      if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
-      }
-
-      switch ((Mode) mNavigator.modeId()) {
-        case Mode::kChangeYear:
-        case Mode::kChangeMonth:
-        case Mode::kChangeDay:
-        case Mode::kChangeHour:
-        case Mode::kChangeMinute:
-        case Mode::kChangeSecond:
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case Mode::kChangeTimeZoneOffset:
-        case Mode::kChangeTimeZoneDst:
-      #else
-        case Mode::kChangeTimeZoneName:
-      #endif
-      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-        case Mode::kChangeSettingsBacklight:
-        case Mode::kChangeSettingsContrast:
-        case Mode::kChangeSettingsBias:
-      #else
-        case Mode::kChangeSettingsContrast:
-        case Mode::kChangeInvertDisplay:
-      #endif
-      #if ENABLE_LED_DISPLAY
-        case Mode::kChangeSettingsLedOnOff:
-        case Mode::kChangeSettingsLedBrightness:
-      #endif
-          // Throw away the changes and just change the mode group.
-          //performModeLongPressAction();
-          mNavigator.changeGroup();
-          performNewModeGroupAction();
-          performNewModeRecordAction();
-          break;
-
-        default:
-          break;
-      }
-    }
-
-    /** Do action associated with entering a ModeGroup due to a LongPress. */
-    void performNewModeGroupAction() {
-      if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("performNewModeGroupAction()"));
-      }
-
-      switch ((Mode) mNavigator.modeId()) {
-        case Mode::kChangeYear:
-        case Mode::kChangeMonth:
-        case Mode::kChangeDay:
-        case Mode::kChangeHour:
-        case Mode::kChangeMinute:
-        case Mode::kChangeSecond:
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case Mode::kChangeTimeZoneOffset:
-        case Mode::kChangeTimeZoneDst:
-      #else
-        case Mode::kChangeTimeZoneName:
-      #endif
+      switch (mClockInfo.mode) {
+        case Mode::kViewDateTime:
           mChangingClockInfo = mClockInfo;
+          initChangingClock();
           mSecondFieldCleared = false;
-          // If the system clock hasn't been initialized, set the initial
-          // clock to epoch 0, which is 2000-01-01T00:00:00 UTC.
-          if (mChangingClockInfo.dateTime.isError()) {
-            mChangingClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
-                0, mChangingClockInfo.dateTime.timeZone());
-          }
+          mClockInfo.mode = Mode::kChangeYear;
           break;
 
-        default:
+        case Mode::kViewTimeZone:
+          mChangingClockInfo = mClockInfo;
+          initChangingClock();
+          mZoneRegistryIndex = mZoneManager.indexForZoneId(
+              mChangingClockInfo.timeZoneData.zoneId);
+        #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+          mClockInfo.mode = Mode::kChangeTimeZoneOffset;
+        #else
+          mClockInfo.mode = Mode::kChangeTimeZoneName;
+        #endif
           break;
-      }
-    }
 
-    /** Do action associated with the given ModeGroup due to a LongPress. */
-    void performModeLongPressAction() {
-      if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("performModeLongPressAction()"));
-      }
+        case Mode::kViewSettings:
+        #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+          mClockInfo.mode = Mode::kChangeSettingsBacklight;
+        #else
+          mClockInfo.mode = Mode::kChangeSettingsContrast;
+        #endif
+          break;
 
-      switch ((Mode) mNavigator.modeId()) {
+        // Long Press in Change mode, so save the changed info.
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -245,6 +255,7 @@ class Controller {
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
           saveDateTime();
+          mClockInfo.mode = Mode::kViewDateTime;
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -254,6 +265,7 @@ class Controller {
         case Mode::kChangeTimeZoneName:
       #endif
           saveChangingClockInfo();
+          mClockInfo.mode = Mode::kViewTimeZone;
           break;
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
@@ -269,6 +281,66 @@ class Controller {
         case Mode::kChangeSettingsLedBrightness:
       #endif
           saveClockInfo();
+          mClockInfo.mode = Mode::kViewSettings;
+          break;
+
+        default:
+          break;
+      }
+
+      mChangingClockInfo.mode = mClockInfo.mode;
+    }
+
+    // If the system clock hasn't been initialized, set the initial
+    // clock to epoch 0, which is 2000-01-01T00:00:00 UTC.
+    void initChangingClock() {
+      if (mChangingClockInfo.dateTime.isError()) {
+        mChangingClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
+            0, mChangingClockInfo.dateTime.timeZone());
+      }
+    }
+
+    /**
+     * Exit the edit mode while throwing away all changes. Does nothing if not
+     * already in edit mode.
+     */
+    void handleModeButtonDoubleClick() {
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
+      }
+
+      switch (mClockInfo.mode) {
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
+          mClockInfo.mode = Mode::kViewDateTime;
+          break;
+
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        case Mode::kChangeTimeZoneOffset:
+        case Mode::kChangeTimeZoneDst:
+      #else
+        case Mode::kChangeTimeZoneName:
+      #endif
+          mClockInfo.mode = Mode::kViewTimeZone;
+          break;
+
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        case Mode::kChangeSettingsBacklight:
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeSettingsBias:
+      #else
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeInvertDisplay:
+      #endif
+      #if ENABLE_LED_DISPLAY
+        case Mode::kChangeSettingsLedOnOff:
+        case Mode::kChangeSettingsLedBrightness:
+      #endif
+          mClockInfo.mode = Mode::kViewSettings;
           break;
 
         default:
@@ -283,7 +355,7 @@ class Controller {
       mClockInfo.suppressBlink = true;
       mChangingClockInfo.suppressBlink = true;
 
-      switch ((Mode) mNavigator.modeId()) {
+      switch (mClockInfo.mode) {
         // Switch 12/24 modes if in Mode::kDataTime
         case Mode::kViewDateTime:
           mClockInfo.hourMode ^= 0x1;
@@ -322,7 +394,6 @@ class Controller {
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneOffset: {
-
           TimeZone tz = mZoneManager.createForTimeZoneData(
               mChangingClockInfo.timeZoneData);
           TimeOffset offset = tz.getStdOffset();
@@ -333,7 +404,6 @@ class Controller {
         }
 
         case Mode::kChangeTimeZoneDst: {
-
           TimeZone tz = mZoneManager.createForTimeZoneData(
               mChangingClockInfo.timeZoneData);
           TimeOffset dstOffset = tz.getDstOffset();
@@ -411,13 +481,13 @@ class Controller {
       //    button is held down.
       //  * Each change of 12/24 mode causes a write to the EEPPROM, which
       //    causes wear and tear.
-      if (mNavigator.modeId() != (uint8_t) Mode::kViewDateTime) {
+      if (mClockInfo.mode != Mode::kViewDateTime) {
         handleChangeButtonPress();
       }
     }
 
     void handleChangeButtonRelease() {
-      switch ((Mode) mNavigator.modeId()) {
+      switch (mClockInfo.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -482,7 +552,7 @@ class Controller {
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update the mChangingDateTime.second field with the current second.
-      switch ((Mode) mNavigator.modeId()) {
+      switch (mClockInfo.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -502,7 +572,7 @@ class Controller {
     void updatePresenter() {
       ClockInfo* clockInfo;
 
-      switch ((Mode) mNavigator.modeId()) {
+      switch (mClockInfo.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -525,7 +595,7 @@ class Controller {
           clockInfo = &mClockInfo;
       }
 
-      mPresenter.setRenderingInfo((Mode) mNavigator.modeId(), *clockInfo);
+      mPresenter.setRenderingInfo(mClockInfo.mode, *clockInfo);
     }
 
     /** Save the current UTC dateTime to the RTC. */
@@ -643,6 +713,7 @@ class Controller {
     SystemClock& mClock;
     PersistentStore& mPersistentStore;
     Presenter& mPresenter;
+
   #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
     ManualZoneManager& mZoneManager;
   #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
@@ -650,8 +721,8 @@ class Controller {
   #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
     ExtendedZoneManager& mZoneManager;
   #endif
+
     TimeZoneData mInitialTimeZoneData;
-    ModeNavigator mNavigator;
   #if ENABLE_DHT22
     DHT* const mDht;
   #endif
