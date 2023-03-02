@@ -28,7 +28,7 @@ class Controller {
         mPersistentStore(persistentStore),
         mPresenter(presenter)
     {
-      mMode = Mode::kViewHourMinute;
+      mClockInfo.mode = Mode::kViewHourMinute;
     }
 
     void setup() {
@@ -51,10 +51,10 @@ class Controller {
      * noticeable drift against the RTC which has a 1 second resolution.
      */
     void update() {
-      if (mMode == Mode::kUnknown) return;
+      if (mClockInfo.mode == Mode::kUnknown) return;
       updateDateTime();
       updatePresenter();
-      mPresenter.display();
+      mPresenter.updateDisplay();
     }
 
     /** Should be called every 0.5 seconds to toggle the blinking state. */
@@ -69,51 +69,53 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("modeButtonPress()"));
       }
 
-      switch ((Mode) mMode) {
+      switch (mClockInfo.mode) {
         case Mode::kViewHourMinute:
-          mMode = Mode::kViewSecond;
+          mClockInfo.mode = Mode::kViewSecond;
           break;
         case Mode::kViewSecond:
-          mMode = Mode::kViewYear;
+          mClockInfo.mode = Mode::kViewYear;
           break;
         case Mode::kViewYear:
-          mMode = Mode::kViewMonth;
+          mClockInfo.mode = Mode::kViewMonth;
           break;
         case Mode::kViewMonth:
-          mMode = Mode::kViewDay;
+          mClockInfo.mode = Mode::kViewDay;
           break;
         case Mode::kViewDay:
-          mMode = Mode::kViewWeekday;
+          mClockInfo.mode = Mode::kViewWeekday;
           break;
         case Mode::kViewWeekday:
-          mMode = Mode::kViewBrightness;
+          mClockInfo.mode = Mode::kViewBrightness;
           break;
         case Mode::kViewBrightness:
-          mMode = Mode::kViewHourMinute;
+          mClockInfo.mode = Mode::kViewHourMinute;
           break;
 
         case Mode::kChangeHour:
-          mMode = Mode::kChangeMinute;
+          mClockInfo.mode = Mode::kChangeMinute;
           break;
         case Mode::kChangeMinute:
-          mMode = Mode::kChangeSecond;
+          mClockInfo.mode = Mode::kChangeSecond;
           break;
         case Mode::kChangeSecond:
-          mMode = Mode::kChangeYear;
+          mClockInfo.mode = Mode::kChangeYear;
           break;
         case Mode::kChangeYear:
-          mMode = Mode::kChangeMonth;
+          mClockInfo.mode = Mode::kChangeMonth;
           break;
         case Mode::kChangeMonth:
-          mMode = Mode::kChangeDay;
+          mClockInfo.mode = Mode::kChangeDay;
           break;
         case Mode::kChangeDay:
-          mMode = Mode::kChangeHour;
+          mClockInfo.mode = Mode::kChangeHour;
           break;
 
         default:
           break;
       }
+
+      mChangingClockInfo.mode = mClockInfo.mode;
     }
 
     void modeButtonLongPress() {
@@ -121,90 +123,92 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("modeButtonLongPress()"));
       }
 
-      switch ((Mode) mMode) {
+      switch (mClockInfo.mode) {
         case Mode::kViewHourMinute:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = Mode::kChangeHour;
+          mClockInfo.mode = Mode::kChangeHour;
           break;
 
         case Mode::kViewSecond:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = Mode::kChangeSecond;
+          mClockInfo.mode = Mode::kChangeSecond;
           break;
 
         case Mode::kViewYear:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = Mode::kChangeYear;
+          mClockInfo.mode = Mode::kChangeYear;
           break;
 
         case Mode::kViewMonth:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = Mode::kChangeMonth;
+          mClockInfo.mode = Mode::kChangeMonth;
           break;
 
         case Mode::kViewDay:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = Mode::kChangeDay;
+          mClockInfo.mode = Mode::kChangeDay;
           break;
 
         case Mode::kViewWeekday:
           mChangingClockInfo = mClockInfo;
           mSecondFieldCleared = false;
-          mMode = Mode::kChangeWeekday;
+          mClockInfo.mode = Mode::kChangeWeekday;
           break;
 
         case Mode::kViewBrightness:
-          mMode = Mode::kChangeBrightness;
+          mClockInfo.mode = Mode::kChangeBrightness;
           break;
 
         case Mode::kChangeYear:
           saveDateTime();
-          mMode = Mode::kViewYear;
+          mClockInfo.mode = Mode::kViewYear;
           break;
 
         case Mode::kChangeMonth:
           saveDateTime();
-          mMode = Mode::kViewMonth;
+          mClockInfo.mode = Mode::kViewMonth;
           break;
 
         case Mode::kChangeDay:
           saveDateTime();
-          mMode = Mode::kViewDay;
+          mClockInfo.mode = Mode::kViewDay;
           break;
 
         case Mode::kChangeHour:
           saveDateTime();
-          mMode = Mode::kViewHourMinute;
+          mClockInfo.mode = Mode::kViewHourMinute;
           break;
 
         case Mode::kChangeMinute:
           saveDateTime();
-          mMode = Mode::kViewHourMinute;
+          mClockInfo.mode = Mode::kViewHourMinute;
           break;
 
         case Mode::kChangeSecond:
           saveDateTime();
-          mMode = Mode::kViewSecond;
+          mClockInfo.mode = Mode::kViewSecond;
           break;
 
         case Mode::kChangeWeekday:
           saveDateTime();
-          mMode = Mode::kViewWeekday;
+          mClockInfo.mode = Mode::kViewWeekday;
           break;
 
         case Mode::kChangeBrightness:
           preserveClockInfo(mClockInfo);
-          mMode = Mode::kViewBrightness;
+          mClockInfo.mode = Mode::kViewBrightness;
           break;
 
         default:
           break;
       }
+
+      mChangingClockInfo.mode = mClockInfo.mode;
     }
 
     void changeButtonPress() {
@@ -215,7 +219,7 @@ class Controller {
       mClockInfo.suppressBlink = true;
       mChangingClockInfo.suppressBlink = true;
 
-      switch ((Mode) mMode) {
+      switch (mClockInfo.mode) {
         case Mode::kChangeHour:
           offset_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
@@ -278,7 +282,7 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("changeButtonRelease()"));
       }
 
-      switch ((Mode) mMode) {
+      switch (mClockInfo.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -307,7 +311,7 @@ class Controller {
 
       // If in CHANGE mode, and the 'second' field has not been cleared, update
       // the displayed time with the current second.
-      switch ((Mode) mMode) {
+      switch (mClockInfo.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -327,7 +331,7 @@ class Controller {
     void updatePresenter() {
       ClockInfo* clockInfo;
 
-      switch ((Mode) mMode) {
+      switch (mClockInfo.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -343,7 +347,7 @@ class Controller {
           clockInfo = &mClockInfo;
       }
 
-      mPresenter.setRenderingInfo(mMode, *clockInfo);
+      mPresenter.setRenderingInfo(*clockInfo);
     }
 
     /** Save the current UTC dateTime to the RTC. */
@@ -401,8 +405,6 @@ class Controller {
 
     ClockInfo mClockInfo; // current clock
     ClockInfo mChangingClockInfo; // the target clock
-
-    Mode mMode = Mode::kUnknown; // current mode
 
     bool mSecondFieldCleared;
 };

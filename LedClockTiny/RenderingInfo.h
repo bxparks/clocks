@@ -10,6 +10,7 @@
  */ 
 struct RenderingInfo {
   Mode mode = Mode::kUnknown; // display mode
+
   bool blinkShowState = true; // true if blinking info should be shown
 
   /** Blinking should be suppressed. e.g. when RepeatPress is active. */

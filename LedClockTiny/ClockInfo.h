@@ -12,6 +12,9 @@ struct ClockInfo {
   /** 00:00:00 - 23:59:59 */
   static uint8_t const kTwentyFour = 1;
 
+  /** display mode */
+  Mode mode = Mode::kUnknown;
+
   /** Blinking info should be shown. Should be toggled every 0.5 sec. */
   bool blinkShowState = false;
 
