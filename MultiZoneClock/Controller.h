@@ -526,24 +526,24 @@ class Controller {
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
         case Mode::kChangeSettingsBacklight: {
-          incrementMod(mClockInfo.backlightLevel, (uint8_t) 10);
+          incrementMod(mChangingClockInfo.backlightLevel, (uint8_t) 10);
           break;
         }
         case Mode::kChangeSettingsContrast: {
-          incrementMod(mClockInfo.contrast, (uint8_t) 128);
+          incrementMod(mChangingClockInfo.contrast, (uint8_t) 128);
           break;
         }
         case Mode::kChangeSettingsBias: {
-          incrementMod(mClockInfo.bias, (uint8_t) 8);
+          incrementMod(mChangingClockInfo.bias, (uint8_t) 8);
           break;
         }
       #else
         case Mode::kChangeSettingsContrast: {
-          incrementMod(mClockInfo.contrastLevel, (uint8_t) 10);
+          incrementMod(mChangingClockInfo.contrastLevel, (uint8_t) 10);
           break;
         }
         case Mode::kChangeInvertDisplay: {
-          incrementMod(mClockInfo.invertDisplay, (uint8_t) 3);
+          incrementMod(mChangingClockInfo.invertDisplay, (uint8_t) 3);
           break;
         }
       #endif
@@ -686,6 +686,14 @@ class Controller {
         case Mode::kChangeTimeZone1Name:
         case Mode::kChangeTimeZone2Name:
         case Mode::kChangeTimeZone3Name:
+      #endif
+      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+        case Mode::kChangeSettingsBacklight:
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeSettingsBias:
+      #else
+        case Mode::kChangeSettingsContrast:
+        case Mode::kChangeInvertDisplay:
       #endif
           clockInfo = &mChangingClockInfo;
           break;
