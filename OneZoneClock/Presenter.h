@@ -235,53 +235,13 @@ class Presenter {
         mDisplay.setContrast(value);
       }
 
-      // Update invertDisplay if changed.
-      mRenderingInfo.invertDisplay = calculateActualInvertDisplay(clockInfo);
+      // Invert the display if needed
       if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
-          || mPrevRenderingInfo.invertDisplay != mRenderingInfo.invertDisplay) {
-        mDisplay.invertDisplay(mRenderingInfo.invertDisplay);
+          || mPrevRenderingInfo.clockInfo.invertState
+              != mRenderingInfo.clockInfo.invertState) {
+        mDisplay.invertDisplay(mRenderingInfo.clockInfo.invertState);
       }
     #endif
-    }
-
-    /**
-     * Calculate the next actual invertDisplay setting. Automatically
-     * alternating inversion is an attempt to extend the life-time of these
-     * OLED devices which seem to suffer from burn-in after about 6-12 months.
-     */
-    static uint8_t calculateActualInvertDisplay(ClockInfo& clockInfo) {
-      uint8_t invertDisplay;
-      if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely
-          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
-          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
-
-        const ZonedDateTime& dateTime = clockInfo.dateTime;
-        const LocalDateTime& ldt = dateTime.localDateTime();
-
-        // The XOR alternates the pattern of on/off to smooth out the wear level
-        // on specific digits. For example, if kInvertDisplayMinutely is
-        // selected, and if last bit of only the minute is used, then the "1" on
-        // the minute segment will always be inverted, which will cause uneven
-        // wearning. By XOR'ing with the hour(), we invert the on/off cycle
-        // every hour.
-        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely) {
-          invertDisplay = ((ldt.minute() & 0x1) ^ (ldt.hour() & 0x1))
-              ? ClockInfo::kInvertDisplayOn
-              : ClockInfo::kInvertDisplayOff;
-        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
-          invertDisplay = ((ldt.hour() & 0x1) ^ (ldt.day() & 0x1))
-              ? ClockInfo::kInvertDisplayOn
-              : ClockInfo::kInvertDisplayOff;
-        } else {
-          invertDisplay = (7 <= ldt.hour() && ldt.hour() < 19)
-              ? ClockInfo::kInvertDisplayOn
-              : ClockInfo::kInvertDisplayOff;
-        }
-      } else {
-        invertDisplay = clockInfo.invertDisplay;
-      }
-
-      return invertDisplay;
     }
 
   #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
