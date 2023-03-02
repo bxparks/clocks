@@ -34,4 +34,18 @@ struct ClockInfo {
   ace_time::ZonedDateTime dateTime;
 };
 
+inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
+  return a.mode == b.mode
+      && a.blinkShowState == b.blinkShowState
+      && a.suppressBlink == b.suppressBlink
+      && a.hourMode == b.hourMode
+      && a.brightness == b.brightness
+      && a.timeZoneData == b.timeZoneData
+      && a.dateTime == b.dateTime;
+}
+
+inline bool operator!=(const ClockInfo& a, const ClockInfo& b) {
+  return ! (a == b);
+}
+
 #endif
