@@ -60,8 +60,8 @@ class Presenter {
       mPrevRenderingInfo = mRenderingInfo;
     }
 
-    void setRenderingInfo(Mode mode, const ClockInfo& clockInfo) {
-      mRenderingInfo.mode = mode;
+    void setRenderingInfo(const ClockInfo& clockInfo) {
+      mRenderingInfo.mode = clockInfo.mode;
       mRenderingInfo.suppressBlink = clockInfo.suppressBlink;
       mRenderingInfo.blinkShowState = clockInfo.blinkShowState;
       mRenderingInfo.hourMode = clockInfo.hourMode;
