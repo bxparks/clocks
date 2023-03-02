@@ -86,9 +86,9 @@ class Controller {
       updatePresenter();
     }
 
-    void modeButtonPress() {
+    void handleModeButtonPress() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("modeButtonPress()"));
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
 
       switch ((Mode) mClockInfo.mode) {
@@ -146,9 +146,9 @@ class Controller {
       mChangingClockInfo.mode = mClockInfo.mode;
     }
 
-    void modeButtonLongPress() {
+    void handleModeButtonLongPress() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("modeButtonLongPress()"));
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
       }
 
       switch (mClockInfo.mode) {
@@ -255,9 +255,9 @@ class Controller {
       }
     }
 
-    void changeButtonPress() {
+    void handleChangeButtonPress() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("changeButtonPress()"));
+        SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
 
       mClockInfo.suppressBlink = true;
@@ -319,17 +319,17 @@ class Controller {
       update();
     }
 
-    void changeButtonRepeatPress() {
+    void handleChangeButtonRepeatPress() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("changeButtonRepeatPress()"));
+        SERIAL_PORT_MONITOR.println(F("handleChangeButtonRepeatPress()"));
       }
 
-      changeButtonPress();
+      handleChangeButtonPress();
     }
 
-    void changeButtonRelease() {
+    void handleChangeButtonRelease() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("changeButtonRelease()"));
+        SERIAL_PORT_MONITOR.println(F("handleChangeButtonRelease()"));
       }
 
       switch (mClockInfo.mode) {
