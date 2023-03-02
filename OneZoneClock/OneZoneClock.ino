@@ -29,7 +29,6 @@
 #include <AceTime.h>
 #include <AceTimeClock.h>
 #include <AceUtils.h>
-#include <mode_group/mode_group.h> // from AceUtils
 #include <SPI.h>
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
   #include <SSD1306AsciiAceWire.h>
@@ -388,13 +387,13 @@ COROUTINE(printFrameRate) {
 }
 #endif
 
-
 COROUTINE(blinker) {
   COROUTINE_LOOP() {
     controller.updateBlinkState();
     COROUTINE_DELAY(500);
   }
 }
+
 //------------------------------------------------------------------
 // Configure AceButton.
 //------------------------------------------------------------------

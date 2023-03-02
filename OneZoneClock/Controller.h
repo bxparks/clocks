@@ -462,7 +462,6 @@ class Controller {
           break;
         }
         case Mode::kChangeSettingsLedBrightness: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.ledBrightness, (uint8_t) 8);
           break;
         }
