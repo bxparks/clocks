@@ -4,7 +4,7 @@
 #include <AceTime.h>
 #include <AceSegment.h>
 #include "config.h"
-#include "RenderingInfo.h"
+#include "ClockInfo.h"
 
 using ace_time::DateStrings;
 using ace_time::OffsetDateTime;
@@ -26,7 +26,7 @@ class Presenter {
         mStringWriter(mCharWriter)
     {}
 
-    void display() {
+    void updateDisplay() {
       if (needsClear()) {
         clearDisplay();
       }
@@ -35,16 +35,11 @@ class Presenter {
         displayData();
       }
 
-      mPrevRenderingInfo = mRenderingInfo;
+      mPrevClockInfo = mClockInfo;
     }
 
-    void setRenderingInfo(Mode mode, bool blinkShowState,
-        const ClockInfo& clockInfo) {
-      mRenderingInfo.mode = mode;
-      mRenderingInfo.blinkShowState = blinkShowState;
-      mRenderingInfo.hourMode = clockInfo.hourMode;
-      mRenderingInfo.brightness = clockInfo.brightness;
-      mRenderingInfo.dateTime = clockInfo.dateTime;
+    void setClockInfo(const ClockInfo& clockInfo) {
+      mClockInfo = clockInfo;
     }
 
   private:
@@ -54,38 +49,40 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(Mode mode) const {
-      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
+      return mode != mClockInfo.mode
+          || mClockInfo.blinkShowState
+          || mClockInfo.suppressBlink;
     }
 
     /** The display needs to be cleared before rendering. */
     bool needsClear() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode;
+      return mClockInfo.mode != mPrevClockInfo.mode;
     }
 
     /** The display needs to be updated because something changed. */
     bool needsUpdate() const {
-      return mRenderingInfo != mPrevRenderingInfo;
+      return mClockInfo != mPrevClockInfo;
     }
 
     /** Update the display settings, e.g. brightness, backlight, etc. */
     void updateDisplaySettings() {
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          mPrevRenderingInfo.brightness != mRenderingInfo.brightness) {
-        mDisplay.setBrightness(mRenderingInfo.brightness);
+      if (mPrevClockInfo.mode == Mode::kUnknown ||
+          mPrevClockInfo.brightness != mClockInfo.brightness) {
+        mDisplay.setBrightness(mClockInfo.brightness);
       }
     }
 
     void clearDisplay() { mClockWriter.clear(); }
 
     void displayData() {
-      const OffsetDateTime& dateTime = mRenderingInfo.dateTime;
+      const OffsetDateTime& dateTime = mClockInfo.dateTime;
       #if ENABLE_SERIAL_DEBUG >= 2
         SERIAL_PORT_MONITOR.print(F("displayData():"));
         dateTime.printTo(SERIAL_PORT_MONITOR);
         SERIAL_PORT_MONITOR.println();
       #endif
 
-      switch ((Mode) mRenderingInfo.mode) {
+      switch ((Mode) mClockInfo.mode) {
         case Mode::kViewHourMinute:
         case Mode::kChangeHour:
         case Mode::kChangeMinute:
@@ -203,7 +200,7 @@ class Presenter {
         // that turns out to save only 18 bytes (12 of which are character
         // patterns in NumberWriter::kHexCharPatterns[]) so not really worth
         // duplicating the code here.
-        mNumberWriter.writeDec2At(2, mRenderingInfo.brightness, kPatternSpace);
+        mNumberWriter.writeDec2At(2, mClockInfo.brightness, kPatternSpace);
       } else {
         mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
@@ -220,8 +217,8 @@ class Presenter {
     CharWriter<LedModule> mCharWriter;
     StringWriter<LedModule> mStringWriter;
 
-    RenderingInfo mRenderingInfo;
-    RenderingInfo mPrevRenderingInfo;
+    ClockInfo mClockInfo;
+    ClockInfo mPrevClockInfo;
 
 };
 

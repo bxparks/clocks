@@ -269,6 +269,17 @@ void updateClock() {
   }
 }
 
+void blinker() {
+  static uint16_t lastRunMillis;
+
+  uint16_t nowMillis = millis();
+  uint16_t elapsedMillis = nowMillis - lastRunMillis;
+  if (elapsedMillis >= 500) {
+    lastRunMillis = nowMillis;
+    controller.updateBlinkState();
+  }
+}
+
 //------------------------------------------------------------------
 // Configure AceButton.
 //------------------------------------------------------------------
@@ -312,24 +323,24 @@ void handleButtonEvent(AceButton* button, uint8_t eventType,
   if (pin == MODE_BUTTON_PIN) {
     switch (eventType) {
       case AceButton::kEventReleased:
-        controller.modeButtonPress();
+        controller.handleModeButtonPress();
         break;
       case AceButton::kEventLongPressed:
-        controller.modeButtonLongPress();
+        controller.handleModeButtonLongPress();
         break;
     }
 
   } else if (pin == CHANGE_BUTTON_PIN) {
     switch (eventType) {
       case AceButton::kEventPressed:
-        controller.changeButtonPress();
+        controller.handleChangeButtonPress();
         break;
       case AceButton::kEventReleased:
       case AceButton::kEventLongReleased:
-        controller.changeButtonRelease();
+        controller.handleChangeButtonRelease();
         break;
       case AceButton::kEventRepeatPressed:
-        controller.changeButtonRepeatPress();
+        controller.handleChangeButtonRepeatPress();
         break;
     }
   }
@@ -415,6 +426,7 @@ void setup() {
 
 void loop() {
   checkButtons();
+  blinker();
   updateClock();
   renderLed();
 }

@@ -80,6 +80,7 @@ class Controller {
       mPresenter.updateDisplay();
     }
 
+    /** Should be called every 0.5 seconds to toggle the blinking state. */
     void updateBlinkState () {
       mClockInfo.blinkShowState = !mClockInfo.blinkShowState;
       mChangingClockInfo.blinkShowState = !mChangingClockInfo.blinkShowState;
