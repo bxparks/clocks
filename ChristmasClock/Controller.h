@@ -76,14 +76,14 @@ class Controller {
     void update() {
       if (mClockInfo.mode == Mode::kUnknown) return;
       updateDateTime();
-      updateRenderingInfo();
-      mPresenter.display();
+      updatePresenter();
+      mPresenter.updateDisplay();
     }
 
     void updateBlinkState () {
       mClockInfo.blinkShowState = !mClockInfo.blinkShowState;
       mChangingClockInfo.blinkShowState = !mChangingClockInfo.blinkShowState;
-      mPresenter.display();
+      updatePresenter();
     }
 
     void modeButtonPress() {
@@ -374,7 +374,7 @@ class Controller {
       }
     }
 
-    void updateRenderingInfo() {
+    void updatePresenter() {
       ClockInfo* clockInfo;
 
       switch (mClockInfo.mode) {
@@ -392,7 +392,7 @@ class Controller {
           clockInfo = &mClockInfo;
       }
 
-      mPresenter.setRenderingInfo(*clockInfo);
+      mPresenter.setClockInfo(*clockInfo);
     }
 
     /** Save the current UTC dateTime to the RTC. */
