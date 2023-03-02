@@ -201,11 +201,8 @@ void setupAceSegment() {
 COROUTINE(renderLed) {
   COROUTINE_LOOP() {
     ledModule.flushIncremental();
-    COROUTINE_DELAY(5);
+    COROUTINE_DELAY(20);
   }
-}
-
-void setupRenderingInterrupt() {
 }
 
 //------------------------------------------------------------------
@@ -229,6 +226,13 @@ COROUTINE(updateClock) {
   COROUTINE_LOOP() {
     controller.update();
     COROUTINE_DELAY(100);
+  }
+}
+
+COROUTINE(blinker) {
+  COROUTINE_LOOP() {
+    controller.updateBlinkState();
+    COROUTINE_DELAY(500);
   }
 }
 
@@ -422,7 +426,6 @@ void setup() {
   setupAceButton();
   setupClocks();
   setupAceSegment();
-  setupRenderingInterrupt();
   controller.setup();
 
 #if ENABLE_SERIAL_DEBUG >= 1
@@ -432,6 +435,7 @@ void setup() {
 
 void loop() {
   checkButtons.runCoroutine();
+  blinker.runCoroutine();
   updateClock.runCoroutine();
   renderLed.runCoroutine();
 

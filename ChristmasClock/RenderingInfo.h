@@ -10,7 +10,8 @@
  */ 
 struct RenderingInfo {
   Mode mode = Mode::kUnknown; // display mode
-  bool blinkShowState = true; // true if blinking info should be shown
+  bool blinkShowState = false; // true if blinking info should be shown
+  bool suppressBlink = false; // true if blinking info should be suppressed
   uint8_t hourMode = 0; // 12/24 mode
   uint8_t brightness = 1;
   ace_time::TimeZoneData timeZoneData;
@@ -19,6 +20,7 @@ struct RenderingInfo {
 
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
   return a.mode == b.mode
+      && a.suppressBlink == b.suppressBlink
       && a.blinkShowState == b.blinkShowState
       && a.hourMode == b.hourMode
       && a.brightness == b.brightness

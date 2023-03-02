@@ -15,6 +15,9 @@ struct ClockInfo {
   /** 12/24 mode */
   uint8_t hourMode = kTwelve;
 
+  bool blinkShowState = false; // true if blinking info should be shown
+  bool suppressBlink = false; // true if blinking should be suppressed
+
   /** Brightness, 1 - 7 for Tm1636Display; 1 - SUBFIELDS for ScanningDisplay. */
   uint8_t brightness = 1;
 
