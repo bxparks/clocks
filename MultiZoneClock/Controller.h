@@ -91,9 +91,23 @@ class Controller {
     void update() {
       if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
       updateDateTime();
-      updateBlinkState();
-      updateRenderingInfo();
+      updatePresenter();
       mPresenter.display();
+    }
+
+    /**
+     * The blinking clock is different than the SystemClock, so the blinking
+     * will becomes slightly skewed from the changes to the 'second' field. If
+     * the 'second' field is not displayed, then this is not a big deal. But if
+     * the second field shown, people may notice that the two are not
+     * synchronized. It would be nice to trigger the blinking from the
+     * SystemClock. The tricky thing is that the SystemClock has only
+     * one-second resolution, but blinking requires 0.5s resolution.
+     */
+    void updateBlinkState () {
+      mClockInfo.blinkShowState = !mClockInfo.blinkShowState;
+      mChangingClockInfo.blinkShowState = !mChangingClockInfo.blinkShowState;
+      updatePresenter();
     }
 
     void handleModeButtonPress() {
@@ -315,15 +329,18 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
+      mClockInfo.suppressBlink = true;
+      mChangingClockInfo.suppressBlink = true;
+
       switch ((Mode) mNavigator.modeId()) {
-        // Change button causes toggling of 12/24 modes if in Mode::kViewDateTime
+        // Change button causes toggling of 12/24 modes if in
+        // Mode::kViewDateTime
         case Mode::kViewDateTime:
           mClockInfo.hourMode ^= 0x1;
           preserveClockInfo(mClockInfo);
           break;
 
         case Mode::kChangeYear:
-          mSuppressBlink = true;
           #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
             zoned_date_time_mutation::incrementYear(
                 mChangingClockInfo.dateTime);
@@ -347,24 +364,19 @@ class Controller {
           #endif
           break;
         case Mode::kChangeMonth:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeDay:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeHour:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeMinute:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(
               mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeSecond:
-          mSuppressBlink = true;
           mChangingClockInfo.dateTime.second(0);
           mSecondFieldCleared = true;
           break;
@@ -375,7 +387,6 @@ class Controller {
         case Mode::kChangeTimeZone2Offset:
         case Mode::kChangeTimeZone3Offset:
         {
-          mSuppressBlink = true;
           if (ENABLE_SERIAL_DEBUG >= 1) {
             if (! mCurrentZone) {
               SERIAL_PORT_MONITOR.println("***CurrentZone is NULL***");
@@ -394,7 +405,6 @@ class Controller {
         case Mode::kChangeTimeZone2Dst:
         case Mode::kChangeTimeZone3Dst:
         {
-          mSuppressBlink = true;
           TimeZone tz = mZoneManager.createForTimeZoneData(*mCurrentZone);
           TimeOffset dstOffset = tz.getDstOffset();
           dstOffset = (dstOffset.isZero())
@@ -412,7 +422,6 @@ class Controller {
         case Mode::kChangeTimeZone2Name:
         case Mode::kChangeTimeZone3Name:
         {
-          mSuppressBlink = true;
           mZoneRegistryIndex++;
           if (mZoneRegistryIndex >= mZoneManager.zoneRegistrySize()) {
             mZoneRegistryIndex = 0;
@@ -431,28 +440,23 @@ class Controller {
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
         case Mode::kChangeSettingsBacklight: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.backlightLevel, (uint8_t) 10);
           break;
         }
         case Mode::kChangeSettingsContrast: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.contrast, (uint8_t) 128);
           break;
         }
         case Mode::kChangeSettingsBias: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.bias, (uint8_t) 8);
           break;
         }
       #else
         case Mode::kChangeSettingsContrast: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.contrastLevel, (uint8_t) 10);
           break;
         }
         case Mode::kChangeInvertDisplay: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.invertDisplay, (uint8_t) 3);
           break;
         }
@@ -508,7 +512,8 @@ class Controller {
         case Mode::kChangeSettingsContrast:
         case Mode::kChangeInvertDisplay:
       #endif
-          mSuppressBlink = false;
+          mClockInfo.suppressBlink = false;
+          mChangingClockInfo.suppressBlink = false;
           break;
 
         default:
@@ -562,28 +567,7 @@ class Controller {
       }
     }
 
-    /**
-     * The blinking clock is different than the SystemClock, so the blinking
-     * will becomes slightly skewed from the changes to the 'second' field. If
-     * the 'second' field is not displayed, then this is not a big deal. But if
-     * the second field shown, people may notice that the two are not
-     * synchronized. It would be nice to trigger the blinking from the
-     * SystemClock. The tricky thing is that the SystemClock has only
-     * one-second resolution, but blinking requires 0.5s resolution.
-     */
-    void updateBlinkState () {
-      uint16_t now = millis();
-      uint16_t duration = now - mBlinkCycleStartMillis;
-      if (duration < 500) {
-        mBlinkShowState = true;
-      } else if (duration < 1000) {
-        mBlinkShowState = false;
-      } else {
-        mBlinkCycleStartMillis = now;
-      }
-    }
-
-    void updateRenderingInfo() {
+    void updatePresenter() {
       ClockInfo* clockInfo;
 
       switch ((Mode) mNavigator.modeId()) {
@@ -622,10 +606,7 @@ class Controller {
           clockInfo = &mClockInfo;
       }
 
-      bool blinkShowState = mSuppressBlink || mBlinkShowState;
-      mPresenter.setRenderingInfo(
-          (Mode) mNavigator.modeId(), blinkShowState, *clockInfo
-      );
+      mPresenter.setRenderingInfo((Mode) mNavigator.modeId(), *clockInfo);
     }
 
     /** Save the changed dateTime to the SystemClock. */
@@ -756,11 +737,6 @@ class Controller {
     uint16_t mZoneRegistryIndex = 0;
 
     bool mSecondFieldCleared = false;
-
-    // Handle blinking.
-    bool mSuppressBlink = false; // true if blinking should be suppressed
-    bool mBlinkShowState = true; // true means actually show
-    uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
 };
 
 #endif

@@ -516,6 +516,13 @@ COROUTINE(printFrameRate) {
 }
 #endif
 
+COROUTINE(blinker) {
+  COROUTINE_LOOP() {
+    controller.updateBlinkState();
+    COROUTINE_DELAY(500);
+  }
+}
+
 //-----------------------------------------------------------------------------
 // Configure AceButton.
 //-----------------------------------------------------------------------------

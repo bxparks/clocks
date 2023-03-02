@@ -10,14 +10,11 @@
  */ 
 struct RenderingInfo {
   Mode mode; // display mode
-  bool blinkShowState; // true if blinking info should be shown
-
   ClockInfo clockInfo;
 };
 
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
   return a.mode == b.mode
-      && a.blinkShowState == b.blinkShowState
       && a.clockInfo == b.clockInfo;
 }
 
