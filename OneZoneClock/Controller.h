@@ -11,7 +11,7 @@
 #include <AceTime.h>
 #include <AceUtils.h>
 #include "ClockInfo.h"
-#include "RenderingInfo.h"
+#include "ClockInfo.h"
 #include "StoredInfo.h"
 #include "PersistentStore.h"
 #include "Presenter.h"
@@ -211,6 +211,8 @@ class Controller {
           break;
       }
       #endif
+
+      mChangingClockInfo.mode = mClockInfo.mode;
     }
 
     /** Toggle edit mode. The editable field will start blinking. */
@@ -596,7 +598,7 @@ class Controller {
       }
 
       clockInfo->invertState = calculateInvertState(*clockInfo);
-      mPresenter.setRenderingInfo(*clockInfo);
+      mPresenter.setClockInfo(*clockInfo);
     }
 
     /**

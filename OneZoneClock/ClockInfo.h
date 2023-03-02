@@ -63,7 +63,7 @@ struct ClockInfo {
   uint8_t invertDisplay;
 
   /**
-   * Actual inversion state, derived from clockInfo.
+   * Actual inversion state, derived from invertDisplay.
    *
    *  * 0: white on black
    *  * 1: black on white

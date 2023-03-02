@@ -603,8 +603,6 @@ if (ENABLE_SERIAL_DEBUG >= 1) {
   SERIAL_PORT_MONITOR.println(sizeof(ClockInfo));
   SERIAL_PORT_MONITOR.print(F("sizeof(StoredInfo): "));
   SERIAL_PORT_MONITOR.println(sizeof(StoredInfo));
-  SERIAL_PORT_MONITOR.print(F("sizeof(RenderingInfo): "));
-  SERIAL_PORT_MONITOR.println(sizeof(RenderingInfo));
 }
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP \
