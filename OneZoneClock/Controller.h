@@ -98,9 +98,14 @@ class Controller {
     void update() {
       if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
       updateDateTime();
-      updateBlinkState();
-      updateRenderingInfo();
-      mPresenter.display();
+      updatePresenter();
+      mPresenter.updateDisplay();
+    }
+
+    void updateBlinkState () {
+      mClockInfo.blinkShowState = !mClockInfo.blinkShowState;
+      mChangingClockInfo.blinkShowState = !mChangingClockInfo.blinkShowState;
+      updatePresenter();
     }
 
     /**
@@ -275,6 +280,9 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
+      mClockInfo.suppressBlink = true;
+      mChangingClockInfo.suppressBlink = true;
+
       switch ((Mode) mNavigator.modeId()) {
         // Switch 12/24 modes if in Mode::kDataTime
         case Mode::kViewDateTime:
@@ -290,37 +298,30 @@ class Controller {
       #endif
 
         case Mode::kChangeYear:
-          mSuppressBlink = true;
           // Keep year between [2000,2100).
           zoned_date_time_mutation::incrementYear(
               mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeMonth:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeDay:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeHour:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeMinute:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(
               mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeSecond:
-          mSuppressBlink = true;
           mChangingClockInfo.dateTime.second(0);
           mSecondFieldCleared = true;
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneOffset: {
-          mSuppressBlink = true;
 
           TimeZone tz = mZoneManager.createForTimeZoneData(
               mChangingClockInfo.timeZoneData);
@@ -332,7 +333,6 @@ class Controller {
         }
 
         case Mode::kChangeTimeZoneDst: {
-          mSuppressBlink = true;
 
           TimeZone tz = mZoneManager.createForTimeZoneData(
               mChangingClockInfo.timeZoneData);
@@ -348,7 +348,6 @@ class Controller {
       #else
         // Cycle through the zones in the registry
         case Mode::kChangeTimeZoneName: {
-          mSuppressBlink = true;
           mZoneRegistryIndex++;
           if (mZoneRegistryIndex >= mZoneManager.zoneRegistrySize()) {
             mZoneRegistryIndex = 0;
@@ -363,28 +362,23 @@ class Controller {
 
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
         case Mode::kChangeSettingsBacklight: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.backlightLevel, (uint8_t) 10);
           break;
         }
         case Mode::kChangeSettingsContrast: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.contrast, (uint8_t) 128);
           break;
         }
         case Mode::kChangeSettingsBias: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.bias, (uint8_t) 8);
           break;
         }
       #else
         case Mode::kChangeSettingsContrast: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.contrastLevel, (uint8_t) 10);
           break;
         }
         case Mode::kChangeInvertDisplay: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.invertDisplay, (uint8_t) 5);
           break;
         }
@@ -392,7 +386,6 @@ class Controller {
 
       #if ENABLE_LED_DISPLAY
         case Mode::kChangeSettingsLedOnOff: {
-          mSuppressBlink = true;
           mClockInfo.ledOnOff = ! mClockInfo.ledOnOff;
           break;
         }
@@ -449,7 +442,8 @@ class Controller {
         case Mode::kChangeSettingsLedOnOff:
         case Mode::kChangeSettingsLedBrightness:
       #endif
-          mSuppressBlink = false;
+          mClockInfo.suppressBlink = false;
+          mChangingClockInfo.suppressBlink = false;
           break;
 
         default:
@@ -505,19 +499,7 @@ class Controller {
       }
     }
 
-    void updateBlinkState () {
-      uint16_t now = millis();
-      uint16_t duration = now - mBlinkCycleStartMillis;
-      if (duration < 500) {
-        mBlinkShowState = true;
-      } else if (duration < 1000) {
-        mBlinkShowState = false;
-      } else {
-        mBlinkCycleStartMillis = now;
-      }
-    }
-
-    void updateRenderingInfo() {
+    void updatePresenter() {
       ClockInfo* clockInfo;
 
       switch ((Mode) mNavigator.modeId()) {
@@ -543,9 +525,7 @@ class Controller {
           clockInfo = &mClockInfo;
       }
 
-      bool blinkShowState = mSuppressBlink || mBlinkShowState;
-      mPresenter.setRenderingInfo(
-          (Mode) mNavigator.modeId(), blinkShowState, *clockInfo);
+      mPresenter.setRenderingInfo((Mode) mNavigator.modeId(), *clockInfo);
     }
 
     /** Save the current UTC dateTime to the RTC. */
@@ -681,11 +661,6 @@ class Controller {
 
     uint16_t mZoneRegistryIndex;
     bool mSecondFieldCleared;
-
-    // Handle blinking
-    bool mSuppressBlink; // true if blinking should be suppressed
-    bool mBlinkShowState = true; // true means actually show
-    uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
 };
 
 #endif

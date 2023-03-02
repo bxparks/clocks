@@ -509,6 +509,13 @@ COROUTINE(printFrameRate) {
 }
 #endif
 
+
+COROUTINE(blinker) {
+  COROUTINE_LOOP() {
+    controller.updateBlinkState();
+    COROUTINE_DELAY(500);
+  }
+}
 //------------------------------------------------------------------
 // Configure AceButton.
 //------------------------------------------------------------------
@@ -751,6 +758,7 @@ if (ENABLE_SERIAL_DEBUG >= 1) {
 
 void loop() {
   readButtons.runCoroutine();
+  blinker.runCoroutine();
 
 #if ENABLE_DHT22
   updateTemperature.runCoroutine();

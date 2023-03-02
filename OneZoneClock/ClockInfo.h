@@ -15,6 +15,12 @@ struct ClockInfo {
   /** 12/24 mode */
   uint8_t hourMode;
 
+  /** Blinking info should be shown. Should be toggled every 0.5 sec. */
+  bool blinkShowState = false;
+
+  /** Blinking should be suppressed. e.g. when RepeatPress is active. */
+  bool suppressBlink = false;
+
   // Keeping uint8_t grouped together helps reduce storage on 32-bit processors
 #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
 
@@ -98,6 +104,8 @@ inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
     && a.nextSync == b.nextSync
     && a.clockSkew == b.clockSkew
     && a.syncStatusCode == b.syncStatusCode
+    && a.blinkShowState == b.blinkShowState
+    && a.suppressBlink == b.suppressBlink
     && a.hourMode == b.hourMode
   #if ENABLE_DHT22
     && a.temperatureC == b.temperatureC

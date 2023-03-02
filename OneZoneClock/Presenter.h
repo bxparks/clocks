@@ -88,7 +88,7 @@ class Presenter {
         mIsOverwriting(isOverwriting)
       {}
 
-    void display() {
+    void updateDisplay() {
       if (needsClear()) {
         clearDisplay();
       }
@@ -104,10 +104,8 @@ class Presenter {
       mPrevRenderingInfo = mRenderingInfo;
     }
 
-    void setRenderingInfo(Mode mode, bool blinkShowState,
-        const ClockInfo& clockInfo) {
+    void setRenderingInfo(Mode mode, const ClockInfo& clockInfo) {
       mRenderingInfo.mode = mode;
-      mRenderingInfo.blinkShowState = blinkShowState;
       mRenderingInfo.clockInfo = clockInfo;
     }
 
@@ -202,7 +200,9 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(Mode mode) const {
-      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
+      return mode != mRenderingInfo.mode
+        || mRenderingInfo.clockInfo.blinkShowState
+        || mRenderingInfo.clockInfo.suppressBlink;
     }
 
     /** The display needs to be cleared before rendering. */
