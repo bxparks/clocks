@@ -6,7 +6,6 @@
 #include <AceTime.h>
 #include <AceTimeClock.h>
 #include <AceUtils.h>
-#include <mode_group/mode_group.h> // from AceUtils
 #include "ClockInfo.h"
 #include "StoredInfo.h"
 #include "PersistentStore.h"
@@ -15,8 +14,6 @@
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_common::incrementMod;
-using ace_utils::mode_group::ModeGroup;
-using ace_utils::mode_group::ModeNavigator;
 
 /**
  * Class responsible for rendering the RenderingInfo to the indicated display.
