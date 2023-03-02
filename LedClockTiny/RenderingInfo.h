@@ -12,6 +12,9 @@ struct RenderingInfo {
   Mode mode = Mode::kUnknown; // display mode
   bool blinkShowState = true; // true if blinking info should be shown
 
+  /** Blinking should be suppressed. e.g. when RepeatPress is active. */
+  bool suppressBlink = false;
+
   uint8_t hourMode = 0; // 12/24 mode
   uint8_t brightness = 1;
   bool isDst = false;

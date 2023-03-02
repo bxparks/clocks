@@ -269,6 +269,17 @@ void updateClock() {
   }
 }
 
+void blinker() {
+  static uint16_t lastRunMillis;
+
+  uint16_t nowMillis = millis();
+  uint16_t elapsedMillis = nowMillis - lastRunMillis;
+  if (elapsedMillis >= 500) {
+    lastRunMillis = nowMillis;
+    controller.updateBlinkState();
+  }
+}
+
 //------------------------------------------------------------------
 // Configure AceButton.
 //------------------------------------------------------------------
@@ -415,6 +426,7 @@ void setup() {
 
 void loop() {
   checkButtons();
+  blinker();
   updateClock();
   renderLed();
 }
