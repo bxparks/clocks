@@ -104,8 +104,7 @@ class Presenter {
       mPrevRenderingInfo = mRenderingInfo;
     }
 
-    void setRenderingInfo(Mode mode, const ClockInfo& clockInfo) {
-      mRenderingInfo.mode = mode;
+    void setRenderingInfo(const ClockInfo& clockInfo) {
       mRenderingInfo.clockInfo = clockInfo;
     }
 
@@ -200,14 +199,14 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(Mode mode) const {
-      return mode != mRenderingInfo.mode
+      return mode != mRenderingInfo.clockInfo.mode
         || mRenderingInfo.clockInfo.blinkShowState
         || mRenderingInfo.clockInfo.suppressBlink;
     }
 
     /** The display needs to be cleared before rendering. */
     bool needsClear() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode;
+      return mRenderingInfo.clockInfo.mode != mPrevRenderingInfo.clockInfo.mode;
     }
 
     /** Update the display settings, e.g. brightness, backlight, etc. */
@@ -230,7 +229,7 @@ class Presenter {
         mDisplay.setBias(clockInfo.bias);
       }
     #else
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
+      if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
           || prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
         uint8_t value = toOledContrastValue(clockInfo.contrastLevel);
         mDisplay.setContrast(value);
@@ -238,7 +237,7 @@ class Presenter {
 
       // Update invertDisplay if changed.
       mRenderingInfo.invertDisplay = calculateActualInvertDisplay(clockInfo);
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
+      if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
           || mPrevRenderingInfo.invertDisplay != mRenderingInfo.invertDisplay) {
         mDisplay.invertDisplay(mRenderingInfo.invertDisplay);
       }
@@ -319,7 +318,7 @@ class Presenter {
       }
       setFont(1);
 
-      switch (mRenderingInfo.mode) {
+      switch (mRenderingInfo.clockInfo.mode) {
         case Mode::kViewDateTime:
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
@@ -390,7 +389,7 @@ class Presenter {
 
       const ZonedDateTime& prevDateTime = prevClockInfo.dateTime;
       const ZonedDateTime& dateTime = clockInfo.dateTime;
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
+      if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
           || prevDateTime != dateTime
           || prevClockInfo.hourMode != clockInfo.hourMode) {
         uint8_t hour = (clockInfo.hourMode == ClockInfo::kTwelve)
@@ -405,17 +404,17 @@ class Presenter {
         }
       }
 
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
+      if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
           || prevClockInfo.ledOnOff != clockInfo.ledOnOff) {
         mLedModule.setDisplayOn(clockInfo.ledOnOff);
       }
 
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
+      if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
           || prevClockInfo.ledBrightness != clockInfo.ledBrightness) {
         mLedModule.setBrightness(clockInfo.ledBrightness);
       }
 
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
+      if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
           || mLedModule.isFlushRequired()) {
         if (ENABLE_SERIAL_DEBUG >= 2) {
           SERIAL_PORT_MONITOR.println(F("displayLedModule(): flush()"));

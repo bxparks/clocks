@@ -10,15 +10,7 @@
  * what needs to be displayed.
  */
 struct RenderingInfo {
-  Mode mode = Mode::kUnknown; // display mode
-
   ClockInfo clockInfo;
-
-  /**
-   * The primary time zone of the clock, used to calculate auto-inversion of
-   * the display.
-   */
-  ace_time::TimeZone primaryTimeZone;
 
   /**
    * Actual inversion mode, derived from clockInfo.
@@ -30,8 +22,7 @@ struct RenderingInfo {
 };
 
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
-  return a.mode == b.mode
-    && a.clockInfo == b.clockInfo;
+  return a.clockInfo == b.clockInfo;
 }
 
 inline bool operator!=(const RenderingInfo& a, const RenderingInfo& b) {
