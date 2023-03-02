@@ -157,40 +157,52 @@ class Controller {
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZone0Offset:
           mClockInfo.mode = Mode::kChangeTimeZone0Dst;
+          updateTimeZones();
           break;
         case Mode::kChangeTimeZone0Dst:
           mClockInfo.mode = Mode::kChangeTimeZone1Offset;
+          updateTimeZones();
           break;
         case Mode::kChangeTimeZone1Offset:
           mClockInfo.mode = Mode::kChangeTimeZone1Dst;
+          updateTimeZones();
           break;
         case Mode::kChangeTimeZone1Dst:
           mClockInfo.mode = Mode::kChangeTimeZone2Offset;
+          updateTimeZones();
           break;
         case Mode::kChangeTimeZone2Offset:
           mClockInfo.mode = Mode::kChangeTimeZone2Dst;
+          updateTimeZones();
           break;
         case Mode::kChangeTimeZone2Dst:
           mClockInfo.mode = Mode::kChangeTimeZone3Offset;
+          updateTimeZones();
           break;
         case Mode::kChangeTimeZone3Offset:
           mClockInfo.mode = Mode::kChangeTimeZone3Dst;
+          updateTimeZones();
           break;
         case Mode::kChangeTimeZone3Dst:
           mClockInfo.mode = Mode::kChangeTimeZone0Offset;
+          updateTimeZones();
           break;
       #else
         case Mode::kChangeTimeZone0Name:
           mClockInfo.mode = Mode::kChangeTimeZone1Name;
+          updateTimeZones();
           break;
         case Mode::kChangeTimeZone1Name:
           mClockInfo.mode = Mode::kChangeTimeZone2Name;
+          updateTimeZones();
           break;
         case Mode::kChangeTimeZone2Name:
           mClockInfo.mode = Mode::kChangeTimeZone3Name;
+          updateTimeZones();
           break;
         case Mode::kChangeTimeZone3Name:
           mClockInfo.mode = Mode::kChangeTimeZone0Name;
+          updateTimeZones();
           break;
       #endif
 
@@ -543,6 +555,11 @@ class Controller {
           break;
       }
 
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.print(F("handleChangeButtonPress(): zoneIndex: "));
+        SERIAL_PORT_MONITOR.println(mZoneRegistryIndex);
+
+      }
       // Update the display right away to prevent jitters in the display when
       // the button is triggering RepeatPressed events.
       update();
