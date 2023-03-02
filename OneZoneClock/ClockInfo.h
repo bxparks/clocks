@@ -12,6 +12,15 @@ struct ClockInfo {
   /** 00:00:00 - 23:59:59 */
   static uint8_t const kTwentyFour = 1;
 
+  /** display mode */
+  Mode mode = Mode::kUnknown;
+
+  /** Blinking info should be shown. Should be toggled every 0.5 sec. */
+  bool blinkShowState = false;
+
+  /** Blinking should be suppressed. e.g. when RepeatPress is active. */
+  bool suppressBlink = false;
+
   /** 12/24 mode */
   uint8_t hourMode;
 
@@ -53,6 +62,13 @@ struct ClockInfo {
   /** Invert display mode. Only for OLED. */
   uint8_t invertDisplay;
 
+  /**
+   * Actual inversion state, derived from invertDisplay.
+   *
+   *  * 0: white on black
+   *  * 1: black on white
+   */
+  uint8_t invertState = 0;
 #endif
 
   /** The desired timezone of the clock. */
@@ -98,6 +114,9 @@ inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
     && a.nextSync == b.nextSync
     && a.clockSkew == b.clockSkew
     && a.syncStatusCode == b.syncStatusCode
+    && a.blinkShowState == b.blinkShowState
+    && a.suppressBlink == b.suppressBlink
+    && a.mode == b.mode
     && a.hourMode == b.hourMode
   #if ENABLE_DHT22
     && a.temperatureC == b.temperatureC
@@ -114,6 +133,7 @@ inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
   #else
     && a.contrastLevel == b.contrastLevel
     && a.invertDisplay == b.invertDisplay
+    && a.invertState == b.invertState
   #endif
     && a.timeZoneData == b.timeZoneData;
 }

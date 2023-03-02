@@ -10,32 +10,11 @@
  * what needs to be displayed.
  */
 struct RenderingInfo {
-  Mode mode = Mode::kUnknown; // display mode
-
-  bool blinkShowState; // true if blinking info should be shown
-
   ClockInfo clockInfo;
-
-  /**
-   * The primary time zone of the clock, used to calculate auto-inversion of
-   * the display.
-   */
-  ace_time::TimeZone primaryTimeZone;
-
-  /**
-   * Actual inversion mode, derived from clockInfo.
-   *
-   *  * 0: white on black
-   *  * 1: black on white
-   */
-  uint8_t invertDisplay = 0;
 };
 
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
-  return
-    a.blinkShowState == b.blinkShowState
-    && a.mode == b.mode
-    && a.clockInfo == b.clockInfo;
+  return a.clockInfo == b.clockInfo;
 }
 
 inline bool operator!=(const RenderingInfo& a, const RenderingInfo& b) {
