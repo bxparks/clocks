@@ -347,7 +347,7 @@ class Controller {
           clockInfo = &mClockInfo;
       }
 
-      mPresenter.setRenderingInfo(*clockInfo);
+      mPresenter.setClockInfo(*clockInfo);
     }
 
     /** Save the current UTC dateTime to the RTC. */

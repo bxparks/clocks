@@ -34,4 +34,19 @@ struct ClockInfo {
   ace_time::OffsetDateTime dateTime;
 };
 
+
+inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
+  return a.mode == b.mode
+      && a.blinkShowState == b.blinkShowState
+      && a.suppressBlink == b.suppressBlink
+      && a.hourMode == b.hourMode
+      && a.brightness == b.brightness
+      && a.isDst == b.isDst
+      && a.dateTime == b.dateTime;
+}
+
+inline bool operator!=(const ClockInfo& a, const ClockInfo& b) {
+  return ! (a == b);
+}
+
 #endif
