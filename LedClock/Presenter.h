@@ -47,7 +47,7 @@ class Presenter {
         mStringWriter(mCharWriter)
     {}
 
-    void display() {
+    void updateDisplay() {
       if (needsClear()) {
         clearDisplay();
       }
@@ -59,10 +59,10 @@ class Presenter {
       mPrevRenderingInfo = mRenderingInfo;
     }
 
-    void setRenderingInfo(Mode mode, bool blinkShowState,
-        const ClockInfo& clockInfo) {
+    void setRenderingInfo(Mode mode, const ClockInfo& clockInfo) {
       mRenderingInfo.mode = mode;
-      mRenderingInfo.blinkShowState = blinkShowState;
+      mRenderingInfo.blinkShowState = clockInfo.blinkShowState;
+      mRenderingInfo.suppressBlink = clockInfo.suppressBlink;
       mRenderingInfo.hourMode = clockInfo.hourMode;
       mRenderingInfo.brightness = clockInfo.brightness;
       mRenderingInfo.timeZoneData = clockInfo.timeZoneData;
@@ -76,7 +76,9 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(Mode mode) const {
-      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
+      return mode != mRenderingInfo.mode
+          || mRenderingInfo.blinkShowState
+          || mRenderingInfo.suppressBlink;
     }
 
     /** The display needs to be cleared before rendering. */

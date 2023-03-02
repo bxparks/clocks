@@ -76,9 +76,14 @@ class Controller {
     void update() {
       if (mMode == Mode::kUnknown) return;
       updateDateTime();
-      updateBlinkState();
-      updateRenderingInfo();
-      mPresenter.display();
+      updatePresenter();
+      mPresenter.updateDisplay();
+    }
+
+    void updateBlinkState () {
+      mClockInfo.blinkShowState = !mClockInfo.blinkShowState;
+      mChangingClockInfo.blinkShowState = !mChangingClockInfo.blinkShowState;
+      updatePresenter();
     }
 
     void modeButtonPress() {
@@ -248,41 +253,37 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("changeButtonPress()"));
       }
 
+      mChangingClockInfo.suppressBlink = true;
+      mClockInfo.suppressBlink = true;
+
       switch ((Mode) mMode) {
         case Mode::kChangeHour:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeMinute:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(
               mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeSecond:
-          mSuppressBlink = true;
           mSecondFieldCleared = true;
           mChangingClockInfo.dateTime.second(0);
           break;
 
         case Mode::kChangeYear:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeMonth:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeDay:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeTimeZone: {
-          mSuppressBlink = true;
           mZoneRegistryIndex++;
           if (mZoneRegistryIndex >= mZoneManager.zoneRegistrySize()) {
             mZoneRegistryIndex = 0;
@@ -295,7 +296,6 @@ class Controller {
         }
 
         case Mode::kChangeBrightness:
-          mSuppressBlink = true;
           incrementModOffset(
               mClockInfo.brightness,
               mBrightnessLevels,
@@ -334,7 +334,8 @@ class Controller {
         case Mode::kChangeSecond:
         case Mode::kChangeTimeZone:
         case Mode::kChangeBrightness:
-          mSuppressBlink = false;
+          mClockInfo.suppressBlink = false;
+          mChangingClockInfo.suppressBlink = false;
           break;
 
         default:
@@ -366,19 +367,7 @@ class Controller {
       }
     }
 
-    void updateBlinkState () {
-      uint16_t now = millis();
-      uint16_t duration = now - mBlinkCycleStartMillis;
-      if (duration < 500) {
-        mBlinkShowState = true;
-      } else if (duration < 1000) {
-        mBlinkShowState = false;
-      } else {
-        mBlinkCycleStartMillis = now;
-      }
-    }
-
-    void updateRenderingInfo() {
+    void updatePresenter() {
       ClockInfo* clockInfo;
 
       switch ((Mode) mMode) {
@@ -396,8 +385,7 @@ class Controller {
           clockInfo = &mClockInfo;
       }
 
-      mPresenter.setRenderingInfo(
-          mMode, mSuppressBlink || mBlinkShowState, *clockInfo);
+      mPresenter.setRenderingInfo(mMode, *clockInfo);
     }
 
     /** Save the current UTC dateTime to the RTC. */
@@ -501,11 +489,6 @@ class Controller {
     ClockInfo mChangingClockInfo; // the target clock
 
     bool mSecondFieldCleared;
-
-    // Handle blinking
-    bool mSuppressBlink; // true if blinking should be suppressed
-    bool mBlinkShowState = true; // true means actually show
-    uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
 };
 
 #endif

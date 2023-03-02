@@ -6,11 +6,17 @@
 #include "config.h"
 
 struct ClockInfo {
-  /** 12:00:00 AM to 12:00:00 PM */
+  /** 12 Hour mode. 12:00:00 AM to 12:00:00 PM */
   static uint8_t const kTwelve = 0;
 
-  /** 00:00:00 - 23:59:59 */
+  /** 24 Hour mode. 00:00:00 - 23:59:59 */
   static uint8_t const kTwentyFour = 1;
+
+  /** Blinking info should be shown. Should be toggled every 0.5 sec. */
+  bool blinkShowState = false;
+
+  /** Blinking should be suppressed. e.g. when RepeatPress is active. */
+  bool suppressBlink = false;
 
   /** 12/24 mode */
   uint8_t hourMode = kTwelve;
