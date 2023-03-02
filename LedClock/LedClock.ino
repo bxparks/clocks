@@ -443,9 +443,6 @@ COROUTINE(renderLed) {
   }
 }
 
-void setupRenderingInterrupt() {
-}
-
 //------------------------------------------------------------------
 // Create an appropriate controller/presenter pair.
 //------------------------------------------------------------------
@@ -467,6 +464,13 @@ COROUTINE(updateClock) {
   COROUTINE_LOOP() {
     controller.update();
     COROUTINE_DELAY(100);
+  }
+}
+
+COROUTINE(blinker) {
+  COROUTINE_LOOP() {
+    controller.updateBlinkState();
+    COROUTINE_DELAY(500);
   }
 }
 
@@ -513,24 +517,24 @@ void handleButtonEvent(AceButton* button, uint8_t eventType,
   if (pin == MODE_BUTTON_PIN) {
     switch (eventType) {
       case AceButton::kEventReleased:
-        controller.modeButtonPress();
+        controller.handleModeButtonPress();
         break;
       case AceButton::kEventLongPressed:
-        controller.modeButtonLongPress();
+        controller.handleModeButtonLongPress();
         break;
     }
 
   } else if (pin == CHANGE_BUTTON_PIN) {
     switch (eventType) {
       case AceButton::kEventPressed:
-        controller.changeButtonPress();
+        controller.handleChangeButtonPress();
         break;
       case AceButton::kEventReleased:
       case AceButton::kEventLongReleased:
-        controller.changeButtonRelease();
+        controller.handleChangeButtonRelease();
         break;
       case AceButton::kEventRepeatPressed:
-        controller.changeButtonRepeatPress();
+        controller.handleChangeButtonRepeatPress();
         break;
     }
   }
@@ -663,7 +667,6 @@ void setup() {
   setupAceButton();
   setupClocks();
   setupAceSegment();
-  setupRenderingInterrupt();
   controller.setup();
 
 #if ENABLE_SERIAL_DEBUG >= 1
@@ -673,6 +676,7 @@ void setup() {
 
 void loop() {
   checkButtons.runCoroutine();
+  blinker.runCoroutine();
   updateClock.runCoroutine();
   renderLed.runCoroutine();
 
