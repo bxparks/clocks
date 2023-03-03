@@ -121,7 +121,6 @@ class Controller {
       }
       // performModeButtonPressAction() - does nothing in this app
       mNavigator.changeMode();
-      performNewModeRecordAction();
     }
 
     /** Toggle edit mode. The editable field will start blinking. */
@@ -133,7 +132,6 @@ class Controller {
       performModeLongPressAction();
       mNavigator.changeGroup();
       performNewModeGroupAction();
-      performNewModeRecordAction();
     }
 
     /**
@@ -166,18 +164,10 @@ class Controller {
           // the mode group.
           mNavigator.changeGroup();
           performNewModeGroupAction();
-          performNewModeRecordAction();
           break;
 
         default:
           break;
-      }
-    }
-
-    /** Perform the action of the current ModeRecord. */
-    void performNewModeRecordAction() {
-      if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("performNewModeRecordAction()"));
       }
     }
 
