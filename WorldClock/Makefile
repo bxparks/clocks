@@ -10,7 +10,6 @@ DEPS := \
 	PersistentStore.h \
 	Presenter.cpp \
 	Presenter.h \
-	RenderingInfo.h \
 	StoredInfo.h \
 	config.h
 MORE_CLEAN := more_clean

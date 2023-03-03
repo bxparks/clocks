@@ -8,7 +8,6 @@
 #include <AceUtils.h>
 #include <crc_eeprom/crc_eeprom.h> // from AceUtils
 #include <mode_group/mode_group.h> // from AceUtils
-#include "RenderingInfo.h"
 #include "StoredInfo.h"
 #include "PersistentStore.h"
 #include "Presenter.h"
@@ -73,7 +72,7 @@ class Controller {
 
     /**
      * In other Controller::update() methods, this method not only updates
-     * the RenderingInfo, but also synchronously calls the mPresenter.display(),
+     * the ClockInfo, but also synchronously calls the mPresenter.display(),
      * to render the display . But for WorldClock, it has 3 OLED displays, and
      * updating them synchronous takes too long, and interferes with the
      * double-click detection of AceButton.
@@ -93,7 +92,7 @@ class Controller {
       if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
       updateDateTime();
       updateInvertState();
-      updateRenderingInfo();
+      updateClockInfo();
     }
 
     void updateBlinkState () {
@@ -420,7 +419,7 @@ class Controller {
       return invertState;
     }
 
-    void updateRenderingInfo() {
+    void updateClockInfo() {
       acetime_t now = 0;
 
       switch ((Mode) mNavigator.modeId()) {
@@ -455,12 +454,16 @@ class Controller {
       mClockInfo0.mode = (Mode) mNavigator.modeId();
       mClockInfo1.mode = (Mode) mNavigator.modeId();
       mClockInfo2.mode = (Mode) mNavigator.modeId();
-      mPresenter0.setRenderingInfo(
-          now, mClockInfo0, mClockInfo0.timeZone);
-      mPresenter1.setRenderingInfo(
-          now, mClockInfo1, mClockInfo0.timeZone);
-      mPresenter2.setRenderingInfo(
-          now, mClockInfo2, mClockInfo0.timeZone);
+      mClockInfo0.now = now;
+      mClockInfo1.now = now;
+      mClockInfo2.now = now;
+      mClockInfo0.primaryTimeZone = mClockInfo0.timeZone;
+      mClockInfo1.primaryTimeZone = mClockInfo0.timeZone;
+      mClockInfo2.primaryTimeZone = mClockInfo0.timeZone;
+
+      mPresenter0.setClockInfo(mClockInfo0);
+      mPresenter1.setClockInfo(mClockInfo1);
+      mPresenter2.setClockInfo(mClockInfo2);
     }
 
     /** Save the current UTC ZonedDateTime to the RTC. */

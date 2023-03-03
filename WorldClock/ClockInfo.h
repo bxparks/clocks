@@ -65,24 +65,36 @@ struct ClockInfo {
    */
   uint8_t invertState = 0;
 
-  /** The desired display time zone of the clock. */
-  ace_time::TimeZone timeZone;
+  /** Seconds from AceTime epoch. */
+  ace_time::acetime_t now;
 
   /** Name of this clock, e.g. City or Time Zone ID */
   const char* name = nullptr;
+
+  /** The desired display time zone of the clock. */
+  ace_time::TimeZone timeZone;
+
+  /**
+   * The primary time zone of the clock, used to calculate auto-inversion of
+   * the display.
+   */
+  ace_time::TimeZone primaryTimeZone;
 };
 
 
 inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
-  return a.mode == b.mode
-      && a.hourMode == b.hourMode
+  return
+      a.now == b.now
       && a.blinkShowState == b.blinkShowState
+      && a.hourMode == b.hourMode
+      && a.mode == b.mode
       && a.suppressBlink == b.suppressBlink
       && a.blinkingColon == b.blinkingColon
       && a.invertDisplay == b.invertDisplay
       && a.invertState == b.invertState
       && a.contrastLevel == b.contrastLevel
       && a.timeZone == b.timeZone
+      && a.primaryTimeZone == b.primaryTimeZone
       && a.name == b.name;
 }
 

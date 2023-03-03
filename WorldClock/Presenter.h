@@ -3,7 +3,7 @@
 
 #include <SSD1306Ascii.h>
 #include <AceTime.h>
-#include "RenderingInfo.h"
+#include "ClockInfo.h"
 #include "config.h"
 
 using namespace ace_time;
@@ -24,7 +24,7 @@ class Presenter {
         mOled(oled) {}
 
     void display() {
-      if (mRenderingInfo.clockInfo.mode == Mode::kUnknown) {
+      if (mClockInfo.mode == Mode::kUnknown) {
         clearDisplay();
         return;
       }
@@ -39,22 +39,16 @@ class Presenter {
       #endif
         writeDisplayData();
         writeDisplaySettings();
-        mPrevRenderingInfo = mRenderingInfo;
+        mPrevClockInfo = mClockInfo;
       }
     }
 
     /**
-     * Set the RenderingInfo of the Presenter. This is called about 10 times a
+     * Set the ClockInfo of the Presenter. This is called about 10 times a
      * second.
      */
-    void setRenderingInfo(
-        acetime_t now,
-        const ClockInfo& clockInfo,
-        const TimeZone& primaryTimeZone) {
-
-      mRenderingInfo.now = now;
-      mRenderingInfo.clockInfo = clockInfo;
-      mRenderingInfo.primaryTimeZone = primaryTimeZone;
+    void setClockInfo(const ClockInfo& clockInfo) {
+      mClockInfo = clockInfo;
     }
 
   private:
@@ -64,21 +58,18 @@ class Presenter {
 
     /** Write the display settings (brightness, contrast, inversion). */
     void writeDisplaySettings() {
-      ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
-      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
-
       // Update contrastLevel if changed.
-      if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
-          || prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
-        uint8_t value = toContrastValue(mRenderingInfo.clockInfo.contrastLevel);
+      if (mPrevClockInfo.mode == Mode::kUnknown
+          || mPrevClockInfo.contrastLevel != mClockInfo.contrastLevel) {
+        uint8_t value = toContrastValue(mClockInfo.contrastLevel);
         mOled.setContrast(value);
       }
 
       // Update invertDisplay if changed.
-      if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
-          || mPrevRenderingInfo.clockInfo.invertState !=
-              mRenderingInfo.clockInfo.invertState) {
-        mOled.invertDisplay(mRenderingInfo.clockInfo.invertDisplay);
+      if (mPrevClockInfo.mode == Mode::kUnknown
+          || mPrevClockInfo.invertState !=
+              mClockInfo.invertState) {
+        mOled.invertDisplay(mClockInfo.invertDisplay);
       }
     }
 
@@ -112,7 +103,7 @@ class Presenter {
     void writeDisplayData() {
       mOled.home();
 
-      switch ((Mode) mRenderingInfo.clockInfo.mode) {
+      switch ((Mode) mClockInfo.mode) {
         case Mode::kViewDateTime:
           displayDateTime();
           break;
@@ -151,9 +142,8 @@ class Presenter {
     void displayDateTime() const {
       setFont(1);
 
-      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
       const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
-          mRenderingInfo.now, clockInfo.timeZone);
+          mClockInfo.now, mClockInfo.timeZone);
       if (dateTime.isError()) {
         clearDisplay();
         mOled.println(F("<Error>"));
@@ -163,20 +153,20 @@ class Presenter {
       // time
       setFont(2);
       uint8_t hour = dateTime.hour();
-      if (clockInfo.hourMode == ClockInfo::kTwelve) {
+      if (mClockInfo.hourMode == ClockInfo::kTwelve) {
         hour = toTwelveHour(hour);
         printPad2To(mOled, hour, ' ');
       } else {
         printPad2To(mOled, hour, '0');
       }
       mOled.print(
-          (! clockInfo.blinkingColon || shouldShowFor(Mode::kViewDateTime))
+          (! mClockInfo.blinkingColon || shouldShowFor(Mode::kViewDateTime))
           ? ':' : ' ');
       printPad2To(mOled, dateTime.minute(), '0');
 
       // AM/PM indicator
       mOled.set1X();
-      if (clockInfo.hourMode == ClockInfo::kTwelve) {
+      if (mClockInfo.hourMode == ClockInfo::kTwelve) {
         mOled.print((dateTime.hour() < 12) ? 'A' : 'P');
       }
 
@@ -195,11 +185,11 @@ class Presenter {
 
       // place name
       ZonedExtra ze = ZonedExtra::forEpochSeconds(
-          mRenderingInfo.now, dateTime.timeZone());
+          mClockInfo.now, dateTime.timeZone());
       mOled.print(ze.abbrev());
       mOled.print(' ');
       mOled.print('(');
-      mOled.print(clockInfo.name);
+      mOled.print(mClockInfo.name);
       mOled.print(')');
       clearToEOL();
     }
@@ -216,9 +206,8 @@ class Presenter {
     }
 
     void displayChangeableDateTime() const {
-      const ClockInfo& clockInfo = mRenderingInfo.clockInfo;
       const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
-          mRenderingInfo.now, clockInfo.timeZone);
+          mClockInfo.now, mClockInfo.timeZone);
 
       setFont(1);
 
@@ -245,7 +234,7 @@ class Presenter {
       // time
       if (shouldShowFor(Mode::kChangeHour)) {
         uint8_t hour = dateTime.hour();
-        if (clockInfo.hourMode == ClockInfo::kTwelve) {
+        if (mClockInfo.hourMode == ClockInfo::kTwelve) {
           if (hour == 0) {
             hour = 12;
           } else if (hour > 12) {
@@ -271,7 +260,7 @@ class Presenter {
         mOled.print("  ");
       }
       mOled.print(' ');
-      if (clockInfo.hourMode == ClockInfo::kTwelve) {
+      if (mClockInfo.hourMode == ClockInfo::kTwelve) {
         mOled.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
       clearToEOL();
@@ -282,41 +271,39 @@ class Presenter {
 
       // abbreviation and place name
       ZonedExtra ze = ZonedExtra::forEpochSeconds(
-          mRenderingInfo.now, dateTime.timeZone());
+          mClockInfo.now, dateTime.timeZone());
       mOled.print(ze.abbrev());
       mOled.print(' ');
       mOled.print('(');
-      mOled.print(clockInfo.name);
+      mOled.print(mClockInfo.name);
       mOled.print(')');
       clearToEOL();
     }
 
     void displayClockInfo() const {
-      const ClockInfo& clockInfo = mRenderingInfo.clockInfo;
-
       mOled.print(F("12/24:"));
       if (shouldShowFor(Mode::kChangeHourMode)) {
-        mOled.print(clockInfo.hourMode == ClockInfo::kTwelve
+        mOled.print(mClockInfo.hourMode == ClockInfo::kTwelve
             ? "12" : "24");
       }
       clearToEOL();
 
       mOled.print(F("Blink:"));
       if (shouldShowFor(Mode::kChangeBlinkingColon)) {
-        mOled.print(clockInfo.blinkingColon ? "on " : "off");
+        mOled.print(mClockInfo.blinkingColon ? "on " : "off");
       }
       clearToEOL();
 
       mOled.print(F("Contrast:"));
       if (shouldShowFor(Mode::kChangeContrast)) {
-        mOled.print(clockInfo.contrastLevel);
+        mOled.print(mClockInfo.contrastLevel);
       }
       clearToEOL();
 
       mOled.print(F("Invert:"));
       if (shouldShowFor(Mode::kChangeInvertDisplay)) {
         const __FlashStringHelper* statusString = F("<error>");
-        switch (clockInfo.invertDisplay) {
+        switch (mClockInfo.invertDisplay) {
           case ClockInfo::kInvertDisplayOff:
             statusString = F("off");
             break;
@@ -339,7 +326,7 @@ class Presenter {
 
       // Extract time zone info.
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-      const TimeZone& timeZone = clockInfo.timeZone;
+      const TimeZone& timeZone = mClockInfo.timeZone;
       TimeOffset timeOffset = timeZone.getUtcOffset(0);
       int8_t hour;
       uint8_t minute;
@@ -371,19 +358,19 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(Mode mode) const {
-      return mode != mRenderingInfo.clockInfo.mode
-          || mRenderingInfo.clockInfo.blinkShowState
-          || mRenderingInfo.clockInfo.suppressBlink;
+      return mode != mClockInfo.mode
+          || mClockInfo.blinkShowState
+          || mClockInfo.suppressBlink;
     }
 
     /** The display needs to be cleared before rendering. */
     bool needsClear() const {
-      return mRenderingInfo.clockInfo.mode != mPrevRenderingInfo.clockInfo.mode;
+      return mClockInfo.mode != mPrevClockInfo.mode;
     }
 
     /** The display needs to be updated because something changed. */
     bool needsUpdate() const {
-      return mRenderingInfo != mPrevRenderingInfo;
+      return mClockInfo != mPrevClockInfo;
     }
 
     static uint8_t toContrastValue(uint8_t level) {
@@ -397,8 +384,8 @@ class Presenter {
 
     SSD1306Ascii& mOled;
 
-    mutable RenderingInfo mRenderingInfo;
-    mutable RenderingInfo mPrevRenderingInfo;
+    mutable ClockInfo mClockInfo;
+    mutable ClockInfo mPrevClockInfo;
 };
 
 #endif
