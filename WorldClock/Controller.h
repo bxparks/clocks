@@ -88,6 +88,7 @@ class Controller {
     void update() {
       if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
       updateDateTime();
+      updateInvertState();
       updateRenderingInfo();
     }
 
@@ -365,6 +366,54 @@ class Controller {
         default:
           break;
       }
+    }
+
+    void updateInvertState() {
+      uint8_t invertState = calculateInvertState(
+          mChangingDateTime, mClockInfo0);
+      mClockInfo0.invertState = invertState;
+      mClockInfo1.invertState = invertState;
+      mClockInfo2.invertState = invertState;
+    }
+
+    /**
+     * Calculate the next actual invertDisplay setting. Automatically
+     * alternating inversion is an attempt to extend the life-time of these
+     * OLED devices which seem to suffer from burn-in after about 6-12 months.
+     */
+    static uint8_t calculateInvertState(
+        ZonedDateTime &zdt, ClockInfo& clockInfo) {
+      uint8_t invertState;
+      if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+
+        const LocalDateTime& ldt = zdt.localDateTime();
+
+        // The XOR alternates the pattern of on/off to smooth out the wear level
+        // on specific digits. For example, if kInvertDisplayMinutely is
+        // selected, and if last bit of only the minute is used, then the "1" on
+        // the minute segment will always be inverted, which will cause uneven
+        // wearning. By XOR'ing with the hour(), we invert the on/off cycle
+        // every hour.
+        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely) {
+          invertState = ((ldt.minute() & 0x1) ^ (ldt.hour() & 0x1))
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+          invertState = ((ldt.hour() & 0x1) ^ (ldt.day() & 0x1))
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        } else {
+          invertState = (7 <= ldt.hour() && ldt.hour() < 19)
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        }
+      } else {
+        invertState = clockInfo.invertDisplay;
+      }
+
+      return invertState;
     }
 
     void updateRenderingInfo() {

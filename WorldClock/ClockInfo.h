@@ -60,14 +60,16 @@ struct ClockInfo {
    */
   uint8_t contrastLevel = 5;
 
+  /** Desired display inversion mode. [0-4] */
+  uint8_t invertDisplay = 0;
+
   /**
-   * Desired display inversion mode.
+   * Actual inversion mode, derived from clockInfo.
    *
    *  * 0: white on black
    *  * 1: black on white
-   *  * 2: auto
    */
-  uint8_t invertDisplay = 0;
+  uint8_t invertState = 0;
 
   /** The desired display time zone of the clock. */
   ace_time::TimeZone timeZone;
@@ -83,6 +85,7 @@ inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
       && a.suppressBlink == b.suppressBlink
       && a.blinkingColon == b.blinkingColon
       && a.invertDisplay == b.invertDisplay
+      && a.invertState == b.invertState
       && a.contrastLevel == b.contrastLevel
       && a.timeZone == b.timeZone
       && a.name == b.name;

@@ -28,14 +28,6 @@ struct RenderingInfo {
    * the display.
    */
   ace_time::TimeZone primaryTimeZone;
-
-  /**
-   * Actual inversion mode, derived from clockInfo.
-   *
-   *  * 0: white on black
-   *  * 1: black on white
-   */
-  uint8_t invertDisplay = 0;
 };
 
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
@@ -43,7 +35,6 @@ inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
   // before infrequently changing fields. This allows the '&&' operator to
   // short-circuit faster.
   return a.now == b.now
-      && a.invertDisplay == b.invertDisplay
       && a.clockInfo == b.clockInfo
       && a.primaryTimeZone == b.primaryTimeZone
       && a.mode == b.mode;

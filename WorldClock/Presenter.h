@@ -33,8 +33,6 @@ class Presenter {
         clearDisplay();
       }
 
-      updateDisplaySettings();
-
       if (needsUpdate()) {
       #if ENABLE_SERIAL_DEBUG >= 1
         SERIAL_PORT_MONITOR.println(F("display(): needsUpdate"));
@@ -65,48 +63,6 @@ class Presenter {
     Presenter(const Presenter&) = delete;
     Presenter& operator=(const Presenter&) = delete;
 
-    /**
-     * Update the display settings, e.g. brightness, backlight, etc, but don't
-     * write the data to the display yet.
-     */
-    void updateDisplaySettings() {
-      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
-
-      // Calculate the next actual invertDisplay setting. Automatically
-      // alternating inversion is an attempt to extend the life-time of these
-      // OLED devices which seem to suffer from burn-in after about 6-12 months.
-      uint8_t invertDisplay;
-      if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely
-          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
-          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
-        const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
-            mRenderingInfo.now, mRenderingInfo.primaryTimeZone);
-        const LocalDateTime& ldt = dateTime.localDateTime();
-        // The XOR alternates the pattern of on/off to smooth out the wear level
-        // on specific digits. For example, if kInvertDisplayMinutely is
-        // selected, and if last bit of only the minute is used, then the "1" on
-        // the minute segment will always be inverted, which will cause uneven
-        // wearning. By XOR'ing with the hour(), we invert the on/off cycle
-        // every hour.
-        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely) {
-          invertDisplay = ((ldt.minute() & 0x1) ^ (ldt.hour() & 0x1))
-              ? ClockInfo::kInvertDisplayOn
-              : ClockInfo::kInvertDisplayOff;
-        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
-          invertDisplay = ((ldt.hour() & 0x1) ^ (ldt.day() & 0x1))
-              ? ClockInfo::kInvertDisplayOn
-              : ClockInfo::kInvertDisplayOff;
-        } else {
-          invertDisplay = (7 <= ldt.hour() && ldt.hour() < 19)
-              ? ClockInfo::kInvertDisplayOn
-              : ClockInfo::kInvertDisplayOff;
-        }
-      } else {
-        invertDisplay = clockInfo.invertDisplay;
-      }
-      mRenderingInfo.invertDisplay = invertDisplay;
-    }
-
     /** Write the display settings (brightness, contrast, inversion). */
     void writeDisplaySettings() {
       ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
@@ -121,8 +77,9 @@ class Presenter {
 
       // Update invertDisplay if changed.
       if (mPrevRenderingInfo.mode == Mode::kUnknown
-          || mPrevRenderingInfo.invertDisplay != mRenderingInfo.invertDisplay) {
-        mOled.invertDisplay(mRenderingInfo.invertDisplay);
+          || mPrevRenderingInfo.clockInfo.invertState !=
+              mRenderingInfo.clockInfo.invertState) {
+        mOled.invertDisplay(mRenderingInfo.clockInfo.invertDisplay);
       }
     }
 
