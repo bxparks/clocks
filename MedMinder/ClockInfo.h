@@ -6,6 +6,9 @@
 
 /** Information about the clock. */
 struct ClockInfo {
+  /** Display mode. */
+  Mode mode = Mode::kUnknown;
+
   /** Blinking info should be shown. Should be toggled every 0.5 sec. */
   bool blinkShowState = false;
 

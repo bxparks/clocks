@@ -453,8 +453,8 @@ class Controller {
         case Mode::kViewSettings:
         case Mode::kViewAbout:
         case Mode::kChangeSettingsContrast:
-          mPresenter.setRenderingInfo(
-              (Mode) mNavigator.modeId(), mClockInfo);
+          mClockInfo.mode = (Mode) mNavigator.modeId();
+          mPresenter.setRenderingInfo(mClockInfo);
           break;
 
         case Mode::kChangeYear:
@@ -471,8 +471,8 @@ class Controller {
       #endif
         case Mode::kChangeMedHour:
         case Mode::kChangeMedMinute:
-          mPresenter.setRenderingInfo(
-              (Mode) mNavigator.modeId(), mChangingClockInfo);
+          mChangingClockInfo.mode = (Mode) mNavigator.modeId();
+          mPresenter.setRenderingInfo(mChangingClockInfo);
           break;
 
         case Mode::kViewMed: {
@@ -481,8 +481,8 @@ class Controller {
           mChangingClockInfo = mClockInfo;
           mChangingClockInfo.medInterval = getRemainingTimePeriod();
 
-          mPresenter.setRenderingInfo(
-              (Mode) mNavigator.modeId(), mChangingClockInfo);
+          mChangingClockInfo.mode = (Mode) mNavigator.modeId();
+          mPresenter.setRenderingInfo(mChangingClockInfo);
           break;
         }
 
