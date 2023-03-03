@@ -7,8 +7,6 @@
 #include <AceTimeClock.h>
 #include <AceUtils.h>
 #include <crc_eeprom/crc_eeprom.h> // from AceUtils
-#include <mode_group/mode_group.h> // from AceUtils
-#include "RenderingInfo.h"
 #include "StoredInfo.h"
 #include "PersistentStore.h"
 #include "Presenter.h"
@@ -16,8 +14,6 @@
 using namespace ace_time;
 using namespace ace_time::clock;
 using ace_common::incrementMod;
-using ace_utils::mode_group::ModeGroup;
-using ace_utils::mode_group::ModeNavigator;
 
 /**
  * Maintains the internal state of the world clock, handling button inputs,
@@ -36,7 +32,6 @@ class Controller {
     Controller(
         Clock& clock,
         PersistentStore& persistentStore,
-        const ModeGroup* rootModeGroup,
         Presenter& presenter0,
         Presenter& presenter1,
         Presenter& presenter2,
@@ -49,14 +44,19 @@ class Controller {
     ) :
         mClock(clock),
         mPersistentStore(persistentStore),
-        mNavigator(rootModeGroup),
         mPresenter0(presenter0),
         mPresenter1(presenter1),
-        mPresenter2(presenter2),
-        mClockInfo0(tz0, name0),
-        mClockInfo1(tz1, name1),
-        mClockInfo2(tz2, name2)
-    {}
+        mPresenter2(presenter2)
+    {
+      mClockInfo0.mode = Mode::kViewDateTime;
+
+      mClockInfo0.timeZone = tz0;
+      mClockInfo0.name = name0;
+      mClockInfo1.timeZone = tz1;
+      mClockInfo1.name = name1;
+      mClockInfo2.timeZone = tz2;
+      mClockInfo2.name = name2;
+    }
 
     /** Initialize the controller with the various time zones of each clock. */
     void setup(bool factoryReset) {
@@ -69,7 +69,7 @@ class Controller {
 
     /**
      * In other Controller::update() methods, this method not only updates
-     * the RenderingInfo, but also synchronously calls the mPresenter.display(),
+     * the ClockInfo, but also synchronously calls the mPresenter.display(),
      * to render the display . But for WorldClock, it has 3 OLED displays, and
      * updating them synchronous takes too long, and interferes with the
      * double-click detection of AceButton.
@@ -86,16 +86,28 @@ class Controller {
      * and call the updatePresenterN() methods separately from the coroutine.
      */
     void update() {
-      if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
+      if (mClockInfo0.mode == Mode::kUnknown) return;
       updateDateTime();
-      updateBlinkState();
-      updateRenderingInfo();
+      updateInvertState();
+      updateClockInfo();
+    }
+
+    void updateBlinkState () {
+      mClockInfo0.blinkShowState = !mClockInfo0.blinkShowState;
+      mClockInfo1.blinkShowState = !mClockInfo1.blinkShowState;
+      mClockInfo2.blinkShowState = !mClockInfo2.blinkShowState;
+      mChangingClockInfo.blinkShowState = !mChangingClockInfo.blinkShowState;
+
+      updatePresenter0();
+      updatePresenter1();
+      updatePresenter2();
     }
 
     // These are exposed as public methods so that the
-    // COROUTINE(updateController) can update each Presenter separately. They
-    // should be called 5-10 times a second to support blinking mode and to
-    // avoid noticeable drift against the RTC which has a 1 second resolution.
+    // COROUTINE(updateController) can update each Presenter separately,
+    // interspersed with calls to COROUTINE_YIELD(). They should be called 5-10
+    // times a second to support blinking mode and to avoid noticeable drift
+    // against the RTC which has a 1 second resolution.
     void updatePresenter0() { mPresenter0.display(); }
     void updatePresenter1() { mPresenter1.display(); }
     void updatePresenter2() { mPresenter2.display(); }
@@ -104,9 +116,61 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonPress()"));
       }
-      // performModeButtonPressAction() - does nothing in this app
-      mNavigator.changeMode();
-      performNewModeRecordAction();
+
+      switch (mClockInfo0.mode) {
+        // View modes
+        case Mode::kViewDateTime:
+          mClockInfo0.mode = Mode::kViewSettings;
+          break;
+        case Mode::kViewSettings:
+          mClockInfo0.mode = Mode::kViewAbout;
+          break;
+        case Mode::kViewAbout:
+          mClockInfo0.mode = Mode::kViewDateTime;
+          break;
+
+        // Change Date/Time
+        case Mode::kChangeHour:
+          mClockInfo0.mode = Mode::kChangeMinute;
+          break;
+        case Mode::kChangeMinute:
+        #if 0
+          mClockInfo0.mode = Mode::kChangeSecond;
+          break;
+        case Mode::kChangeSecond:
+        #endif
+          mClockInfo0.mode = Mode::kChangeYear;
+          break;
+        case Mode::kChangeYear:
+          mClockInfo0.mode = Mode::kChangeMonth;
+          break;
+        case Mode::kChangeMonth:
+          mClockInfo0.mode = Mode::kChangeDay;
+          break;
+        case Mode::kChangeDay:
+          mClockInfo0.mode = Mode::kChangeHour;
+          break;
+
+        // Change Settings
+        case Mode::kChangeHourMode:
+          mClockInfo0.mode = Mode::kChangeBlinkingColon;
+          break;
+        case Mode::kChangeBlinkingColon:
+          mClockInfo0.mode = Mode::kChangeContrast;
+          break;
+        case Mode::kChangeContrast:
+          mClockInfo0.mode = Mode::kChangeInvertDisplay;
+          break;
+        case Mode::kChangeInvertDisplay:
+          mClockInfo0.mode = Mode::kChangeHourMode;
+          break;
+
+        default:
+          break;
+      }
+
+      mClockInfo1.mode = mClockInfo0.mode;
+      mClockInfo2.mode = mClockInfo0.mode;
     }
 
     /** Toggle edit mode. The editable field will start blinking. */
@@ -115,78 +179,18 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("handleModeButtonLongPress()"));
       }
 
-      performModeLongPressAction();
-      mNavigator.changeGroup();
-      performNewModeGroupAction();
-      performNewModeRecordAction();
-    }
-
-    /**
-     * Exit the edit mode while throwing away all changes. Does nothing if not
-     * already in edit mode.
-     */
-    void handleModeButtonDoubleClick() {
-      if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
-      }
-
-      switch ((Mode) mNavigator.modeId()) {
-        case Mode::kChangeYear:
-        case Mode::kChangeMonth:
-        case Mode::kChangeDay:
-        case Mode::kChangeHour:
-        case Mode::kChangeMinute:
-        case Mode::kChangeSecond:
-
-        case Mode::kChangeHourMode:
-        case Mode::kChangeBlinkingColon:
-        case Mode::kChangeContrast:
-        case Mode::kChangeInvertDisplay:
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case Mode::kChangeTimeZoneDst0:
-        case Mode::kChangeTimeZoneDst1:
-        case Mode::kChangeTimeZoneDst2:
-      #endif
-          // Don't perform any action, throw away the changes and just change
-          // the mode group.
-          mNavigator.changeGroup();
-          performNewModeGroupAction();
-          performNewModeRecordAction();
+      switch (mClockInfo0.mode) {
+        // Long Press in View modes changes to Change modes.
+        case Mode::kViewDateTime:
+          mClockInfo0.mode = Mode::kChangeYear;
+          updateChangingDateTime();
           break;
 
-        default:
+        case Mode::kViewSettings:
+          mClockInfo0.mode = Mode::kChangeHourMode;
+          updateChangingDateTime();
           break;
-      }
-    }
 
-    /** Perform the action of the current ModeRecord. */
-    void performNewModeRecordAction() {
-      if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("performNewModeRecordAction()"));
-      }
-    }
-
-    /** Do action associated with entering a ModeGroup due to a LongPress. */
-    void performNewModeGroupAction() {
-      if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("performNewModeGroupAction()"));
-      }
-
-      // Update mChangingDateTime for all modes. Even when changing only the
-      // Clock Info settings, the current date and time is required to make sure
-      // that the display is updated correctly when invertDisplay is set to
-      // kInvertDisplayAuto.
-      mChangingDateTime = ZonedDateTime::forEpochSeconds(
-          mClock.getNow(), mClockInfo0.timeZone);
-      mSecondFieldCleared = false;
-    }
-
-    void performModeLongPressAction() {
-      if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("performModeLongPressAction()"));
-      }
-
-      switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -194,6 +198,7 @@ class Controller {
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
           saveDateTime();
+          mClockInfo0.mode = Mode::kViewDateTime;
           break;
 
         case Mode::kChangeHourMode:
@@ -206,6 +211,46 @@ class Controller {
         case Mode::kChangeTimeZoneDst2:
       #endif
           saveClockInfo();
+          mClockInfo0.mode = Mode::kViewSettings;
+          break;
+
+        default:
+          break;
+      }
+
+      mClockInfo1.mode = mClockInfo0.mode;
+      mClockInfo2.mode = mClockInfo0.mode;
+    }
+
+    /**
+     * Exit the edit mode while throwing away all changes. Does nothing if not
+     * already in edit mode.
+     */
+    void handleModeButtonDoubleClick() {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
+        SERIAL_PORT_MONITOR.println(F("handleModeButtonDoubleClick()"));
+      }
+
+      switch (mClockInfo0.mode) {
+        case Mode::kChangeYear:
+        case Mode::kChangeMonth:
+        case Mode::kChangeDay:
+        case Mode::kChangeHour:
+        case Mode::kChangeMinute:
+        case Mode::kChangeSecond:
+          mClockInfo0.mode = Mode::kViewDateTime;
+          break;
+
+        case Mode::kChangeHourMode:
+        case Mode::kChangeBlinkingColon:
+        case Mode::kChangeContrast:
+        case Mode::kChangeInvertDisplay:
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        case Mode::kChangeTimeZoneDst0:
+        case Mode::kChangeTimeZoneDst1:
+        case Mode::kChangeTimeZoneDst2:
+      #endif
+          mClockInfo0.mode = Mode::kViewSettings;
           break;
 
         default:
@@ -213,79 +258,81 @@ class Controller {
       }
     }
 
+    /**
+     * Update mChangingDateTime after entering one of the change modes (e.g.
+     * kChangeHour or kChangeHourMode). Even when changing only the Clock Info
+     * settings, the current date and time is required to make sure that the
+     * display is updated correctly when invertDisplay is set to
+     * kInvertDisplayAuto.
+     */
+    void updateChangingDateTime() {
+      if (ENABLE_SERIAL_DEBUG >= 1) {
+        SERIAL_PORT_MONITOR.println(F("updateChangingDateTime()"));
+      }
+
+      mChangingDateTime = ZonedDateTime::forEpochSeconds(
+          mClock.getNow(), mClockInfo0.timeZone);
+      mSecondFieldCleared = false;
+    }
+
     void handleChangeButtonPress() {
       if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
-      switch ((Mode) mNavigator.modeId()) {
+      mClockInfo0.suppressBlink = true;
+      mClockInfo1.suppressBlink = true;
+      mClockInfo2.suppressBlink = true;
+      mChangingClockInfo.suppressBlink = true;
+
+      switch (mClockInfo0.mode) {
         case Mode::kChangeYear:
-          mSuppressBlink = true;
         #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
           zoned_date_time_mutation::incrementYear(mChangingDateTime);
         #else
           {
-            auto& dateTime = mChangingDateTime;
-            int16_t year = dateTime.year();
+            int16_t year = mChangingDateTime.year();
             year++;
-            // Keep the year within the bounds of zonedb or zonedbx files.
-            #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-            if (year >= zonedb::kZoneContext.untilYear) {
-              year = zonedb::kZoneContext.startYear;
-            }
-            #else
-            if (year >= zonedbx::kZoneContext.untilYear) {
-              year = zonedbx::kZoneContext.startYear;
-            }
-            #endif
-            dateTime.year(year);
+            if (year >= 2100) year = 2000;
+            mChangingDateTime.year(year);
           }
         #endif
           break;
         case Mode::kChangeMonth:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMonth(mChangingDateTime);
           break;
         case Mode::kChangeDay:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementDay(mChangingDateTime);
           break;
         case Mode::kChangeHour:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementHour(mChangingDateTime);
           break;
         case Mode::kChangeMinute:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(mChangingDateTime);
           break;
         case Mode::kChangeSecond:
-          mSuppressBlink = true;
           mChangingDateTime.second(0);
           mSecondFieldCleared = true;
           break;
 
         case Mode::kChangeHourMode:
-          mSuppressBlink = true;
           mClockInfo0.hourMode ^= 0x1;
           mClockInfo1.hourMode ^= 0x1;
           mClockInfo2.hourMode ^= 0x1;
           break;
 
         case Mode::kChangeBlinkingColon:
-          mSuppressBlink = true;
           mClockInfo0.blinkingColon = !mClockInfo0.blinkingColon;
           mClockInfo1.blinkingColon = !mClockInfo1.blinkingColon;
           mClockInfo2.blinkingColon = !mClockInfo2.blinkingColon;
           break;
 
         case Mode::kChangeContrast:
-          mSuppressBlink = true;
           incrementMod(mClockInfo0.contrastLevel, (uint8_t) 10);
           incrementMod(mClockInfo1.contrastLevel, (uint8_t) 10);
           incrementMod(mClockInfo2.contrastLevel, (uint8_t) 10);
           break;
 
         case Mode::kChangeInvertDisplay:
-          mSuppressBlink = true;
           incrementMod(mClockInfo0.invertDisplay, (uint8_t) 5);
           incrementMod(mClockInfo1.invertDisplay, (uint8_t) 5);
           incrementMod(mClockInfo2.invertDisplay, (uint8_t) 5);
@@ -293,17 +340,14 @@ class Controller {
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneDst0:
-          mSuppressBlink = true;
           mClockInfo0.timeZone.setDst(!mClockInfo0.timeZone.isDst());
           break;
 
         case Mode::kChangeTimeZoneDst1:
-          mSuppressBlink = true;
           mClockInfo1.timeZone.setDst(!mClockInfo1.timeZone.isDst());
           break;
 
         case Mode::kChangeTimeZoneDst2:
-          mSuppressBlink = true;
           mClockInfo2.timeZone.setDst(!mClockInfo2.timeZone.isDst());
           break;
       #endif
@@ -324,7 +368,7 @@ class Controller {
     }
 
     void handleChangeButtonRelease() {
-      switch ((Mode) mNavigator.modeId()) {
+      switch (mClockInfo0.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -340,7 +384,10 @@ class Controller {
         case Mode::kChangeTimeZoneDst1:
         case Mode::kChangeTimeZoneDst2:
       #endif
-          mSuppressBlink = false;
+          mClockInfo0.suppressBlink = false;
+          mClockInfo1.suppressBlink = false;
+          mClockInfo2.suppressBlink = false;
+          mChangingClockInfo.suppressBlink = false;
           break;
 
         default:
@@ -352,7 +399,7 @@ class Controller {
     void updateDateTime() {
       // If in CHANGE mode, and the 'second' field has not been cleared,
       // update the mChangingDateTime.second field with the current second.
-      switch ((Mode) mNavigator.modeId()) {
+      switch (mClockInfo0.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -371,36 +418,63 @@ class Controller {
       }
     }
 
-    /** Update the blinkShowState. */
-    void updateBlinkState () {
-      uint16_t now = millis();
-      uint16_t duration = now - mBlinkCycleStartMillis;
-      if (duration < 500) {
-        mBlinkShowState = true;
-      } else if (duration < 1000) {
-        mBlinkShowState = false;
-      } else {
-        mBlinkCycleStartMillis = now;
-      }
+    void updateInvertState() {
+      uint8_t invertState = calculateInvertState(
+          mChangingDateTime, mClockInfo0);
+      mClockInfo0.invertState = invertState;
+      mClockInfo1.invertState = invertState;
+      mClockInfo2.invertState = invertState;
     }
 
-    void updateRenderingInfo() {
-      switch ((Mode) mNavigator.modeId()) {
+    /**
+     * Calculate the next actual invertDisplay setting. Automatically
+     * alternating inversion is an attempt to extend the life-time of these
+     * OLED devices which seem to suffer from burn-in after about 6-12 months.
+     */
+    static uint8_t calculateInvertState(
+        ZonedDateTime &zdt, ClockInfo& clockInfo) {
+      uint8_t invertState;
+      if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
+          || clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+
+        const LocalDateTime& ldt = zdt.localDateTime();
+
+        // The XOR alternates the pattern of on/off to smooth out the wear level
+        // on specific digits. For example, if kInvertDisplayMinutely is
+        // selected, and if last bit of only the minute is used, then the "1" on
+        // the minute segment will always be inverted, which will cause uneven
+        // wearning. By XOR'ing with the hour(), we invert the on/off cycle
+        // every hour.
+        if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely) {
+          invertState = ((ldt.minute() & 0x1) ^ (ldt.hour() & 0x1))
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        } else if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
+          invertState = ((ldt.hour() & 0x1) ^ (ldt.day() & 0x1))
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        } else {
+          invertState = (7 <= ldt.hour() && ldt.hour() < 19)
+              ? ClockInfo::kInvertDisplayOn
+              : ClockInfo::kInvertDisplayOff;
+        }
+      } else {
+        invertState = clockInfo.invertDisplay;
+      }
+
+      return invertState;
+    }
+
+    void updateClockInfo() {
+      acetime_t now = 0;
+
+      switch (mClockInfo0.mode) {
         case Mode::kViewDateTime:
         case Mode::kViewSettings:
         case Mode::kViewAbout:
-        {
-          bool blinkShowState = mBlinkShowState || mSuppressBlink;
-          Mode mode = (Mode) mNavigator.modeId();
-          acetime_t now = mClock.getNow();
-          mPresenter0.setRenderingInfo(
-              mode, now, blinkShowState, mClockInfo0, mClockInfo0.timeZone);
-          mPresenter1.setRenderingInfo(
-              mode, now, blinkShowState, mClockInfo1, mClockInfo0.timeZone);
-          mPresenter2.setRenderingInfo(
-              mode, now, blinkShowState, mClockInfo2, mClockInfo0.timeZone);
+          now = mClock.getNow();
           break;
-        }
 
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
@@ -412,56 +486,30 @@ class Controller {
         case Mode::kChangeBlinkingColon:
         case Mode::kChangeContrast:
         case Mode::kChangeInvertDisplay:
-        {
-          acetime_t now = mChangingDateTime.toEpochSeconds();
-          bool blinkShowState = mBlinkShowState || mSuppressBlink;
-          Mode mode = (Mode) mNavigator.modeId();
-          mPresenter0.setRenderingInfo(
-              mode, now, blinkShowState, mClockInfo0, mClockInfo0.timeZone);
-          mPresenter1.setRenderingInfo(
-              mode, now, true, mClockInfo1, mClockInfo0.timeZone);
-          mPresenter2.setRenderingInfo(
-              mode, now, true, mClockInfo2, mClockInfo0.timeZone);
-          break;
-        }
-
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneDst0:
-          updateChangingDst(0);
-          break;
         case Mode::kChangeTimeZoneDst1:
-          updateChangingDst(1);
-          break;
         case Mode::kChangeTimeZoneDst2:
-          updateChangingDst(2);
-          break;
       #endif
+          now = mChangingDateTime.toEpochSeconds();
+          break;
 
         default:
           break;
       }
-    }
 
-    void updateChangingDst(uint8_t clockId) {
-      acetime_t now = mChangingDateTime.toEpochSeconds();
-      mPresenter0.setRenderingInfo(
-          (Mode) mNavigator.modeId(),
-          now,
-          mBlinkShowState || clockId!=0,
-          mClockInfo0,
-          mClockInfo0.timeZone);
-      mPresenter1.setRenderingInfo(
-          (Mode) mNavigator.modeId(),
-          now,
-          mBlinkShowState || clockId!=1,
-          mClockInfo1,
-          mClockInfo0.timeZone);
-      mPresenter2.setRenderingInfo(
-          (Mode) mNavigator.modeId(),
-          now,
-          mBlinkShowState || clockId!=2,
-          mClockInfo2,
-          mClockInfo0.timeZone);
+      mClockInfo1.mode = mClockInfo0.mode;
+      mClockInfo2.mode = mClockInfo0.mode;
+      mClockInfo0.now = now;
+      mClockInfo1.now = now;
+      mClockInfo2.now = now;
+      mClockInfo0.primaryTimeZone = mClockInfo0.timeZone;
+      mClockInfo1.primaryTimeZone = mClockInfo0.timeZone;
+      mClockInfo2.primaryTimeZone = mClockInfo0.timeZone;
+
+      mPresenter0.setClockInfo(mClockInfo0);
+      mPresenter1.setClockInfo(mClockInfo1);
+      mPresenter2.setClockInfo(mClockInfo2);
     }
 
     /** Save the current UTC ZonedDateTime to the RTC. */
@@ -584,7 +632,6 @@ class Controller {
 
     Clock& mClock;
     PersistentStore& mPersistentStore;
-    ModeNavigator mNavigator;
 
     Presenter& mPresenter0;
     Presenter& mPresenter1;
@@ -592,14 +639,9 @@ class Controller {
     ClockInfo mClockInfo0;
     ClockInfo mClockInfo1;
     ClockInfo mClockInfo2;
-
+    ClockInfo mChangingClockInfo;
     ZonedDateTime mChangingDateTime; // source of now() in "Change" modes
     bool mSecondFieldCleared = false;
-
-    // Handle blinking
-    bool mSuppressBlink = false; // true if blinking should be suppressed
-    bool mBlinkShowState = true; // true means actually show
-    uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
 };
 
 #endif

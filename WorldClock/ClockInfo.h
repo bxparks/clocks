@@ -33,14 +33,14 @@ struct ClockInfo {
   /** Invert display automatically half-daily. */
   static uint8_t const kInvertDisplayDaily = 4;
 
-  /** Default constructor. */
-  ClockInfo() {}
+  /** display mode */
+  Mode mode = Mode::kUnknown;
 
-  /** Construct from ZoneProcessor. */
-  ClockInfo(const ace_time::TimeZone& tz, const char* theName) :
-      timeZone(tz),
-      name(theName)
-  {}
+  /** true if blinking info should be shown */
+  bool blinkShowState = false;
+
+  /** Blinking should be suppressed. e.g. when RepeatPress is active. */
+  bool suppressBlink = false;
 
   /** Hour mode, 12H or 24H. */
   uint8_t hourMode = kTwelve;
@@ -54,29 +54,47 @@ struct ClockInfo {
    */
   uint8_t contrastLevel = 5;
 
+  /** Desired display inversion mode. [0-4] */
+  uint8_t invertDisplay = 0;
+
   /**
-   * Desired display inversion mode.
+   * Actual inversion mode, derived from clockInfo.
    *
    *  * 0: white on black
    *  * 1: black on white
-   *  * 2: auto
    */
-  uint8_t invertDisplay = 0;
+  uint8_t invertState = 0;
+
+  /** Seconds from AceTime epoch. */
+  ace_time::acetime_t now;
+
+  /** Name of this clock, e.g. City or Time Zone ID */
+  const char* name = nullptr;
 
   /** The desired display time zone of the clock. */
   ace_time::TimeZone timeZone;
 
-  /** Name of this clock, e.g. City or Time Zone ID */
-  const char* name = nullptr;
+  /**
+   * The primary time zone of the clock, used to calculate auto-inversion of
+   * the display.
+   */
+  ace_time::TimeZone primaryTimeZone;
 };
 
 
 inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
-  return a.hourMode == b.hourMode
+  return
+      a.now == b.now
+      && a.blinkShowState == b.blinkShowState
+      && a.hourMode == b.hourMode
+      && a.mode == b.mode
+      && a.suppressBlink == b.suppressBlink
       && a.blinkingColon == b.blinkingColon
       && a.invertDisplay == b.invertDisplay
+      && a.invertState == b.invertState
       && a.contrastLevel == b.contrastLevel
       && a.timeZone == b.timeZone
+      && a.primaryTimeZone == b.primaryTimeZone
       && a.name == b.name;
 }
 

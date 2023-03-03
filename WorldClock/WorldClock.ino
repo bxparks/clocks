@@ -63,7 +63,6 @@
 #include <AceTimeClock.h>
 #include <AceCommon.h>
 #include <AceUtils.h>
-#include <mode_group/mode_group.h> // from AceUtils
 #include <AceWire.h>
 #include <AceSPI.h>
 #include <SSD1306AsciiAceSpi.h>
@@ -75,9 +74,6 @@ using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_spi;
-
-using ace_utils::mode_group::ModeGroup;
-using ace_utils::mode_group::ModeRecord;
 
 //----------------------------------------------------------------------------
 // Configure PersistentStore
@@ -256,96 +252,12 @@ Presenter presenter2(oled2);
   #error Unknown TIME_ZONE_TYPE
 #endif
 
-//-----------------------------------------------------------------------------
-// Create mode groups that define the navigation path for the Mode button.
-// It forms a recursive tree structure that looks like this:
-//
-// - View Date Time
-//    - Change hour
-//    - Change minute
-//    - Change second
-//    - Change day
-//    - Change month
-//    - Change year
-// - View Settings
-//    - Change 12/24 mode
-//    - Change Blinking mode
-//    - Change Contrast
-// - About
-//    - (no submodes)
-
-// The Arduino compiler becomes confused without this.
-extern const ModeGroup ROOT_MODE_GROUP;
-
-// List of DateTime modes.
-const ModeRecord DATE_TIME_MODES[] = {
-  {(uint8_t) Mode::kChangeYear, nullptr},
-  {(uint8_t) Mode::kChangeMonth, nullptr},
-  {(uint8_t) Mode::kChangeDay, nullptr},
-  {(uint8_t) Mode::kChangeHour, nullptr},
-  {(uint8_t) Mode::kChangeMinute, nullptr},
-  {(uint8_t) Mode::kChangeSecond, nullptr},
-};
-
-// ModeGroup for the DateTime modes.
-const ModeGroup DATE_TIME_MODE_GROUP = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(DATE_TIME_MODES) / sizeof(ModeRecord),
-  DATE_TIME_MODES,
-};
-
-// List of TimeZone modes.
-//const ModeRecord TIME_ZONE_MODES[] = {
-//#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-//  {(uint8_t) Mode::kchangeTimeZoneOffset, nullptr},
-//  {(uint8_t) Mode::kchangeTimeZoneDst, nullptr},
-//#else
-//  {(uint8_t) Mode::kchangeTimeZoneName, nullptr},
-//#endif
-//};
-
-// ModeGroup for the TimeZone modes.
-//const ModeGroup TIME_ZONE_MODE_GROUP = {
-//  &ROOT_MODE_GROUP /* parentGroup */,
-//  sizeof(TIME_ZONE_MODES) / sizeof(ModeRecord),
-//  TIME_ZONE_MODES,
-//};
-
-// List of Settings modes.
-const ModeRecord SETTINGS_MODES[] = {
-  {(uint8_t) Mode::kChangeHourMode, nullptr},
-  {(uint8_t) Mode::kChangeBlinkingColon, nullptr},
-  {(uint8_t) Mode::kChangeContrast, nullptr},
-  {(uint8_t) Mode::kChangeInvertDisplay, nullptr},
-};
-
-// ModeGroup for the Settings modes.
-const ModeGroup SETTINGS_MODE_GROUP = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(SETTINGS_MODES) / sizeof(ModeRecord),
-  SETTINGS_MODES,
-};
-
-// List of top level modes.
-const ModeRecord TOP_LEVEL_MODES[] = {
-  {(uint8_t) Mode::kViewDateTime, &DATE_TIME_MODE_GROUP},
-  {(uint8_t) Mode::kViewSettings, &SETTINGS_MODE_GROUP},
-  {(uint8_t) Mode::kViewAbout, nullptr},
-};
-
-// Root mode group
-const ModeGroup ROOT_MODE_GROUP = {
-  nullptr /* parentGroup */,
-  sizeof(TOP_LEVEL_MODES) / sizeof(ModeRecord),
-  TOP_LEVEL_MODES,
-};
-
 //----------------------------------------------------------------------------
 // Create controller with 3 presenters for the 3 OLED displays.
 //----------------------------------------------------------------------------
 
 Controller controller(
-    systemClock, persistentStore, &ROOT_MODE_GROUP,
+    systemClock, persistentStore,
     presenter0, presenter1, presenter2,
     tz0, tz1, tz2,
     "SFO", "PHL", "LHR"
@@ -369,6 +281,13 @@ COROUTINE(updateController) {
     controller.updatePresenter2();
 
     COROUTINE_DELAY(100);
+  }
+}
+
+COROUTINE(blinker) {
+  COROUTINE_LOOP() {
+    controller.updateBlinkState();
+    COROUTINE_DELAY(500);
   }
 }
 
@@ -545,6 +464,7 @@ void loop() {
   // bytes of extra flash memory. So run the coroutines manually instead of
   // call CoroutineScheduler::loop();
   updateController.runCoroutine();
+  blinker.runCoroutine();
   systemClock.runCoroutine();
 
   // Call AceButton::check directly instead of using COROUTINE() to save 174
