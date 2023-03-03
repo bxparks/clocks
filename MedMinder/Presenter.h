@@ -40,7 +40,7 @@ class Presenter {
       mRenderingInfo.suppressBlink = clockInfo.suppressBlink;
       mRenderingInfo.timeZone = clockInfo.timeZone;
       mRenderingInfo.dateTime = clockInfo.dateTime;
-      mRenderingInfo.timePeriod = clockInfo.medInterval;
+      mRenderingInfo.medInterval = clockInfo.medInterval;
       mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
     }
 
@@ -140,10 +140,10 @@ class Presenter {
       }
 
       mOled.println(F("Med due"));
-      if (mRenderingInfo.timePeriod.isError()) {
+      if (mRenderingInfo.medInterval.isError()) {
         mOled.print(F("<Overdue>"));
       } else {
-        mRenderingInfo.timePeriod.printTo(mOled);
+        mRenderingInfo.medInterval.printTo(mOled);
       }
       clearToEOL();
     }
@@ -166,13 +166,13 @@ class Presenter {
       mOled.println("Med intrvl");
 
       if (shouldShowFor(Mode::kChangeMedHour)) {
-        printPad2To(mOled, mRenderingInfo.timePeriod.hour(), '0');
+        printPad2To(mOled, mRenderingInfo.medInterval.hour(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(Mode::kChangeMedMinute)) {
-        printPad2To(mOled, mRenderingInfo.timePeriod.minute(), '0');
+        printPad2To(mOled, mRenderingInfo.medInterval.minute(), '0');
       } else {
         mOled.print("  ");
       }
