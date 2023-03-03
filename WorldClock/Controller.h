@@ -88,14 +88,25 @@ class Controller {
     void update() {
       if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
       updateDateTime();
-      updateBlinkState();
       updateRenderingInfo();
     }
 
+    void updateBlinkState () {
+      mClockInfo0.blinkShowState = !mClockInfo0.blinkShowState;
+      mClockInfo1.blinkShowState = !mClockInfo1.blinkShowState;
+      mClockInfo2.blinkShowState = !mClockInfo2.blinkShowState;
+      mChangingClockInfo.blinkShowState = !mChangingClockInfo.blinkShowState;
+
+      updatePresenter0();
+      updatePresenter1();
+      updatePresenter2();
+    }
+
     // These are exposed as public methods so that the
-    // COROUTINE(updateController) can update each Presenter separately. They
-    // should be called 5-10 times a second to support blinking mode and to
-    // avoid noticeable drift against the RTC which has a 1 second resolution.
+    // COROUTINE(updateController) can update each Presenter separately,
+    // interspersed with calls to COROUTINE_YIELD(). They should be called 5-10
+    // times a second to support blinking mode and to avoid noticeable drift
+    // against the RTC which has a 1 second resolution.
     void updatePresenter0() { mPresenter0.display(); }
     void updatePresenter1() { mPresenter1.display(); }
     void updatePresenter2() { mPresenter2.display(); }
@@ -217,75 +228,60 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
+      mClockInfo0.suppressBlink = true;
+      mClockInfo1.suppressBlink = true;
+      mClockInfo2.suppressBlink = true;
+      mChangingClockInfo.suppressBlink = true;
+
       switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeYear:
-          mSuppressBlink = true;
         #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
           zoned_date_time_mutation::incrementYear(mChangingDateTime);
         #else
           {
-            auto& dateTime = mChangingDateTime;
-            int16_t year = dateTime.year();
+            int16_t year = mChangingDateTime.year();
             year++;
-            // Keep the year within the bounds of zonedb or zonedbx files.
-            #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
-            if (year >= zonedb::kZoneContext.untilYear) {
-              year = zonedb::kZoneContext.startYear;
-            }
-            #else
-            if (year >= zonedbx::kZoneContext.untilYear) {
-              year = zonedbx::kZoneContext.startYear;
-            }
-            #endif
-            dateTime.year(year);
+            if (year >= 2100) year = 2000;
+            mChangingDateTime.year(year);
           }
         #endif
           break;
         case Mode::kChangeMonth:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMonth(mChangingDateTime);
           break;
         case Mode::kChangeDay:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementDay(mChangingDateTime);
           break;
         case Mode::kChangeHour:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementHour(mChangingDateTime);
           break;
         case Mode::kChangeMinute:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(mChangingDateTime);
           break;
         case Mode::kChangeSecond:
-          mSuppressBlink = true;
           mChangingDateTime.second(0);
           mSecondFieldCleared = true;
           break;
 
         case Mode::kChangeHourMode:
-          mSuppressBlink = true;
           mClockInfo0.hourMode ^= 0x1;
           mClockInfo1.hourMode ^= 0x1;
           mClockInfo2.hourMode ^= 0x1;
           break;
 
         case Mode::kChangeBlinkingColon:
-          mSuppressBlink = true;
           mClockInfo0.blinkingColon = !mClockInfo0.blinkingColon;
           mClockInfo1.blinkingColon = !mClockInfo1.blinkingColon;
           mClockInfo2.blinkingColon = !mClockInfo2.blinkingColon;
           break;
 
         case Mode::kChangeContrast:
-          mSuppressBlink = true;
           incrementMod(mClockInfo0.contrastLevel, (uint8_t) 10);
           incrementMod(mClockInfo1.contrastLevel, (uint8_t) 10);
           incrementMod(mClockInfo2.contrastLevel, (uint8_t) 10);
           break;
 
         case Mode::kChangeInvertDisplay:
-          mSuppressBlink = true;
           incrementMod(mClockInfo0.invertDisplay, (uint8_t) 5);
           incrementMod(mClockInfo1.invertDisplay, (uint8_t) 5);
           incrementMod(mClockInfo2.invertDisplay, (uint8_t) 5);
@@ -293,17 +289,14 @@ class Controller {
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneDst0:
-          mSuppressBlink = true;
           mClockInfo0.timeZone.setDst(!mClockInfo0.timeZone.isDst());
           break;
 
         case Mode::kChangeTimeZoneDst1:
-          mSuppressBlink = true;
           mClockInfo1.timeZone.setDst(!mClockInfo1.timeZone.isDst());
           break;
 
         case Mode::kChangeTimeZoneDst2:
-          mSuppressBlink = true;
           mClockInfo2.timeZone.setDst(!mClockInfo2.timeZone.isDst());
           break;
       #endif
@@ -340,7 +333,10 @@ class Controller {
         case Mode::kChangeTimeZoneDst1:
         case Mode::kChangeTimeZoneDst2:
       #endif
-          mSuppressBlink = false;
+          mClockInfo0.suppressBlink = false;
+          mClockInfo1.suppressBlink = false;
+          mClockInfo2.suppressBlink = false;
+          mChangingClockInfo.suppressBlink = false;
           break;
 
         default:
@@ -371,34 +367,20 @@ class Controller {
       }
     }
 
-    /** Update the blinkShowState. */
-    void updateBlinkState () {
-      uint16_t now = millis();
-      uint16_t duration = now - mBlinkCycleStartMillis;
-      if (duration < 500) {
-        mBlinkShowState = true;
-      } else if (duration < 1000) {
-        mBlinkShowState = false;
-      } else {
-        mBlinkCycleStartMillis = now;
-      }
-    }
-
     void updateRenderingInfo() {
       switch ((Mode) mNavigator.modeId()) {
         case Mode::kViewDateTime:
         case Mode::kViewSettings:
         case Mode::kViewAbout:
         {
-          bool blinkShowState = mBlinkShowState || mSuppressBlink;
           Mode mode = (Mode) mNavigator.modeId();
           acetime_t now = mClock.getNow();
           mPresenter0.setRenderingInfo(
-              mode, now, blinkShowState, mClockInfo0, mClockInfo0.timeZone);
+              mode, now, mClockInfo0, mClockInfo0.timeZone);
           mPresenter1.setRenderingInfo(
-              mode, now, blinkShowState, mClockInfo1, mClockInfo0.timeZone);
+              mode, now, mClockInfo1, mClockInfo0.timeZone);
           mPresenter2.setRenderingInfo(
-              mode, now, blinkShowState, mClockInfo2, mClockInfo0.timeZone);
+              mode, now, mClockInfo2, mClockInfo0.timeZone);
           break;
         }
 
@@ -414,14 +396,13 @@ class Controller {
         case Mode::kChangeInvertDisplay:
         {
           acetime_t now = mChangingDateTime.toEpochSeconds();
-          bool blinkShowState = mBlinkShowState || mSuppressBlink;
           Mode mode = (Mode) mNavigator.modeId();
           mPresenter0.setRenderingInfo(
-              mode, now, blinkShowState, mClockInfo0, mClockInfo0.timeZone);
+              mode, now, mClockInfo0, mClockInfo0.timeZone);
           mPresenter1.setRenderingInfo(
-              mode, now, true, mClockInfo1, mClockInfo0.timeZone);
+              mode, now, mClockInfo1, mClockInfo0.timeZone);
           mPresenter2.setRenderingInfo(
-              mode, now, true, mClockInfo2, mClockInfo0.timeZone);
+              mode, now, mClockInfo2, mClockInfo0.timeZone);
           break;
         }
 
@@ -447,19 +428,16 @@ class Controller {
       mPresenter0.setRenderingInfo(
           (Mode) mNavigator.modeId(),
           now,
-          mBlinkShowState || clockId!=0,
           mClockInfo0,
           mClockInfo0.timeZone);
       mPresenter1.setRenderingInfo(
           (Mode) mNavigator.modeId(),
           now,
-          mBlinkShowState || clockId!=1,
           mClockInfo1,
           mClockInfo0.timeZone);
       mPresenter2.setRenderingInfo(
           (Mode) mNavigator.modeId(),
           now,
-          mBlinkShowState || clockId!=2,
           mClockInfo2,
           mClockInfo0.timeZone);
     }
@@ -592,14 +570,9 @@ class Controller {
     ClockInfo mClockInfo0;
     ClockInfo mClockInfo1;
     ClockInfo mClockInfo2;
-
+    ClockInfo mChangingClockInfo;
     ZonedDateTime mChangingDateTime; // source of now() in "Change" modes
     bool mSecondFieldCleared = false;
-
-    // Handle blinking
-    bool mSuppressBlink = false; // true if blinking should be suppressed
-    bool mBlinkShowState = true; // true means actually show
-    uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
 };
 
 #endif

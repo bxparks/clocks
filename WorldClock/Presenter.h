@@ -51,13 +51,11 @@ class Presenter {
      */
     void setRenderingInfo(
         Mode mode, acetime_t now,
-        bool blinkShowState,
         const ClockInfo& clockInfo,
         const TimeZone& primaryTimeZone) {
 
       mRenderingInfo.mode = mode;
       mRenderingInfo.now = now;
-      mRenderingInfo.blinkShowState = blinkShowState;
       mRenderingInfo.clockInfo = clockInfo;
       mRenderingInfo.primaryTimeZone = primaryTimeZone;
     }
@@ -417,7 +415,9 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(Mode mode) const {
-      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
+      return mode != mRenderingInfo.mode
+          || mRenderingInfo.clockInfo.blinkShowState
+          || mRenderingInfo.clockInfo.suppressBlink;
     }
 
     /** The display needs to be cleared before rendering. */

@@ -42,6 +42,12 @@ struct ClockInfo {
       name(theName)
   {}
 
+  /** true if blinking info should be shown */
+  bool blinkShowState = false;
+
+  /** Blinking should be suppressed. e.g. when RepeatPress is active. */
+  bool suppressBlink = false;
+
   /** Hour mode, 12H or 24H. */
   uint8_t hourMode = kTwelve;
 
@@ -73,6 +79,8 @@ struct ClockInfo {
 
 inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
   return a.hourMode == b.hourMode
+      && a.blinkShowState == b.blinkShowState
+      && a.suppressBlink == b.suppressBlink
       && a.blinkingColon == b.blinkingColon
       && a.invertDisplay == b.invertDisplay
       && a.contrastLevel == b.contrastLevel

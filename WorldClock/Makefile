@@ -4,6 +4,15 @@
 APP_NAME := WorldClock
 ARDUINO_LIBS := EpoxyEepromEsp AceCommon AceCRC AceButton AceSorting \
 	AceTime AceTimeClock AceRoutine AceUtils AceWire SSD1306Ascii AceSPI
+DEPS := \
+	ClockInfo.h \
+	Controller.h \
+	PersistentStore.h \
+	Presenter.cpp \
+	Presenter.h \
+	RenderingInfo.h \
+	StoredInfo.h \
+	config.h
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 

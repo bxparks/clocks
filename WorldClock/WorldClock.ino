@@ -372,6 +372,13 @@ COROUTINE(updateController) {
   }
 }
 
+COROUTINE(blinker) {
+  COROUTINE_LOOP() {
+    controller.updateBlinkState();
+    COROUTINE_DELAY(500);
+  }
+}
+
 //----------------------------------------------------------------------------
 // Configure AceButton.
 //----------------------------------------------------------------------------
@@ -545,6 +552,7 @@ void loop() {
   // bytes of extra flash memory. So run the coroutines manually instead of
   // call CoroutineScheduler::loop();
   updateController.runCoroutine();
+  blinker.runCoroutine();
   systemClock.runCoroutine();
 
   // Call AceButton::check directly instead of using COROUTINE() to save 174

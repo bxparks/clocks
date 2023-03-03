@@ -15,9 +15,6 @@ struct RenderingInfo {
   /** display mode */
   Mode mode = Mode::kUnknown;
 
-  /** true if blinking info should be shown */
-  bool blinkShowState = true;
-
   /**
    * Information about how to render the clock: date, time, timezone, contrast.
    */
@@ -45,8 +42,7 @@ inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
   // The following fields are ordered so that frequently changing fields come
   // before infrequently changing fields. This allows the '&&' operator to
   // short-circuit faster.
-  return a.blinkShowState == b.blinkShowState
-      && a.now == b.now
+  return a.now == b.now
       && a.invertDisplay == b.invertDisplay
       && a.clockInfo == b.clockInfo
       && a.primaryTimeZone == b.primaryTimeZone
