@@ -33,6 +33,9 @@ struct ClockInfo {
   /** Invert display automatically half-daily. */
   static uint8_t const kInvertDisplayDaily = 4;
 
+  /** display mode */
+  Mode mode = Mode::kUnknown;
+
   /** true if blinking info should be shown */
   bool blinkShowState = false;
 
@@ -71,7 +74,8 @@ struct ClockInfo {
 
 
 inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
-  return a.hourMode == b.hourMode
+  return a.mode == b.mode
+      && a.hourMode == b.hourMode
       && a.blinkShowState == b.blinkShowState
       && a.suppressBlink == b.suppressBlink
       && a.blinkingColon == b.blinkingColon

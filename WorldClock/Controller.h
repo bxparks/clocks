@@ -421,21 +421,14 @@ class Controller {
     }
 
     void updateRenderingInfo() {
+      acetime_t now = 0;
+
       switch ((Mode) mNavigator.modeId()) {
         case Mode::kViewDateTime:
         case Mode::kViewSettings:
         case Mode::kViewAbout:
-        {
-          Mode mode = (Mode) mNavigator.modeId();
-          acetime_t now = mClock.getNow();
-          mPresenter0.setRenderingInfo(
-              mode, now, mClockInfo0, mClockInfo0.timeZone);
-          mPresenter1.setRenderingInfo(
-              mode, now, mClockInfo1, mClockInfo0.timeZone);
-          mPresenter2.setRenderingInfo(
-              mode, now, mClockInfo2, mClockInfo0.timeZone);
+          now = mClock.getNow();
           break;
-        }
 
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
@@ -447,52 +440,27 @@ class Controller {
         case Mode::kChangeBlinkingColon:
         case Mode::kChangeContrast:
         case Mode::kChangeInvertDisplay:
-        {
-          acetime_t now = mChangingDateTime.toEpochSeconds();
-          Mode mode = (Mode) mNavigator.modeId();
-          mPresenter0.setRenderingInfo(
-              mode, now, mClockInfo0, mClockInfo0.timeZone);
-          mPresenter1.setRenderingInfo(
-              mode, now, mClockInfo1, mClockInfo0.timeZone);
-          mPresenter2.setRenderingInfo(
-              mode, now, mClockInfo2, mClockInfo0.timeZone);
-          break;
-        }
-
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneDst0:
-          updateChangingDst(0);
-          break;
         case Mode::kChangeTimeZoneDst1:
-          updateChangingDst(1);
-          break;
         case Mode::kChangeTimeZoneDst2:
-          updateChangingDst(2);
-          break;
       #endif
+          now = mChangingDateTime.toEpochSeconds();
+          break;
 
         default:
           break;
       }
-    }
 
-    void updateChangingDst(uint8_t clockId) {
-      acetime_t now = mChangingDateTime.toEpochSeconds();
+      mClockInfo0.mode = (Mode) mNavigator.modeId();
+      mClockInfo1.mode = (Mode) mNavigator.modeId();
+      mClockInfo2.mode = (Mode) mNavigator.modeId();
       mPresenter0.setRenderingInfo(
-          (Mode) mNavigator.modeId(),
-          now,
-          mClockInfo0,
-          mClockInfo0.timeZone);
+          now, mClockInfo0, mClockInfo0.timeZone);
       mPresenter1.setRenderingInfo(
-          (Mode) mNavigator.modeId(),
-          now,
-          mClockInfo1,
-          mClockInfo0.timeZone);
+          now, mClockInfo1, mClockInfo0.timeZone);
       mPresenter2.setRenderingInfo(
-          (Mode) mNavigator.modeId(),
-          now,
-          mClockInfo2,
-          mClockInfo0.timeZone);
+          now, mClockInfo2, mClockInfo0.timeZone);
     }
 
     /** Save the current UTC ZonedDateTime to the RTC. */

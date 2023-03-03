@@ -12,9 +12,6 @@ using namespace ace_time;
  * addition to other information related to the presentation of the clock.
  */ 
 struct RenderingInfo {
-  /** display mode */
-  Mode mode = Mode::kUnknown;
-
   /**
    * Information about how to render the clock: date, time, timezone, contrast.
    */
@@ -36,8 +33,7 @@ inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
   // short-circuit faster.
   return a.now == b.now
       && a.clockInfo == b.clockInfo
-      && a.primaryTimeZone == b.primaryTimeZone
-      && a.mode == b.mode;
+      && a.primaryTimeZone == b.primaryTimeZone;
 }
 
 inline bool operator!=(const RenderingInfo& a, const RenderingInfo& b) {

@@ -24,7 +24,7 @@ class Presenter {
         mOled(oled) {}
 
     void display() {
-      if (mRenderingInfo.mode == Mode::kUnknown) {
+      if (mRenderingInfo.clockInfo.mode == Mode::kUnknown) {
         clearDisplay();
         return;
       }
@@ -48,11 +48,10 @@ class Presenter {
      * second.
      */
     void setRenderingInfo(
-        Mode mode, acetime_t now,
+        acetime_t now,
         const ClockInfo& clockInfo,
         const TimeZone& primaryTimeZone) {
 
-      mRenderingInfo.mode = mode;
       mRenderingInfo.now = now;
       mRenderingInfo.clockInfo = clockInfo;
       mRenderingInfo.primaryTimeZone = primaryTimeZone;
@@ -69,14 +68,14 @@ class Presenter {
       ClockInfo& clockInfo = mRenderingInfo.clockInfo;
 
       // Update contrastLevel if changed.
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
+      if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
           || prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
         uint8_t value = toContrastValue(mRenderingInfo.clockInfo.contrastLevel);
         mOled.setContrast(value);
       }
 
       // Update invertDisplay if changed.
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
+      if (mPrevRenderingInfo.clockInfo.mode == Mode::kUnknown
           || mPrevRenderingInfo.clockInfo.invertState !=
               mRenderingInfo.clockInfo.invertState) {
         mOled.invertDisplay(mRenderingInfo.clockInfo.invertDisplay);
@@ -113,7 +112,7 @@ class Presenter {
     void writeDisplayData() {
       mOled.home();
 
-      switch ((Mode) mRenderingInfo.mode) {
+      switch ((Mode) mRenderingInfo.clockInfo.mode) {
         case Mode::kViewDateTime:
           displayDateTime();
           break;
@@ -372,14 +371,14 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(Mode mode) const {
-      return mode != mRenderingInfo.mode
+      return mode != mRenderingInfo.clockInfo.mode
           || mRenderingInfo.clockInfo.blinkShowState
           || mRenderingInfo.clockInfo.suppressBlink;
     }
 
     /** The display needs to be cleared before rendering. */
     bool needsClear() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode;
+      return mRenderingInfo.clockInfo.mode != mPrevRenderingInfo.clockInfo.mode;
     }
 
     /** The display needs to be updated because something changed. */
