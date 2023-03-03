@@ -269,15 +269,16 @@ class Controller {
       if (ENABLE_SERIAL_DEBUG >= 1) {
         SERIAL_PORT_MONITOR.println(F("handleChangeButtonPress()"));
       }
+      mClockInfo.suppressBlink = true;
+      mChangingClockInfo.suppressBlink = true;
+
       switch ((Mode) mNavigator.modeId()) {
         case Mode::kChangeMedHour:
-          mSuppressBlink = true;
           time_period_mutation::incrementHour(
               mChangingClockInfo.medInterval, MAX_MED_INTERVAL_HOURS);
           break;
 
         case Mode::kChangeMedMinute:
-          mSuppressBlink = true;
           time_period_mutation::incrementMinute(
               mChangingClockInfo.medInterval);
           break;
@@ -285,7 +286,6 @@ class Controller {
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneOffset:
         {
-          mSuppressBlink = true;
           TimeOffset offset = mChangingClockInfo.timeZone.getStdOffset();
           time_offset_mutation::increment15Minutes(offset);
           mChangingClockInfo.timeZone.setStdOffset(offset);
@@ -294,7 +294,6 @@ class Controller {
 
         case Mode::kChangeTimeZoneDst:
         {
-          mSuppressBlink = true;
           TimeOffset dstOffset = mChangingClockInfo.timeZone.getDstOffset();
           dstOffset = (dstOffset.isZero())
               ? TimeOffset::forMinutes(kDstOffsetMinutes)
@@ -305,7 +304,6 @@ class Controller {
 
       #else
         case Mode::kChangeTimeZoneName:
-          mSuppressBlink = true;
           incrementMod(mZoneRegistryIndex, kZoneRegistrySize);
           mChangingClockInfo.timeZone =
               mZoneManager.createForZoneIndex(mZoneRegistryIndex);
@@ -316,39 +314,32 @@ class Controller {
       #endif
 
         case Mode::kChangeYear:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeMonth:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeDay:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeHour:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeMinute:
-          mSuppressBlink = true;
           zoned_date_time_mutation::incrementMinute(
               mChangingClockInfo.dateTime);
           break;
 
         case Mode::kChangeSecond:
-          mSuppressBlink = true;
           mChangingClockInfo.dateTime.second(0);
           mSecondFieldCleared = true;
           break;
 
         case Mode::kChangeSettingsContrast: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.contrastLevel, (uint8_t) 10);
           break;
         }
@@ -382,7 +373,8 @@ class Controller {
         case Mode::kChangeTimeZoneName:
       #endif
         case Mode::kChangeSettingsContrast:
-          mSuppressBlink = false;
+          mClockInfo.suppressBlink = false;
+          mChangingClockInfo.suppressBlink = false;
           break;
 
         default:
@@ -410,9 +402,14 @@ class Controller {
       if (mNavigator.modeId() == (uint8_t) Mode::kUnknown) return;
       if (mIsPreparingToSleep) return;
       updateDateTime();
-      updateBlinkState();
-      updateRenderingInfo();
+      updatePresenter();
       mPresenter.display();
+    }
+
+    void updateBlinkState () {
+      mClockInfo.blinkShowState = !mClockInfo.blinkShowState;
+      mChangingClockInfo.blinkShowState = !mChangingClockInfo.blinkShowState;
+      updatePresenter();
     }
 
   protected:
@@ -448,8 +445,8 @@ class Controller {
       }
     }
 
-    /** Update the internal rendering info. */
-    void updateRenderingInfo() {
+    /** Update the rendering info for the Presenter. */
+    void updatePresenter() {
       switch ((Mode) mNavigator.modeId()) {
         case Mode::kViewDateTime:
         case Mode::kViewTimeZone:
@@ -457,9 +454,7 @@ class Controller {
         case Mode::kViewAbout:
         case Mode::kChangeSettingsContrast:
           mPresenter.setRenderingInfo(
-              (Mode) mNavigator.modeId(),
-              mSuppressBlink || mBlinkShowState,
-              mClockInfo);
+              (Mode) mNavigator.modeId(), mClockInfo);
           break;
 
         case Mode::kChangeYear:
@@ -477,9 +472,7 @@ class Controller {
         case Mode::kChangeMedHour:
         case Mode::kChangeMedMinute:
           mPresenter.setRenderingInfo(
-              (Mode) mNavigator.modeId(),
-              mSuppressBlink || mBlinkShowState,
-              mChangingClockInfo);
+              (Mode) mNavigator.modeId(), mChangingClockInfo);
           break;
 
         case Mode::kViewMed: {
@@ -489,9 +482,7 @@ class Controller {
           mChangingClockInfo.medInterval = getRemainingTimePeriod();
 
           mPresenter.setRenderingInfo(
-              (Mode) mNavigator.modeId(),
-              mSuppressBlink || mBlinkShowState,
-              mChangingClockInfo);
+              (Mode) mNavigator.modeId(), mChangingClockInfo);
           break;
         }
 
@@ -518,19 +509,6 @@ class Controller {
       }
 
       return TimePeriod(remainingSeconds);
-    }
-
-    /** Update the blinkShowState. */
-    void updateBlinkState () {
-      uint16_t now = millis();
-      uint16_t duration = now - mBlinkCycleStartMillis;
-      if (duration < 500) {
-        mBlinkShowState = true;
-      } else if (duration < 1000) {
-        mBlinkShowState = false;
-      } else {
-        mBlinkCycleStartMillis = now;
-      }
     }
 
     void restoreClockInfo(ClockInfo& clockInfo, const StoredInfo& storedInfo) {
@@ -597,12 +575,6 @@ class Controller {
 
     uint16_t mZoneRegistryIndex;
     bool mSecondFieldCleared;
-
-    // Handle blinking
-    bool mSuppressBlink; // true if blinking should be suppressed
-    bool mBlinkShowState = true; // true means actually show
-    uint16_t mBlinkCycleStartMillis = 0; // millis since blink cycle start
-
     bool mIsPreparingToSleep = false;
 };
 

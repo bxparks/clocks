@@ -13,6 +13,7 @@ using namespace ace_time;
 struct RenderingInfo {
   Mode mode = Mode::kUnknown;
   bool blinkShowState = true; // true if should be rendered
+  bool suppressBlink = false;
   TimeZone timeZone; // currentTimeZone or changingTimeZone
   ZonedDateTime dateTime; // currentDateTime or changingDateTime
   TimePeriod timePeriod; // med interval or med remaining
@@ -22,6 +23,7 @@ struct RenderingInfo {
 inline bool operator==(const RenderingInfo& a, const RenderingInfo& b) {
   return a.mode == b.mode
       && a.blinkShowState == b.blinkShowState
+      && a.suppressBlink == b.suppressBlink
       && a.timeZone == b.timeZone
       && a.dateTime == b.dateTime
       && a.timePeriod == b.timePeriod

@@ -252,10 +252,6 @@ void setupController() {
   controller.setup();
 }
 
-//------------------------------------------------------------------
-// Run the controller.
-//------------------------------------------------------------------
-
 // The RTC has a resolution of only 1s, so we need to poll it fast enough to
 // make it appear that the display is tracking it correctly. On a slow 16MHz
 // AVR, Controller::run() returns in less than 1ms according to manual
@@ -265,6 +261,13 @@ COROUTINE(runController) {
   COROUTINE_LOOP() {
     controller.update();
     COROUTINE_DELAY(100);
+  }
+}
+
+COROUTINE(blinker) {
+  COROUTINE_LOOP() {
+    controller.updateBlinkState();
+    COROUTINE_DELAY(500);
   }
 }
 

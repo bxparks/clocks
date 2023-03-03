@@ -2,9 +2,16 @@
 #define MED_MINDER_CLOCK_INFO_H
 
 #include <AceTime.h>
+#include "config.h" // DISPLAY_TYPE
 
-/** Information about the clock, mostly independent of rendering. */
+/** Information about the clock. */
 struct ClockInfo {
+  /** Blinking info should be shown. Should be toggled every 0.5 sec. */
+  bool blinkShowState = false;
+
+  /** Blinking should be suppressed. e.g. when RepeatPress is active. */
+  bool suppressBlink = false;
+
   /** The desired timezone of the clock. */
   ace_time::TimeZone timeZone;
 
