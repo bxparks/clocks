@@ -314,15 +314,20 @@ void setupController(bool factoryReset) {
 }
 
 #if ENABLE_DHT22
-
 COROUTINE(updateTemperature) {
   COROUTINE_LOOP() {
     controller.updateTemperature();
     COROUTINE_DELAY_SECONDS(60);
   }
 }
-
 #endif
+
+COROUTINE(blinker) {
+  COROUTINE_LOOP() {
+    controller.updateBlinkState();
+    COROUTINE_DELAY(500);
+  }
+}
 
 //------------------------------------------------------------------
 // Render the Clock periodically.
@@ -386,13 +391,6 @@ COROUTINE(printFrameRate) {
   }
 }
 #endif
-
-COROUTINE(blinker) {
-  COROUTINE_LOOP() {
-    controller.updateBlinkState();
-    COROUTINE_DELAY(500);
-  }
-}
 
 //------------------------------------------------------------------
 // Configure AceButton.
