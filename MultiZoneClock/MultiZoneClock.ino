@@ -32,7 +32,6 @@
   #include <AceTimePro.h> // BasicDbZoneManager, ExtendedDbZoneManager
 #endif
 #include <AceUtils.h>
-#include <mode_group/mode_group.h> // from AceUtils
 #include <SPI.h>
 #if DISPLAY_TYPE == DISPLAY_TYPE_OLED
   #include <SSD1306AsciiAceWire.h>
@@ -47,8 +46,6 @@ using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
 using namespace ace_time::clock;
-using ace_utils::mode_group::ModeGroup;
-using ace_utils::mode_group::ModeRecord;
 
 //-----------------------------------------------------------------------------
 // Configure AceWire
@@ -307,127 +304,6 @@ void setupPresenter() {
 }
 
 //-----------------------------------------------------------------------------
-// Create mode groups that define the navigation path for the Mode button.
-// It forms a recursive tree structure that looks like this:
-//
-// - View date time
-//    - Change hour
-//    - Change minute
-//    - Change second
-//    - Change day
-//    - Change month
-//    - Change year
-// - View TimeZone
-//    - Change zone offset
-//    - Change zone dst
-//    - Change zone name
-// - View Settings
-//    - Change backlight (LCD)
-//    - Change contrast (LCD)
-//    - Change bias (LCD)
-//    - Change contrast (OLED)
-//    - Invert display (OLED)
-// - View SystemClock
-// - About
-//
-// Operation:
-//
-// * A Press of the Mode button cycles through the sibling modes.
-// * A LongPress of the Mode button goes down or up the hierarchy. Since the
-// hierarchy is only 2-levels deep, we can use LongPress to alternate going up
-// or down the mode tree. In the general case, we would need a different button
-// event (e.g. double click?) to distinguish between going up or going down the
-// tree.
-//
-// Previous version of this encoded the navigation tree within the Controller.h
-// class itself, in the various switch statements. However, I found it to be
-// too difficult to maintain when modes or their ordering changed. This
-// solution defines the mode hierarchy in a data-driven way, so should be
-// easier to maintain.
-//-----------------------------------------------------------------------------
-
-// The Arduino compiler becomes confused without this.
-extern const ModeGroup ROOT_MODE_GROUP;
-
-// List of DateTime modes.
-const ModeRecord DATE_TIME_MODES[] = {
-  {(uint8_t) Mode::kChangeHour, nullptr},
-  {(uint8_t) Mode::kChangeMinute, nullptr},
-  // {(uint8_t) Mode::kChangeSecond, nullptr},
-  {(uint8_t) Mode::kChangeDay, nullptr},
-  {(uint8_t) Mode::kChangeMonth, nullptr},
-  {(uint8_t) Mode::kChangeYear, nullptr},
-};
-
-// List of TimeZone modes.
-const ModeRecord TIME_ZONE_MODES[] = {
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-  {(uint8_t) Mode::kChangeTimeZone0Offset, nullptr},
-  {(uint8_t) Mode::kChangeTimeZone0Dst, nullptr},
-  {(uint8_t) Mode::kChangeTimeZone1Offset, nullptr},
-  {(uint8_t) Mode::kChangeTimeZone1Dst, nullptr},
-  {(uint8_t) Mode::kChangeTimeZone2Offset, nullptr},
-  {(uint8_t) Mode::kChangeTimeZone2Dst, nullptr},
-  {(uint8_t) Mode::kChangeTimeZone3Offset, nullptr},
-  {(uint8_t) Mode::kChangeTimeZone3Dst, nullptr},
-#else
-  {(uint8_t) Mode::kChangeTimeZone0Name, nullptr},
-  {(uint8_t) Mode::kChangeTimeZone1Name, nullptr},
-  {(uint8_t) Mode::kChangeTimeZone2Name, nullptr},
-  {(uint8_t) Mode::kChangeTimeZone3Name, nullptr},
-#endif
-};
-
-// List of Settings modes.
-const ModeRecord SETTINGS_MODES[] = {
-#if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-  {(uint8_t) Mode::kChangeSettingsBacklight, nullptr},
-  {(uint8_t) Mode::kChangeSettingsContrast, nullptr},
-  {(uint8_t) Mode::kChangeSettingsBias, nullptr},
-#else
-  {(uint8_t) Mode::kChangeSettingsContrast, nullptr},
-  {(uint8_t) Mode::kChangeInvertDisplay, nullptr},
-#endif
-};
-
-// ModeGroup for the DateTime modes.
-const ModeGroup DATE_TIME_MODE_GROUP = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(DATE_TIME_MODES) / sizeof(ModeRecord),
-  DATE_TIME_MODES,
-};
-
-// ModeGroup for the TimeZone modes.
-const ModeGroup TIME_ZONE_MODE_GROUP = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(TIME_ZONE_MODES) / sizeof(ModeRecord),
-  TIME_ZONE_MODES,
-};
-
-// ModeGroup for the Settings modes.
-const ModeGroup SETTINGS_MODE_GROUP = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(SETTINGS_MODES) / sizeof(ModeRecord),
-  SETTINGS_MODES,
-};
-
-// List of top level modes.
-const ModeRecord TOP_LEVEL_MODES[] = {
-  {(uint8_t) Mode::kViewDateTime, &DATE_TIME_MODE_GROUP},
-  {(uint8_t) Mode::kViewTimeZone, &TIME_ZONE_MODE_GROUP},
-  {(uint8_t) Mode::kViewSettings, &SETTINGS_MODE_GROUP},
-  {(uint8_t) Mode::kViewSysclock, nullptr},
-  {(uint8_t) Mode::kViewAbout, nullptr},
-};
-
-// Root mode group
-const ModeGroup ROOT_MODE_GROUP = {
-  nullptr /* parentGroup */,
-  sizeof(TOP_LEVEL_MODES) / sizeof(ModeRecord),
-  TOP_LEVEL_MODES,
-};
-
-//-----------------------------------------------------------------------------
 // Create persistent store.
 //-----------------------------------------------------------------------------
 
@@ -445,8 +321,7 @@ void setupPersistentStore() {
 //-----------------------------------------------------------------------------
 
 Controller controller(
-    persistentStore, systemClock, presenter, zoneManager,
-    DISPLAY_ZONES, &ROOT_MODE_GROUP
+    persistentStore, systemClock, presenter, zoneManager, DISPLAY_ZONES
 );
 
 void setupController(bool factoryReset) {
@@ -515,6 +390,13 @@ COROUTINE(printFrameRate) {
   }
 }
 #endif
+
+COROUTINE(blinker) {
+  COROUTINE_LOOP() {
+    controller.updateBlinkState();
+    COROUTINE_DELAY(500);
+  }
+}
 
 //-----------------------------------------------------------------------------
 // Configure AceButton.
@@ -725,8 +607,6 @@ void setup() {
     SERIAL_PORT_MONITOR.println(sizeof(ClockInfo));
     SERIAL_PORT_MONITOR.print(F("sizeof(StoredInfo): "));
     SERIAL_PORT_MONITOR.println(sizeof(StoredInfo));
-    SERIAL_PORT_MONITOR.print(F("sizeof(RenderingInfo): "));
-    SERIAL_PORT_MONITOR.println(sizeof(RenderingInfo));
   }
 
 #if TIME_SOURCE_TYPE == TIME_SOURCE_TYPE_NTP \

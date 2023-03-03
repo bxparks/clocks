@@ -113,6 +113,7 @@ class Controller {
       }
 
       switch (mClockInfo.mode) {
+        // View modes
         case Mode::kViewDateTime:
           mClockInfo.mode = Mode::kViewTimeZone;
           break;
@@ -134,7 +135,7 @@ class Controller {
           mClockInfo.mode = Mode::kViewDateTime;
           break;
 
-        // Date/Time
+        // Change Date/Time
         case Mode::kChangeHour:
           mClockInfo.mode = Mode::kChangeMinute;
           break;
@@ -154,7 +155,7 @@ class Controller {
           mClockInfo.mode = Mode::kChangeHour;
           break;
 
-        // TimeZone
+        // Change TimeZone
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneOffset:
           mClockInfo.mode = Mode::kChangeTimeZoneDst;
@@ -167,7 +168,7 @@ class Controller {
           break;
       #endif
 
-        // Display settings
+        // Change Display settings
       #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
         case Mode::kChangeSettingsBacklight:
           mClockInfo.mode = Mode::kChangeSettingsContrast;
@@ -186,8 +187,9 @@ class Controller {
           mClockInfo.mode = Mode::kChangeSettingsContrast;
           break;
       #endif
+
       // TODO: I think this needs to be merged into the above somehow.
-      #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
+      #if ENABLE_LED_DISPLAY
         case Mode::kChangeSettingsLedOnOff:
           mClockInfo.mode = Mode::kChangeSettingsLedBrightness;
           break;
@@ -222,6 +224,8 @@ class Controller {
       }
 
       switch (mClockInfo.mode) {
+        // Long Press in View modes changes to Change modes.
+
         case Mode::kViewDateTime:
           mChangingClockInfo = mClockInfo;
           initChangingClock();
@@ -282,7 +286,7 @@ class Controller {
         case Mode::kChangeSettingsLedOnOff:
         case Mode::kChangeSettingsLedBrightness:
       #endif
-          saveClockInfo();
+          preserveClockInfo();
           mClockInfo.mode = Mode::kViewSettings;
           break;
 
@@ -361,7 +365,7 @@ class Controller {
         // Switch 12/24 modes if in Mode::kDataTime
         case Mode::kViewDateTime:
           mClockInfo.hourMode ^= 0x1;
-          saveClockInfo();
+          preserveClockInfo();
           break;
 
       #if ENABLE_DHT22
@@ -373,8 +377,7 @@ class Controller {
 
         case Mode::kChangeYear:
           // Keep year between [2000,2100).
-          zoned_date_time_mutation::incrementYear(
-              mChangingClockInfo.dateTime);
+          zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeMonth:
           zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
@@ -462,7 +465,6 @@ class Controller {
           break;
         }
         case Mode::kChangeSettingsLedBrightness: {
-          mSuppressBlink = true;
           incrementMod(mClockInfo.ledBrightness, (uint8_t) 8);
           break;
         }
@@ -653,13 +655,13 @@ class Controller {
         SERIAL_PORT_MONITOR.println(F("saveChangingClockInfo()"));
       }
       mClockInfo = mChangingClockInfo;
-      saveClockInfo();
+      preserveClockInfo();
     }
 
     /** Save the clock info into EEPROM. */
-    void saveClockInfo() {
+    void preserveClockInfo() {
       if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("saveClockInfo()"));
+        SERIAL_PORT_MONITOR.println(F("preserveClockInfo()"));
       }
       StoredInfo storedInfo;
       storedInfoFromClockInfo(storedInfo, mClockInfo);
@@ -729,7 +731,7 @@ class Controller {
         clockInfoFromStoredInfo(mClockInfo, storedInfo);
       } else {
         setupClockInfo();
-        saveClockInfo();
+        preserveClockInfo();
       }
     }
 

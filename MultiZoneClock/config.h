@@ -7,7 +7,7 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
-#define MULTI_ZONE_CLOCK_VERSION_STRING "2022.11.16"
+#define MULTI_ZONE_CLOCK_VERSION_STRING "2023.03.02"
 
 // Set to >= 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
@@ -452,7 +452,6 @@
 //------------------------------------------------------------------
 
 enum class Mode : uint8_t {
-  // must be identical to ace_utils::mode_groups::kModeUnknown
   kUnknown = 0,
 
   kViewDateTime,

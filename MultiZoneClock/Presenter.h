@@ -18,7 +18,6 @@
 #endif
 #include "StoredInfo.h"
 #include "ClockInfo.h"
-#include "RenderingInfo.h"
 
 using namespace ace_time;
 using ace_common::printPad2To;
@@ -77,7 +76,7 @@ class Presenter {
         mIsOverwriting(isOverwriting)
       {}
 
-    void display() {
+    void updateDisplay() {
       if (needsClear()) {
         clearDisplay();
       }
@@ -86,18 +85,15 @@ class Presenter {
         displayData();
       }
 
-      mPrevRenderingInfo = mRenderingInfo;
+      mPrevClockInfo = mClockInfo;
     }
 
     /**
      * The Controller uses this method to pass mode and time information to the
      * Presenter.
      */
-    void setRenderingInfo(Mode mode, bool blinkShowState,
-        const ClockInfo& clockInfo) {
-      mRenderingInfo.mode = mode;
-      mRenderingInfo.blinkShowState = blinkShowState;
-      mRenderingInfo.clockInfo = clockInfo;
+    void setClockInfo(const ClockInfo& clockInfo) {
+      mClockInfo = clockInfo;
     }
 
   private:
@@ -180,47 +176,46 @@ class Presenter {
      * mBlinkShowState.
      */
     bool shouldShowFor(Mode mode) const {
-      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
+      return mode != mClockInfo.mode
+        || mClockInfo.blinkShowState
+        || mClockInfo.suppressBlink;
     }
 
     /** The display needs to be cleared before rendering. */
     bool needsClear() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode;
+      return mClockInfo.mode != mPrevClockInfo.mode;
     }
 
     /** The display needs to be updated because something changed. */
     bool needsUpdate() const {
-      return mRenderingInfo != mPrevRenderingInfo;
+      return mClockInfo != mPrevClockInfo;
     }
 
     /** Update the display settings, e.g. brightness, backlight, etc. */
     void updateDisplaySettings() {
-      ClockInfo& prevClockInfo = mPrevRenderingInfo.clockInfo;
-      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
-
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.backlightLevel != clockInfo.backlightLevel) {
-        uint16_t value = toLcdBacklightValue(clockInfo.backlightLevel);
+      if (mPrevClockInfo.mode == Mode::kUnknown ||
+          mPrevClockInfo.backlightLevel != mClockInfo.backlightLevel) {
+        uint16_t value = toLcdBacklightValue(mClockInfo.backlightLevel);
         analogWrite(LCD_BACKLIGHT_PIN, value);
       }
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.contrast != clockInfo.contrast) {
-        mDisplay.setContrast(clockInfo.contrast);
+      if (mPrevClockInfo.mode == Mode::kUnknown ||
+          mPrevClockInfo.contrast != mClockInfo.contrast) {
+        mDisplay.setContrast(mClockInfo.contrast);
       }
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.bias != clockInfo.bias) {
-        mDisplay.setBias(clockInfo.bias);
+      if (mPrevClockInfo.mode == Mode::kUnknown ||
+          mPrevClockInfo.bias != mClockInfo.bias) {
+        mDisplay.setBias(mClockInfo.bias);
       }
     #else
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.contrastLevel != clockInfo.contrastLevel) {
-        uint8_t value = toOledContrastValue(clockInfo.contrastLevel);
+      if (mPrevClockInfo.mode == Mode::kUnknown ||
+          mPrevClockInfo.contrastLevel != mClockInfo.contrastLevel) {
+        uint8_t value = toOledContrastValue(mClockInfo.contrastLevel);
         mDisplay.setContrast(value);
       }
-      if (mPrevRenderingInfo.mode == Mode::kUnknown ||
-          prevClockInfo.invertDisplay != clockInfo.invertDisplay) {
-        mDisplay.invertDisplay(clockInfo.invertDisplay);
+      if (mPrevClockInfo.mode == Mode::kUnknown ||
+          mPrevClockInfo.invertDisplay != mClockInfo.invertDisplay) {
+        mDisplay.invertDisplay(mClockInfo.invertDisplay);
       }
     #endif
     }
@@ -258,7 +253,7 @@ class Presenter {
       }
       setFont();
 
-      switch ((Mode) mRenderingInfo.mode) {
+      switch (mClockInfo.mode) {
         case Mode::kViewDateTime:
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
@@ -320,9 +315,7 @@ class Presenter {
         SERIAL_PORT_MONITOR.println(F("displayDateTimeMode()"));
       }
 
-      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
-
-      const ZonedDateTime& dateTime = clockInfo.dateTime;
+      const ZonedDateTime& dateTime = mClockInfo.dateTime;
       if (dateTime.isError()) {
         mDisplay.println(F("<Error>"));
         return;
@@ -332,17 +325,17 @@ class Presenter {
       displayLargeTime(dateTime);
 
       // Display alternates in normal font.
-      TimeZone tz = mZoneManager.createForTimeZoneData(clockInfo.zones[1]);
+      TimeZone tz = mZoneManager.createForTimeZoneData(mClockInfo.zones[1]);
       ZonedDateTime altDateTime = dateTime.convertToTimeZone(tz);
       displayDateChangeIndicator(dateTime, altDateTime);
       displayTimeWithAbbrev(altDateTime);
 
-      tz = mZoneManager.createForTimeZoneData(clockInfo.zones[2]);
+      tz = mZoneManager.createForTimeZoneData(mClockInfo.zones[2]);
       altDateTime = dateTime.convertToTimeZone(tz);
       displayDateChangeIndicator(dateTime, altDateTime);
       displayTimeWithAbbrev(altDateTime);
 
-      tz = mZoneManager.createForTimeZoneData(clockInfo.zones[3]);
+      tz = mZoneManager.createForTimeZoneData(mClockInfo.zones[3]);
       altDateTime = dateTime.convertToTimeZone(tz);
       displayDateChangeIndicator(dateTime, altDateTime);
       displayTimeWithAbbrev(altDateTime);
@@ -378,11 +371,9 @@ class Presenter {
     }
 
     void displayTime(const ZonedDateTime& dateTime) {
-      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
-
       if (shouldShowFor(Mode::kChangeHour)) {
         uint8_t hour = dateTime.hour();
-        if (clockInfo.hourMode == ClockInfo::kTwelve) {
+        if (mClockInfo.hourMode == ClockInfo::kTwelve) {
           hour = convert24To12(hour);
           printPad2To(mDisplay, hour, ' ');
         } else {
@@ -407,19 +398,17 @@ class Presenter {
       // With monospaced fonts, this extra space does not seem necessary.
       //mDisplay.print(' ');
 
-      if (clockInfo.hourMode == ClockInfo::kTwelve) {
+      if (mClockInfo.hourMode == ClockInfo::kTwelve) {
         mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
       }
       clearToEOL();
     }
 
     void displayLargeTime(const ZonedDateTime& dateTime) {
-      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
-
       setSize(2);
       if (shouldShowFor(Mode::kChangeHour)) {
         uint8_t hour = dateTime.hour();
-        if (clockInfo.hourMode == ClockInfo::kTwelve) {
+        if (mClockInfo.hourMode == ClockInfo::kTwelve) {
           hour = convert24To12(hour);
           printPad2To(mDisplay, hour, ' ');
         } else {
@@ -440,7 +429,7 @@ class Presenter {
       //mDisplay.print(' ');
 
       // AM/PM
-      if (clockInfo.hourMode == ClockInfo::kTwelve) {
+      if (mClockInfo.hourMode == ClockInfo::kTwelve) {
         setSize(1);
         mDisplay.print((dateTime.hour() < 12) ? "AM" : "PM");
         mDisplay.clearToEOL();
@@ -454,11 +443,9 @@ class Presenter {
     }
 
     void displayTimeWithAbbrev(const ZonedDateTime& dateTime) {
-      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
-
       if (shouldShowFor(Mode::kChangeHour)) {
         uint8_t hour = dateTime.hour();
-        if (clockInfo.hourMode == ClockInfo::kTwelve) {
+        if (mClockInfo.hourMode == ClockInfo::kTwelve) {
           hour = convert24To12(hour);
           printPad2To(mDisplay, hour, ' ');
         } else {
@@ -475,7 +462,7 @@ class Presenter {
       }
 
       // AM/PM
-      if (clockInfo.hourMode == ClockInfo::kTwelve) {
+      if (mClockInfo.hourMode == ClockInfo::kTwelve) {
         // With monospaced fonts, this extra space does not seem necessary.
         //mDisplay.print(' ');
         mDisplay.print((dateTime.hour() < 12) ? "A" : "P");
@@ -557,27 +544,22 @@ class Presenter {
         SERIAL_PORT_MONITOR.println(F("displayTimeZoneMode()"));
       }
 
-      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
       displayTimeZoneType();
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        displayManualTimeZone(0, clockInfo.zones[0],
+        displayManualTimeZone(0, mClockInfo.zones[0],
             Mode::kChangeTimeZone0Offset, Mode::kChangeTimeZone0Dst);
-        displayManualTimeZone(1, clockInfo.zones[1],
+        displayManualTimeZone(1, mClockInfo.zones[1],
             Mode::kChangeTimeZone1Offset, Mode::kChangeTimeZone1Dst);
-        displayManualTimeZone(2, clockInfo.zones[2],
+        displayManualTimeZone(2, mClockInfo.zones[2],
             Mode::kChangeTimeZone2Offset, Mode::kChangeTimeZone2Dst);
-        displayManualTimeZone(3, clockInfo.zones[3],
+        displayManualTimeZone(3, mClockInfo.zones[3],
             Mode::kChangeTimeZone3Offset, Mode::kChangeTimeZone3Dst);
       #else
-        displayAutoTimeZone(0, clockInfo.zones[0],
-            Mode::kChangeTimeZone0Name);
-        displayAutoTimeZone(1, clockInfo.zones[1],
-            Mode::kChangeTimeZone1Name);
-        displayAutoTimeZone(2, clockInfo.zones[2],
-            Mode::kChangeTimeZone2Name);
-        displayAutoTimeZone(3, clockInfo.zones[3],
-            Mode::kChangeTimeZone3Name);
+        displayAutoTimeZone(0, mClockInfo.zones[0], Mode::kChangeTimeZone0Name);
+        displayAutoTimeZone(1, mClockInfo.zones[1], Mode::kChangeTimeZone1Name);
+        displayAutoTimeZone(2, mClockInfo.zones[2], Mode::kChangeTimeZone2Name);
+        displayAutoTimeZone(3, mClockInfo.zones[3], Mode::kChangeTimeZone3Name);
       #endif
     }
 
@@ -664,26 +646,24 @@ class Presenter {
         SERIAL_PORT_MONITOR.println(F("displaySettingsMode()"));
       }
 
-      ClockInfo& clockInfo = mRenderingInfo.clockInfo;
-
     #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
       mDisplay.print(F("Backlight:"));
       if (shouldShowFor(Mode::kChangeSettingsBacklight)) {
-        mDisplay.println(clockInfo.backlightLevel);
+        mDisplay.println(mClockInfo.backlightLevel);
       } else {
         mDisplay.println(' ');
       }
 
       mDisplay.print(F("Contrast:"));
       if (shouldShowFor(Mode::kChangeSettingsContrast)) {
-        mDisplay.println(clockInfo.contrast);
+        mDisplay.println(mClockInfo.contrast);
       } else {
         mDisplay.println(' ');
       }
 
       mDisplay.print(F("Bias:"));
       if (shouldShowFor(Mode::kChangeSettingsBias)) {
-        mDisplay.println(clockInfo.bias);
+        mDisplay.println(mClockInfo.bias);
       } else {
         mDisplay.println(' ');
       }
@@ -691,14 +671,14 @@ class Presenter {
     #else
       mDisplay.print(F("Contrast:"));
       if (shouldShowFor(Mode::kChangeSettingsContrast)) {
-        mDisplay.println(clockInfo.contrastLevel);
+        mDisplay.println(mClockInfo.contrastLevel);
       } else {
         mDisplay.println(' ');
       }
 
       mDisplay.print(F("Invert:"));
       if (shouldShowFor(Mode::kChangeInvertDisplay)) {
-        mDisplay.println(clockInfo.invertDisplay);
+        mDisplay.println(mClockInfo.invertDisplay);
       } else {
         mDisplay.println(' ');
       }
@@ -710,29 +690,27 @@ class Presenter {
         SERIAL_PORT_MONITOR.println(F("displaySystemClockMode()"));
       }
 
-      ClockInfo &clockInfo = mRenderingInfo.clockInfo;
-
     #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
       mDisplay.print(F("SClkLoop:"));
     #else
       mDisplay.print(F("SClkCortn:"));
     #endif
-      mDisplay.print(clockInfo.syncStatusCode);
+      mDisplay.print(mClockInfo.syncStatusCode);
       clearToEOL();
 
       // Print the prev sync as a negative
       mDisplay.print(F("<:"));
-      TimePeriod prevSync = clockInfo.prevSync;
+      TimePeriod prevSync = mClockInfo.prevSync;
       prevSync.sign(-prevSync.sign());
       displayTimePeriodHMS(prevSync);
       clearToEOL();
 
       mDisplay.print(F(">:"));
-      displayTimePeriodHMS(clockInfo.nextSync);
+      displayTimePeriodHMS(mClockInfo.nextSync);
       clearToEOL();
 
       mDisplay.print(F("S:"));
-      displayTimePeriodHMS(clockInfo.clockSkew);
+      displayTimePeriodHMS(mClockInfo.clockSkew);
       clearToEOL();
     }
 
@@ -778,8 +756,8 @@ class Presenter {
     SSD1306Ascii& mDisplay;
   #endif
 
-    RenderingInfo mRenderingInfo;
-    RenderingInfo mPrevRenderingInfo;
+    ClockInfo mClockInfo;
+    ClockInfo mPrevClockInfo;
     bool const mIsOverwriting;
 };
 
