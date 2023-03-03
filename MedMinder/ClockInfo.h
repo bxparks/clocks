@@ -38,5 +38,20 @@ struct ClockInfo {
   uint8_t contrastLevel;
 };
 
+inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
+  return a.mode == b.mode
+      && a.blinkShowState == b.blinkShowState
+      && a.suppressBlink == b.suppressBlink
+      && a.timeZone == b.timeZone
+      && a.dateTime == b.dateTime
+      && a.medStartTime == b.medStartTime
+      && a.medInterval == b.medInterval
+      && a.contrastLevel == b.contrastLevel;
+}
+
+inline bool operator!=(const ClockInfo& a, const ClockInfo& b) {
+  return ! (a == b);
+}
+
 #endif
 

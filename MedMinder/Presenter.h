@@ -6,7 +6,7 @@
 #include <AceTime.h>
 #include <AceButton.h>
 #include <AceRoutine.h>
-#include "RenderingInfo.h"
+#include "ClockInfo.h"
 #include "ClockInfo.h"
 
 using namespace ace_time;
@@ -31,17 +31,11 @@ class Presenter {
         displayData();
       }
 
-      mPrevRenderingInfo = mRenderingInfo;
+      mPrevClockInfo = mClockInfo;
     }
 
-    void setRenderingInfo(const ClockInfo& clockInfo) {
-      mRenderingInfo.mode = clockInfo.mode;
-      mRenderingInfo.blinkShowState = clockInfo.blinkShowState;
-      mRenderingInfo.suppressBlink = clockInfo.suppressBlink;
-      mRenderingInfo.timeZone = clockInfo.timeZone;
-      mRenderingInfo.dateTime = clockInfo.dateTime;
-      mRenderingInfo.medInterval = clockInfo.medInterval;
-      mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
+    void setClockInfo(const ClockInfo& clockInfo) {
+      mClockInfo = clockInfo;
     }
 
     void prepareToSleep() {
@@ -84,13 +78,13 @@ class Presenter {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.print(F("displayData(): "));
         SERIAL_PORT_MONITOR.print(F("mode="));
-        SERIAL_PORT_MONITOR.println((uint8_t) mRenderingInfo.mode);
+        SERIAL_PORT_MONITOR.println((uint8_t) mClockInfo.mode);
       }
 
       mOled.home();
       setFont(1);
 
-      switch (mRenderingInfo.mode) {
+      switch (mClockInfo.mode) {
         case Mode::kViewMed:
           displayMed();
           break;
@@ -140,10 +134,10 @@ class Presenter {
       }
 
       mOled.println(F("Med due"));
-      if (mRenderingInfo.medInterval.isError()) {
+      if (mClockInfo.medInterval.isError()) {
         mOled.print(F("<Overdue>"));
       } else {
-        mRenderingInfo.medInterval.printTo(mOled);
+        mClockInfo.medInterval.printTo(mOled);
       }
       clearToEOL();
     }
@@ -166,13 +160,13 @@ class Presenter {
       mOled.println("Med intrvl");
 
       if (shouldShowFor(Mode::kChangeMedHour)) {
-        printPad2To(mOled, mRenderingInfo.medInterval.hour(), '0');
+        printPad2To(mOled, mClockInfo.medInterval.hour(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(Mode::kChangeMedMinute)) {
-        printPad2To(mOled, mRenderingInfo.medInterval.minute(), '0');
+        printPad2To(mOled, mClockInfo.medInterval.minute(), '0');
       } else {
         mOled.print("  ");
       }
@@ -189,7 +183,7 @@ class Presenter {
     }
 
     void displayDate() const {
-      const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
+      const ZonedDateTime& dateTime = mClockInfo.dateTime;
 
       if (dateTime.isError()) {
         mOled.print(F("<INVALID>"));
@@ -216,7 +210,7 @@ class Presenter {
     }
 
     void displayTime() const {
-      const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
+      const ZonedDateTime& dateTime = mClockInfo.dateTime;
 
       if (shouldShowFor(Mode::kChangeHour)) {
         printPad2To(mOled, dateTime.hour(), '0');
@@ -243,7 +237,7 @@ class Presenter {
     }
 
     void displayTimeZone() const {
-      const auto& tz = mRenderingInfo.timeZone;
+      const auto& tz = mClockInfo.timeZone;
 
       // Display the timezone using the TimeZoneData, not the dateTime, since
       // dateTime will contain a TimeZone, which points to the (singular)
@@ -307,7 +301,7 @@ class Presenter {
 
       mOled.print(F("Contrast:"));
       if (shouldShowFor(Mode::kChangeSettingsContrast)) {
-        mOled.println(mRenderingInfo.contrastLevel);
+        mOled.println(mClockInfo.contrastLevel);
       }
       clearToEOL();
     }
@@ -318,26 +312,26 @@ class Presenter {
      * accordance with the mBlinkShowState.
      */
     bool shouldShowFor(Mode mode) const {
-      return mode != mRenderingInfo.mode
-        || mRenderingInfo.blinkShowState
-        || mRenderingInfo.suppressBlink;
+      return mode != mClockInfo.mode
+        || mClockInfo.blinkShowState
+        || mClockInfo.suppressBlink;
     }
 
     /** The display needs to be cleared before rendering. */
     bool needsClear() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode;
+      return mClockInfo.mode != mPrevClockInfo.mode;
     }
 
     /** The display needs to be updated because something changed. */
     bool needsUpdate() const {
-      return mRenderingInfo != mPrevRenderingInfo;
+      return mClockInfo != mPrevClockInfo;
     }
 
     /** Update the display settings, e.g. brightness, backlight, etc. */
     void updateDisplaySettings() {
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
-          || mPrevRenderingInfo.contrastLevel != mRenderingInfo.contrastLevel) {
-        uint8_t value = toOledContrastValue(mRenderingInfo.contrastLevel);
+      if (mPrevClockInfo.mode == Mode::kUnknown
+          || mPrevClockInfo.contrastLevel != mClockInfo.contrastLevel) {
+        uint8_t value = toOledContrastValue(mClockInfo.contrastLevel);
         mOled.setContrast(value);
       }
     }
@@ -351,8 +345,8 @@ class Presenter {
     static const uint8_t kOledContrastValues[];
 
     SSD1306Ascii& mOled;
-    RenderingInfo mRenderingInfo;
-    RenderingInfo mPrevRenderingInfo;
+    ClockInfo mClockInfo;
+    ClockInfo mPrevClockInfo;
 };
 
 #endif
