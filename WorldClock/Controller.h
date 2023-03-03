@@ -88,8 +88,8 @@ class Controller {
     void update() {
       if (mClockInfo0.mode == Mode::kUnknown) return;
       updateDateTime();
+      updatePresenter();
       updateInvertState();
-      updateClockInfo();
     }
 
     void updateBlinkState () {
@@ -98,9 +98,7 @@ class Controller {
       mClockInfo2.blinkShowState = !mClockInfo2.blinkShowState;
       mChangingClockInfo.blinkShowState = !mChangingClockInfo.blinkShowState;
 
-      updatePresenter0();
-      updatePresenter1();
-      updatePresenter2();
+      updatePresenter();
     }
 
     // These are exposed as public methods so that the
@@ -169,6 +167,7 @@ class Controller {
           break;
       }
 
+      mChangingClockInfo.mode = mClockInfo0.mode;
       mClockInfo1.mode = mClockInfo0.mode;
       mClockInfo2.mode = mClockInfo0.mode;
     }
@@ -183,12 +182,15 @@ class Controller {
         // Long Press in View modes changes to Change modes.
         case Mode::kViewDateTime:
           mClockInfo0.mode = Mode::kChangeYear;
-          updateChangingDateTime();
+          mChangingClockInfo = mClockInfo0;
+          initChangingClock();
+          mSecondFieldCleared = false;
           break;
 
         case Mode::kViewSettings:
           mClockInfo0.mode = Mode::kChangeHourMode;
-          updateChangingDateTime();
+          mChangingClockInfo = mClockInfo0;
+          initChangingClock();
           break;
 
         case Mode::kChangeYear:
@@ -218,6 +220,7 @@ class Controller {
           break;
       }
 
+      mChangingClockInfo.mode = mClockInfo0.mode;
       mClockInfo1.mode = mClockInfo0.mode;
       mClockInfo2.mode = mClockInfo0.mode;
     }
@@ -259,20 +262,17 @@ class Controller {
     }
 
     /**
-     * Update mChangingDateTime after entering one of the change modes (e.g.
+     * Update mChangingClockInfo after entering one of the change modes (e.g.
      * kChangeHour or kChangeHourMode). Even when changing only the Clock Info
      * settings, the current date and time is required to make sure that the
      * display is updated correctly when invertDisplay is set to
      * kInvertDisplayAuto.
      */
-    void updateChangingDateTime() {
-      if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("updateChangingDateTime()"));
+    void initChangingClock() {
+      if (mChangingClockInfo.dateTime.isError()) {
+        mChangingClockInfo.dateTime = ZonedDateTime::forEpochSeconds(
+            0, mChangingClockInfo.dateTime.timeZone());
       }
-
-      mChangingDateTime = ZonedDateTime::forEpochSeconds(
-          mClock.getNow(), mClockInfo0.timeZone);
-      mSecondFieldCleared = false;
     }
 
     void handleChangeButtonPress() {
@@ -286,31 +286,23 @@ class Controller {
 
       switch (mClockInfo0.mode) {
         case Mode::kChangeYear:
-        #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-          zoned_date_time_mutation::incrementYear(mChangingDateTime);
-        #else
-          {
-            int16_t year = mChangingDateTime.year();
-            year++;
-            if (year >= 2100) year = 2000;
-            mChangingDateTime.year(year);
-          }
-        #endif
+          zoned_date_time_mutation::incrementYear(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeMonth:
-          zoned_date_time_mutation::incrementMonth(mChangingDateTime);
+          zoned_date_time_mutation::incrementMonth(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeDay:
-          zoned_date_time_mutation::incrementDay(mChangingDateTime);
+          zoned_date_time_mutation::incrementDay(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeHour:
-          zoned_date_time_mutation::incrementHour(mChangingDateTime);
+          zoned_date_time_mutation::incrementHour(mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeMinute:
-          zoned_date_time_mutation::incrementMinute(mChangingDateTime);
+          zoned_date_time_mutation::incrementMinute(
+              mChangingClockInfo.dateTime);
           break;
         case Mode::kChangeSecond:
-          mChangingDateTime.second(0);
+          mChangingClockInfo.dateTime.second(0);
           mSecondFieldCleared = true;
           break;
 
@@ -397,8 +389,16 @@ class Controller {
 
   protected:
     void updateDateTime() {
+      acetime_t now = mClock.getNow();
+      mClockInfo0.dateTime = ZonedDateTime::forEpochSeconds(
+          now, mClockInfo0.timeZone);
+      mClockInfo1.dateTime = ZonedDateTime::forEpochSeconds(
+          now, mClockInfo1.timeZone);
+      mClockInfo2.dateTime = ZonedDateTime::forEpochSeconds(
+          now, mClockInfo2.timeZone);
+
       // If in CHANGE mode, and the 'second' field has not been cleared,
-      // update the mChangingDateTime.second field with the current second.
+      // update the mChangingClockInfo.second field with the current second.
       switch (mClockInfo0.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
@@ -407,9 +407,7 @@ class Controller {
         case Mode::kChangeMinute:
         case Mode::kChangeSecond:
           if (!mSecondFieldCleared) {
-            ZonedDateTime dt = ZonedDateTime::forEpochSeconds(
-                mClock.getNow(), TimeZone());
-            mChangingDateTime.second(dt.second());
+            mChangingClockInfo.dateTime.second(mClockInfo0.dateTime.second());
           }
           break;
 
@@ -419,11 +417,6 @@ class Controller {
     }
 
     void updateInvertState() {
-      uint8_t invertState = calculateInvertState(
-          mChangingDateTime, mClockInfo0);
-      mClockInfo0.invertState = invertState;
-      mClockInfo1.invertState = invertState;
-      mClockInfo2.invertState = invertState;
     }
 
     /**
@@ -431,14 +424,13 @@ class Controller {
      * alternating inversion is an attempt to extend the life-time of these
      * OLED devices which seem to suffer from burn-in after about 6-12 months.
      */
-    static uint8_t calculateInvertState(
-        ZonedDateTime &zdt, ClockInfo& clockInfo) {
+    static uint8_t calculateInvertState(ClockInfo& clockInfo) {
       uint8_t invertState;
       if (clockInfo.invertDisplay == ClockInfo::kInvertDisplayMinutely
           || clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
           || clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
 
-        const LocalDateTime& ldt = zdt.localDateTime();
+        const LocalDateTime& ldt = clockInfo.dateTime.localDateTime();
 
         // The XOR alternates the pattern of on/off to smooth out the wear level
         // on specific digits. For example, if kInvertDisplayMinutely is
@@ -466,16 +458,10 @@ class Controller {
       return invertState;
     }
 
-    void updateClockInfo() {
-      acetime_t now = 0;
+    void updatePresenter() {
+      ClockInfo* clockInfo;
 
       switch (mClockInfo0.mode) {
-        case Mode::kViewDateTime:
-        case Mode::kViewSettings:
-        case Mode::kViewAbout:
-          now = mClock.getNow();
-          break;
-
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
         case Mode::kChangeDay:
@@ -491,18 +477,29 @@ class Controller {
         case Mode::kChangeTimeZoneDst1:
         case Mode::kChangeTimeZoneDst2:
       #endif
-          now = mChangingDateTime.toEpochSeconds();
+          clockInfo = &mChangingClockInfo;
           break;
 
         default:
+          clockInfo = &mClockInfo0;
           break;
+
       }
 
-      mClockInfo1.mode = mClockInfo0.mode;
-      mClockInfo2.mode = mClockInfo0.mode;
-      mClockInfo0.now = now;
-      mClockInfo1.now = now;
-      mClockInfo2.now = now;
+      mClockInfo0.mode = clockInfo->mode;
+      mClockInfo1.mode = clockInfo->mode;
+      mClockInfo2.mode = clockInfo->mode;
+
+      mClockInfo0.dateTime = clockInfo->dateTime;
+      mClockInfo1.dateTime = ZonedDateTime::forEpochSeconds(
+          clockInfo->dateTime.toEpochSeconds(), mClockInfo1.timeZone);
+      mClockInfo2.dateTime = ZonedDateTime::forEpochSeconds(
+          clockInfo->dateTime.toEpochSeconds(), mClockInfo2.timeZone);
+
+      uint8_t invertState = calculateInvertState(*clockInfo);
+      mClockInfo0.invertState = invertState;
+      mClockInfo1.invertState = invertState;
+      mClockInfo2.invertState = invertState;
 
       mPresenter0.setClockInfo(mClockInfo0);
       mPresenter1.setClockInfo(mClockInfo1);
@@ -511,8 +508,8 @@ class Controller {
 
     /** Save the current UTC ZonedDateTime to the RTC. */
     void saveDateTime() {
-      mChangingDateTime.normalize();
-      mClock.setNow(mChangingDateTime.toEpochSeconds());
+      mChangingClockInfo.dateTime.normalize();
+      mClock.setNow(mChangingClockInfo.dateTime.toEpochSeconds());
     }
 
     void saveClockInfo() {
@@ -637,7 +634,6 @@ class Controller {
     ClockInfo mClockInfo1;
     ClockInfo mClockInfo2;
     ClockInfo mChangingClockInfo;
-    ZonedDateTime mChangingDateTime; // source of now() in "Change" modes
     bool mSecondFieldCleared = false;
 };
 
