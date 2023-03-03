@@ -614,8 +614,7 @@ class Controller {
           || clockInfo.invertDisplay == ClockInfo::kInvertDisplayDaily
           || clockInfo.invertDisplay == ClockInfo::kInvertDisplayHourly) {
 
-        const ZonedDateTime& dateTime = clockInfo.dateTime;
-        const LocalDateTime& ldt = dateTime.localDateTime();
+        const LocalDateTime& ldt = clockInfo.dateTime.localDateTime();
 
         // The XOR alternates the pattern of on/off to smooth out the wear level
         // on specific digits. For example, if kInvertDisplayMinutely is

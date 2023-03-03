@@ -142,9 +142,7 @@ class Presenter {
     void displayDateTime() const {
       setFont(1);
 
-      const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
-          mClockInfo.now, mClockInfo.timeZone);
-      if (dateTime.isError()) {
+      if (mClockInfo.dateTime.isError()) {
         clearDisplay();
         mOled.println(F("<Error>"));
         return;
@@ -152,7 +150,7 @@ class Presenter {
 
       // time
       setFont(2);
-      uint8_t hour = dateTime.hour();
+      uint8_t hour = mClockInfo.dateTime.hour();
       if (mClockInfo.hourMode == ClockInfo::kTwelve) {
         hour = toTwelveHour(hour);
         printPad2To(mOled, hour, ' ');
@@ -162,12 +160,12 @@ class Presenter {
       mOled.print(
           (! mClockInfo.blinkingColon || shouldShowFor(Mode::kViewDateTime))
           ? ':' : ' ');
-      printPad2To(mOled, dateTime.minute(), '0');
+      printPad2To(mOled, mClockInfo.dateTime.minute(), '0');
 
       // AM/PM indicator
       mOled.set1X();
       if (mClockInfo.hourMode == ClockInfo::kTwelve) {
-        mOled.print((dateTime.hour() < 12) ? 'A' : 'P');
+        mOled.print((mClockInfo.dateTime.hour() < 12) ? 'A' : 'P');
       }
 
       // dayOfWeek, month/day, AM/PM
@@ -175,18 +173,20 @@ class Presenter {
       mOled.println();
       mOled.println();
 
-      mOled.print(DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));
+      mOled.print(DateStrings().dayOfWeekShortString(
+          mClockInfo.dateTime.dayOfWeek()));
       mOled.print(' ');
-      printPad2To(mOled, dateTime.month(), ' ');
+      printPad2To(mOled, mClockInfo.dateTime.month(), ' ');
       mOled.print('/');
-      printPad2To(mOled, dateTime.day(), '0');
+      printPad2To(mOled, mClockInfo.dateTime.day(), '0');
       mOled.print(' ');
       clearToEOL();
 
       // place name
-      ZonedExtra ze = ZonedExtra::forEpochSeconds(
-          mClockInfo.now, dateTime.timeZone());
-      mOled.print(ze.abbrev());
+      ZonedExtra extra = ZonedExtra::forLocalDateTime(
+          mClockInfo.dateTime.localDateTime(),
+          mClockInfo.dateTime.timeZone());
+      mOled.print(extra.abbrev());
       mOled.print(' ');
       mOled.print('(');
       mOled.print(mClockInfo.name);
@@ -206,26 +206,23 @@ class Presenter {
     }
 
     void displayChangeableDateTime() const {
-      const ZonedDateTime dateTime = ZonedDateTime::forEpochSeconds(
-          mClockInfo.now, mClockInfo.timeZone);
-
       setFont(1);
 
       // date
       if (shouldShowFor(Mode::kChangeYear)) {
-        mOled.print(dateTime.year());
+        mOled.print(mClockInfo.dateTime.year());
       } else {
         mOled.print("    ");
       }
       mOled.print('-');
       if (shouldShowFor(Mode::kChangeMonth)) {
-        printPad2To(mOled, dateTime.month(), '0');
+        printPad2To(mOled, mClockInfo.dateTime.month(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print('-');
       if (shouldShowFor(Mode::kChangeDay)) {
-        printPad2To(mOled, dateTime.day(), '0');
+        printPad2To(mOled, mClockInfo.dateTime.day(), '0');
       } else{
         mOled.print("  ");
       }
@@ -233,7 +230,7 @@ class Presenter {
 
       // time
       if (shouldShowFor(Mode::kChangeHour)) {
-        uint8_t hour = dateTime.hour();
+        uint8_t hour = mClockInfo.dateTime.hour();
         if (mClockInfo.hourMode == ClockInfo::kTwelve) {
           if (hour == 0) {
             hour = 12;
@@ -249,30 +246,32 @@ class Presenter {
       }
       mOled.print(':');
       if (shouldShowFor(Mode::kChangeMinute)) {
-        printPad2To(mOled, dateTime.minute(), '0');
+        printPad2To(mOled, mClockInfo.dateTime.minute(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(Mode::kChangeSecond)) {
-        printPad2To(mOled, dateTime.second(), '0');
+        printPad2To(mOled, mClockInfo.dateTime.second(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(' ');
       if (mClockInfo.hourMode == ClockInfo::kTwelve) {
-        mOled.print((dateTime.hour() < 12) ? "AM" : "PM");
+        mOled.print((mClockInfo.dateTime.hour() < 12) ? "AM" : "PM");
       }
       clearToEOL();
 
       // week day
-      mOled.print(DateStrings().dayOfWeekLongString(dateTime.dayOfWeek()));
+      mOled.print(DateStrings().dayOfWeekLongString(
+          mClockInfo.dateTime.dayOfWeek()));
       clearToEOL();
 
       // abbreviation and place name
-      ZonedExtra ze = ZonedExtra::forEpochSeconds(
-          mClockInfo.now, dateTime.timeZone());
-      mOled.print(ze.abbrev());
+      ZonedExtra extra = ZonedExtra::forLocalDateTime(
+          mClockInfo.dateTime.localDateTime(),
+          mClockInfo.dateTime.timeZone());
+      mOled.print(extra.abbrev());
       mOled.print(' ');
       mOled.print('(');
       mOled.print(mClockInfo.name);
