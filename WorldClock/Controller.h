@@ -503,9 +503,6 @@ class Controller {
       mClockInfo0.now = now;
       mClockInfo1.now = now;
       mClockInfo2.now = now;
-      mClockInfo0.primaryTimeZone = mClockInfo0.timeZone;
-      mClockInfo1.primaryTimeZone = mClockInfo0.timeZone;
-      mClockInfo2.primaryTimeZone = mClockInfo0.timeZone;
 
       mPresenter0.setClockInfo(mClockInfo0);
       mPresenter1.setClockInfo(mClockInfo1);
