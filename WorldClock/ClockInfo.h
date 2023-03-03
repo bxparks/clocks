@@ -33,15 +33,6 @@ struct ClockInfo {
   /** Invert display automatically half-daily. */
   static uint8_t const kInvertDisplayDaily = 4;
 
-  /** Default constructor. */
-  ClockInfo() {}
-
-  /** Construct from ZoneProcessor. */
-  ClockInfo(const ace_time::TimeZone& tz, const char* theName) :
-      timeZone(tz),
-      name(theName)
-  {}
-
   /** true if blinking info should be shown */
   bool blinkShowState = false;
 

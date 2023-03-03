@@ -52,11 +52,15 @@ class Controller {
         mNavigator(rootModeGroup),
         mPresenter0(presenter0),
         mPresenter1(presenter1),
-        mPresenter2(presenter2),
-        mClockInfo0(tz0, name0),
-        mClockInfo1(tz1, name1),
-        mClockInfo2(tz2, name2)
-    {}
+        mPresenter2(presenter2)
+    {
+      mClockInfo0.timeZone = tz0;
+      mClockInfo0.name = name0;
+      mClockInfo1.timeZone = tz1;
+      mClockInfo1.name = name1;
+      mClockInfo2.timeZone = tz2;
+      mClockInfo2.name = name2;
+    }
 
     /** Initialize the controller with the various time zones of each clock. */
     void setup(bool factoryReset) {
