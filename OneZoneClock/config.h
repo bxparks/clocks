@@ -502,7 +502,7 @@
 //------------------------------------------------------------------
 
 enum class Mode : uint8_t {
-  kUnknown = 0, // must be identical to ace_utils::mode_groups::kModeUnknown
+  kUnknown = 0,
 
   kViewDateTime,
   kViewTimeZone,
