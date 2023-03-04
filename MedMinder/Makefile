@@ -6,7 +6,6 @@ ARDUINO_LIBS := EpoxyEepromEsp AceCommon AceCRC AceButton AceSorting \
 	AceTime AceTimeClock AceRoutine AceUtils AceWire SSD1306Ascii
 DEPS:= \
 	ClockInfo.h \
-	Controller.cpp \
 	Controller.h \
 	PersistentStore.h \
 	Presenter.cpp \

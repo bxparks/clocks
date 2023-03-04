@@ -15,14 +15,24 @@ using ace_common::printPad2To;
 /** Class responsible for rendering the information to the OLED display. */
 class Presenter {
   public:
-    Presenter(SSD1306Ascii& oled):
+    Presenter(
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        ManualZoneManager& zoneManager,
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+        BasicZoneManager& zoneManager,
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+        ExtendedZoneManager& zoneManager,
+      #endif
+      SSD1306Ascii& oled
+    ):
+        mZoneManager(zoneManager),
         mOled(oled) {}
 
     /**
      * This should be called every 0.1s to support blinking mode and to avoid
      * noticeable drift against the RTC which has a 1 second resolution.
      */
-    void display() {
+    void updateDisplay() {
       if (needsClear()) {
         clearDisplay();
       }
@@ -237,11 +247,13 @@ class Presenter {
     }
 
     void displayTimeZone() const {
-      const auto& tz = mClockInfo.timeZone;
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("displayTimeZone()"));
+      }
 
       // Display the timezone using the TimeZoneData, not the dateTime, since
-      // dateTime will contain a TimeZone, which points to the (singular)
-      // Controller::mZoneProcessor, which will contain the old timeZone.
+      // dateTime will point to the old timeZone.
+      TimeZone tz = mZoneManager.createForTimeZoneData(mClockInfo.timeZoneData);
       mOled.print("TZ: ");
       const __FlashStringHelper* typeString;
       switch (tz.getType()) {
@@ -344,6 +356,13 @@ class Presenter {
 
     static const uint8_t kOledContrastValues[];
 
+  #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+    ManualZoneManager& mZoneManager;
+  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+    BasicZoneManager& mZoneManager;
+  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+    ExtendedZoneManager& mZoneManager;
+  #endif
     SSD1306Ascii& mOled;
     ClockInfo mClockInfo;
     ClockInfo mPrevClockInfo;

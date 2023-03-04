@@ -16,7 +16,7 @@ struct ClockInfo {
   bool suppressBlink = false;
 
   /** The desired timezone of the clock. */
-  ace_time::TimeZone timeZone;
+  ace_time::TimeZoneData timeZoneData;
 
   /** Current time. */
   ace_time::ZonedDateTime dateTime;
@@ -42,7 +42,7 @@ inline bool operator==(const ClockInfo& a, const ClockInfo& b) {
   return a.mode == b.mode
       && a.blinkShowState == b.blinkShowState
       && a.suppressBlink == b.suppressBlink
-      && a.timeZone == b.timeZone
+      && a.timeZoneData == b.timeZoneData
       && a.dateTime == b.dateTime
       && a.medStartTime == b.medStartTime
       && a.medInterval == b.medInterval

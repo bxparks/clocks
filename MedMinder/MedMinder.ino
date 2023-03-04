@@ -69,8 +69,6 @@
 using namespace ace_button;
 using namespace ace_routine;
 using namespace ace_time;
-using ace_utils::mode_group::ModeGroup;
-using ace_utils::mode_group::ModeRecord;
 
 //------------------------------------------------------------------
 // Configure PersistentStore
@@ -84,6 +82,68 @@ PersistentStore persistentStore(kContextId, kStoredInfoEepromAddress);
 void setupPersistentStore() {
   persistentStore.setup();
 }
+
+//-----------------------------------------------------------------------------
+// Configure time zones and ZoneManager.
+//-----------------------------------------------------------------------------
+
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+
+static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
+  &zonedb::kZoneAmerica_Los_Angeles,
+  &zonedb::kZoneAmerica_Denver,
+  &zonedb::kZoneAmerica_Chicago,
+  &zonedb::kZoneAmerica_New_York,
+  &zonedb::kZoneEurope_London,
+  &zonedb::kZoneAsia_Bangkok,
+};
+
+static const uint16_t ZONE_REGISTRY_SIZE =
+    sizeof(ZONE_REGISTRY) / sizeof(basic::ZoneInfo*);
+
+// Only 1 displayed at any given time, need 2 for conversions.
+static const uint16_t CACHE_SIZE = 1 + 1;
+static BasicZoneProcessorCache<CACHE_SIZE> zoneProcessorCache;
+static BasicZoneManager zoneManager(
+    ZONE_REGISTRY_SIZE, ZONE_REGISTRY, zoneProcessorCache);
+
+#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+
+static const extended::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
+  &zonedbx::kZoneAmerica_Los_Angeles,
+  &zonedbx::kZoneAmerica_Denver,
+  &zonedbx::kZoneAmerica_Chicago,
+  &zonedbx::kZoneAmerica_New_York,
+  &zonedbx::kZoneEurope_London,
+  &zonedbx::kZoneAsia_Bangkok,
+};
+
+static const uint16_t ZONE_REGISTRY_SIZE =
+    sizeof(ZONE_REGISTRY) / sizeof(extended::ZoneInfo*);
+
+// Only 1 displayed at any given time, need 2 for conversions.
+static const uint16_t CACHE_SIZE = 1 + 1;
+static ExtendedZoneProcessorCache<CACHE_SIZE> zoneProcessorCache;
+static ExtendedZoneManager zoneManager(
+    ZONE_REGISTRY_SIZE, ZONE_REGISTRY, zoneProcessorCache);
+
+#endif
+
+//-----------------------------------------------------------------------------
+// Create initial display timezone. Normally, these will be replaced by
+// the information retrieved from the EEPROM by the Controller.
+//-----------------------------------------------------------------------------
+
+#if TIME_ZONE_TYPE == TIME_ZONE_MANUAL
+
+  const TimeZoneData DISPLAY_ZONE = {-8*60, 0} /*-08:00*/;
+
+#else
+
+  // zoneIds are identical in zonedb:: and zonedbx::
+  const TimeZoneData DISPLAY_ZONE = {zonedb::kZoneIdAmerica_Los_Angeles};
+
+#endif
 
 //------------------------------------------------------------------
 // Configure the SystemClock.
@@ -110,122 +170,6 @@ void setupClocks() {
   systemClock.setup();
 }
 
-//-----------------------------------------------------------------------------
-// Create mode groups that define the navigation path for the Mode button.
-// It forms a recursive tree structure that looks like this:
-//
-// - View med info
-//    - Change med interval hour
-//    - Change med interval minute
-// - View date time
-//    - Change hour
-//    - Change minute
-//    - Change second
-//    - Change day
-//    - Change month
-//    - Change year
-// - View TimeZone
-//    - Change zone offset
-//    - Change zone dst
-//    - Change zone name
-// - Settings
-//    - Change contrast (OLED)
-// - About
-//
-// Operation:
-//
-// * A Press of the Mode button cycles through the sibling modes.
-// * A LongPress of the Mode button goes down or up the hierarchy. Since the
-// hierarchy is only 2-levels deep, we can use LongPress to alternate going up
-// or down the mode tree. In the general case, we would need a different button
-// event (e.g. double click?) to distinguish between going up or going down the
-// tree.
-//
-// Previous version of this encoded the navigation tree within the Controller.h
-// class itself, in the various switch statements. However, I found it to be
-// too difficult to maintain when modes or their ordering changed. This
-// solution defines the mode hierarchy in a data-driven way, so should be
-// easier to maintain.
-//-----------------------------------------------------------------------------
-
-// The Arduino compiler becomes confused without this.
-extern const ModeGroup ROOT_MODE_GROUP;
-
-// List of MedTimer modes
-const ModeRecord MED_INFO_MODES[] = {
-  {(uint8_t) Mode::kChangeMedHour, nullptr},
-  {(uint8_t) Mode::kChangeMedMinute, nullptr},
-};
-
-// List of DateTime modes.
-const ModeRecord DATE_TIME_MODES[] = {
-  {(uint8_t) Mode::kChangeYear, nullptr},
-  {(uint8_t) Mode::kChangeMonth, nullptr},
-  {(uint8_t) Mode::kChangeDay, nullptr},
-  {(uint8_t) Mode::kChangeHour, nullptr},
-  {(uint8_t) Mode::kChangeMinute, nullptr},
-  {(uint8_t) Mode::kChangeSecond, nullptr},
-};
-
-// List of TimeZone modes.
-const ModeRecord TIME_ZONE_MODES[] = {
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-  {(uint8_t) Mode::kChangeTimeZoneOffset, nullptr},
-  {(uint8_t) Mode::kChangeTimeZoneDst, nullptr},
-#else
-  {(uint8_t) Mode::kChangeTimeZoneName, nullptr},
-#endif
-};
-
-// List of Settings modes.
-const ModeRecord SETTINGS_MODES[] = {
-  {(uint8_t) Mode::kChangeSettingsContrast, nullptr},
-};
-
-// ModeGroup for the DateTime modes.
-const ModeGroup MED_INFO_MODE_GROUP = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(MED_INFO_MODES) / sizeof(ModeRecord),
-  MED_INFO_MODES,
-};
-
-// ModeGroup for the DateTime modes.
-const ModeGroup DATE_TIME_MODE_GROUP = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(DATE_TIME_MODES) / sizeof(ModeRecord),
-  DATE_TIME_MODES,
-};
-
-// ModeGroup for the TimeZone modes.
-const ModeGroup TIME_ZONE_MODE_GROUP = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(TIME_ZONE_MODES) / sizeof(ModeRecord),
-  TIME_ZONE_MODES,
-};
-
-// ModeGroup for the Settings modes.
-const ModeGroup SETTINGS_MODE_GROUP = {
-  &ROOT_MODE_GROUP /* parentGroup */,
-  sizeof(SETTINGS_MODES) / sizeof(ModeRecord),
-  SETTINGS_MODES,
-};
-
-// List of top level modes.
-const ModeRecord TOP_LEVEL_MODES[] = {
-  {(uint8_t) Mode::kViewMed, &MED_INFO_MODE_GROUP},
-  {(uint8_t) Mode::kViewDateTime, &DATE_TIME_MODE_GROUP},
-  {(uint8_t) Mode::kViewTimeZone, &TIME_ZONE_MODE_GROUP},
-  {(uint8_t) Mode::kViewSettings, &SETTINGS_MODE_GROUP},
-  {(uint8_t) Mode::kViewAbout, nullptr},
-};
-
-// Root mode group
-const ModeGroup ROOT_MODE_GROUP = {
-  nullptr /* parentGroup */,
-  sizeof(TOP_LEVEL_MODES) / sizeof(ModeRecord),
-  TOP_LEVEL_MODES,
-};
-
 //------------------------------------------------------------------
 // Configure the OLED display.
 //------------------------------------------------------------------
@@ -244,9 +188,9 @@ void setupOled() {
 // Configure the controller.
 //------------------------------------------------------------------
 
-Presenter presenter(oled);
-Controller controller(
-    systemClock, persistentStore, &ROOT_MODE_GROUP, presenter);
+Presenter presenter(zoneManager, oled);
+Controller controller(systemClock, persistentStore, presenter, zoneManager,
+    DISPLAY_ZONE);
 
 void setupController() {
   controller.setup();
