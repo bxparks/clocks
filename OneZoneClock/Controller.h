@@ -64,8 +64,8 @@ class Controller {
         mClock(clock)
         , mPersistentStore(persistentStore)
         , mPresenter(presenter)
-        , mZoneManager(zoneManager),
-        mInitialTimeZoneData(initialTimeZoneData)
+        , mZoneManager(zoneManager)
+        , mInitialTimeZoneData(initialTimeZoneData)
       #if ENABLE_DHT22
         , mDht(dht)
       #endif
@@ -205,6 +205,8 @@ class Controller {
       #if TIME_ZONE_TYPE != TIME_ZONE_TYPE_MANUAL
       switch (mClockInfo.mode) {
         case Mode::kChangeTimeZoneName:
+          // TODO: I think this can be merged into the
+          // Mode::kChangeTimeZoneName case above.
           mZoneRegistryIndex = mZoneManager.indexForZoneId(
               mChangingClockInfo.timeZoneData.zoneId);
           break;
@@ -233,6 +235,7 @@ class Controller {
           mClockInfo.mode = Mode::kChangeYear;
           break;
 
+        // Long Press in ViewTimeZone mode.
         case Mode::kViewTimeZone:
           mChangingClockInfo = mClockInfo;
           initChangingClock();
@@ -245,6 +248,7 @@ class Controller {
         #endif
           break;
 
+        // Long Press in ViewSettings mode.
         case Mode::kViewSettings:
         #if DISPLAY_TYPE == DISPLAY_TYPE_LCD
           mClockInfo.mode = Mode::kChangeSettingsBacklight;
@@ -264,6 +268,7 @@ class Controller {
           mClockInfo.mode = Mode::kViewDateTime;
           break;
 
+        // Long Press in Change time zone mode.
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
         case Mode::kChangeTimeZoneOffset:
         case Mode::kChangeTimeZoneDst:
@@ -423,10 +428,7 @@ class Controller {
       #else
         // Cycle through the zones in the registry
         case Mode::kChangeTimeZoneName: {
-          mZoneRegistryIndex++;
-          if (mZoneRegistryIndex >= mZoneManager.zoneRegistrySize()) {
-            mZoneRegistryIndex = 0;
-          }
+          incrementMod(mZoneRegistryIndex, mZoneManager.zoneRegistrySize());
           TimeZone tz = mZoneManager.createForZoneIndex(mZoneRegistryIndex);
           mChangingClockInfo.timeZoneData = tz.toTimeZoneData();
           mChangingClockInfo.dateTime =
@@ -650,9 +652,6 @@ class Controller {
 
     /** Transfer info from ChangingClockInfo to ClockInfo. */
     void saveChangingClockInfo() {
-      if (ENABLE_SERIAL_DEBUG >= 2) {
-        SERIAL_PORT_MONITOR.println(F("saveChangingClockInfo()"));
-      }
       mClockInfo = mChangingClockInfo;
       preserveClockInfo();
     }
@@ -767,6 +766,7 @@ class Controller {
   #endif
 
     TimeZoneData mInitialTimeZoneData;
+
   #if ENABLE_DHT22
     DHT* const mDht;
   #endif

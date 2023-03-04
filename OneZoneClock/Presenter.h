@@ -454,14 +454,9 @@ class Presenter {
         SERIAL_PORT_MONITOR.println(F("displayTimeZoneMode()"));
       }
 
-      // Don't use F() strings for short strings <= 4 characters. Seems to
-      // increase flash memory, while saving only a few bytes of RAM.
-
       // Display the timezone using the TimeZoneData, not the dateTime, since
-      // dateTime will contain a TimeZone, which points to the (singular)
-      // Controller::mZoneProcessor, which will contain the old timeZone.
-      TimeZone tz = mZoneManager.createForTimeZoneData(
-          mClockInfo.timeZoneData);
+      // dateTime will point to the old timeZone.
+      TimeZone tz = mZoneManager.createForTimeZoneData(mClockInfo.timeZoneData);
       mDisplay.print("TZ:");
       const __FlashStringHelper* typeString;
       switch (tz.getType()) {

@@ -6,7 +6,7 @@
 #include <AceTime.h>
 #include <AceButton.h>
 #include <AceRoutine.h>
-#include "RenderingInfo.h"
+#include "ClockInfo.h"
 #include "ClockInfo.h"
 
 using namespace ace_time;
@@ -15,14 +15,24 @@ using ace_common::printPad2To;
 /** Class responsible for rendering the information to the OLED display. */
 class Presenter {
   public:
-    Presenter(SSD1306Ascii& oled):
+    Presenter(
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+        ManualZoneManager& zoneManager,
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+        BasicZoneManager& zoneManager,
+      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+        ExtendedZoneManager& zoneManager,
+      #endif
+      SSD1306Ascii& oled
+    ):
+        mZoneManager(zoneManager),
         mOled(oled) {}
 
     /**
      * This should be called every 0.1s to support blinking mode and to avoid
      * noticeable drift against the RTC which has a 1 second resolution.
      */
-    void display() {
+    void updateDisplay() {
       if (needsClear()) {
         clearDisplay();
       }
@@ -31,20 +41,11 @@ class Presenter {
         displayData();
       }
 
-      mPrevRenderingInfo = mRenderingInfo;
+      mPrevClockInfo = mClockInfo;
     }
 
-    void setRenderingInfo(
-        Mode mode,
-        bool blinkShowState,
-        const ClockInfo& clockInfo
-    ) {
-      mRenderingInfo.mode = mode;
-      mRenderingInfo.blinkShowState = blinkShowState;
-      mRenderingInfo.timeZone = clockInfo.timeZone;
-      mRenderingInfo.dateTime = clockInfo.dateTime;
-      mRenderingInfo.timePeriod = clockInfo.medInterval;
-      mRenderingInfo.contrastLevel = clockInfo.contrastLevel;
+    void setClockInfo(const ClockInfo& clockInfo) {
+      mClockInfo = clockInfo;
     }
 
     void prepareToSleep() {
@@ -87,13 +88,13 @@ class Presenter {
       if (ENABLE_SERIAL_DEBUG >= 2) {
         SERIAL_PORT_MONITOR.print(F("displayData(): "));
         SERIAL_PORT_MONITOR.print(F("mode="));
-        SERIAL_PORT_MONITOR.println((uint8_t) mRenderingInfo.mode);
+        SERIAL_PORT_MONITOR.println((uint8_t) mClockInfo.mode);
       }
 
       mOled.home();
       setFont(1);
 
-      switch (mRenderingInfo.mode) {
+      switch (mClockInfo.mode) {
         case Mode::kViewMed:
           displayMed();
           break;
@@ -143,10 +144,10 @@ class Presenter {
       }
 
       mOled.println(F("Med due"));
-      if (mRenderingInfo.timePeriod.isError()) {
+      if (mClockInfo.medInterval.isError()) {
         mOled.print(F("<Overdue>"));
       } else {
-        mRenderingInfo.timePeriod.printTo(mOled);
+        mClockInfo.medInterval.printTo(mOled);
       }
       clearToEOL();
     }
@@ -169,13 +170,13 @@ class Presenter {
       mOled.println("Med intrvl");
 
       if (shouldShowFor(Mode::kChangeMedHour)) {
-        printPad2To(mOled, mRenderingInfo.timePeriod.hour(), '0');
+        printPad2To(mOled, mClockInfo.medInterval.hour(), '0');
       } else {
         mOled.print("  ");
       }
       mOled.print(':');
       if (shouldShowFor(Mode::kChangeMedMinute)) {
-        printPad2To(mOled, mRenderingInfo.timePeriod.minute(), '0');
+        printPad2To(mOled, mClockInfo.medInterval.minute(), '0');
       } else {
         mOled.print("  ");
       }
@@ -192,7 +193,7 @@ class Presenter {
     }
 
     void displayDate() const {
-      const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
+      const ZonedDateTime& dateTime = mClockInfo.dateTime;
 
       if (dateTime.isError()) {
         mOled.print(F("<INVALID>"));
@@ -219,7 +220,7 @@ class Presenter {
     }
 
     void displayTime() const {
-      const ZonedDateTime& dateTime = mRenderingInfo.dateTime;
+      const ZonedDateTime& dateTime = mClockInfo.dateTime;
 
       if (shouldShowFor(Mode::kChangeHour)) {
         printPad2To(mOled, dateTime.hour(), '0');
@@ -246,11 +247,13 @@ class Presenter {
     }
 
     void displayTimeZone() const {
-      const auto& tz = mRenderingInfo.timeZone;
+      if (ENABLE_SERIAL_DEBUG >= 2) {
+        SERIAL_PORT_MONITOR.println(F("displayTimeZone()"));
+      }
 
       // Display the timezone using the TimeZoneData, not the dateTime, since
-      // dateTime will contain a TimeZone, which points to the (singular)
-      // Controller::mZoneProcessor, which will contain the old timeZone.
+      // dateTime will point to the old timeZone.
+      TimeZone tz = mZoneManager.createForTimeZoneData(mClockInfo.timeZoneData);
       mOled.print("TZ: ");
       const __FlashStringHelper* typeString;
       switch (tz.getType()) {
@@ -310,7 +313,7 @@ class Presenter {
 
       mOled.print(F("Contrast:"));
       if (shouldShowFor(Mode::kChangeSettingsContrast)) {
-        mOled.println(mRenderingInfo.contrastLevel);
+        mOled.println(mClockInfo.contrastLevel);
       }
       clearToEOL();
     }
@@ -321,24 +324,26 @@ class Presenter {
      * accordance with the mBlinkShowState.
      */
     bool shouldShowFor(Mode mode) const {
-      return mode != mRenderingInfo.mode || mRenderingInfo.blinkShowState;
+      return mode != mClockInfo.mode
+        || mClockInfo.blinkShowState
+        || mClockInfo.suppressBlink;
     }
 
     /** The display needs to be cleared before rendering. */
     bool needsClear() const {
-      return mRenderingInfo.mode != mPrevRenderingInfo.mode;
+      return mClockInfo.mode != mPrevClockInfo.mode;
     }
 
     /** The display needs to be updated because something changed. */
     bool needsUpdate() const {
-      return mRenderingInfo != mPrevRenderingInfo;
+      return mClockInfo != mPrevClockInfo;
     }
 
     /** Update the display settings, e.g. brightness, backlight, etc. */
     void updateDisplaySettings() {
-      if (mPrevRenderingInfo.mode == Mode::kUnknown
-          || mPrevRenderingInfo.contrastLevel != mRenderingInfo.contrastLevel) {
-        uint8_t value = toOledContrastValue(mRenderingInfo.contrastLevel);
+      if (mPrevClockInfo.mode == Mode::kUnknown
+          || mPrevClockInfo.contrastLevel != mClockInfo.contrastLevel) {
+        uint8_t value = toOledContrastValue(mClockInfo.contrastLevel);
         mOled.setContrast(value);
       }
     }
@@ -351,9 +356,16 @@ class Presenter {
 
     static const uint8_t kOledContrastValues[];
 
+  #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+    ManualZoneManager& mZoneManager;
+  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+    BasicZoneManager& mZoneManager;
+  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
+    ExtendedZoneManager& mZoneManager;
+  #endif
     SSD1306Ascii& mOled;
-    RenderingInfo mRenderingInfo;
-    RenderingInfo mPrevRenderingInfo;
+    ClockInfo mClockInfo;
+    ClockInfo mPrevClockInfo;
 };
 
 #endif
