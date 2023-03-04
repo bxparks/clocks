@@ -7,7 +7,7 @@
 // Compile-time selectors and options
 //------------------------------------------------------------------
 
-#define MED_MINDER_VERSION_STRING "2022.11.16"
+#define MED_MINDER_VERSION_STRING "2023.03.03"
 
 // Set to 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
