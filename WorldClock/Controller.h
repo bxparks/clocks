@@ -89,7 +89,6 @@ class Controller {
       if (mClockInfo0.mode == Mode::kUnknown) return;
       updateDateTime();
       updatePresenter();
-      updateInvertState();
     }
 
     void updateBlinkState () {
@@ -307,27 +306,19 @@ class Controller {
           break;
 
         case Mode::kChangeHourMode:
-          mClockInfo0.hourMode ^= 0x1;
-          mClockInfo1.hourMode ^= 0x1;
-          mClockInfo2.hourMode ^= 0x1;
+          mChangingClockInfo.hourMode ^= 0x1;
           break;
 
         case Mode::kChangeBlinkingColon:
-          mClockInfo0.blinkingColon = !mClockInfo0.blinkingColon;
-          mClockInfo1.blinkingColon = !mClockInfo1.blinkingColon;
-          mClockInfo2.blinkingColon = !mClockInfo2.blinkingColon;
+          mChangingClockInfo.blinkingColon = !mChangingClockInfo.blinkingColon;
           break;
 
         case Mode::kChangeContrast:
-          incrementMod(mClockInfo0.contrastLevel, (uint8_t) 10);
-          incrementMod(mClockInfo1.contrastLevel, (uint8_t) 10);
-          incrementMod(mClockInfo2.contrastLevel, (uint8_t) 10);
+          incrementMod(mChangingClockInfo.contrastLevel, (uint8_t) 10);
           break;
 
         case Mode::kChangeInvertDisplay:
-          incrementMod(mClockInfo0.invertDisplay, (uint8_t) 5);
-          incrementMod(mClockInfo1.invertDisplay, (uint8_t) 5);
-          incrementMod(mClockInfo2.invertDisplay, (uint8_t) 5);
+          incrementMod(mChangingClockInfo.invertDisplay, (uint8_t) 5);
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -416,9 +407,6 @@ class Controller {
       }
     }
 
-    void updateInvertState() {
-    }
-
     /**
      * Calculate the next actual invertDisplay setting. Automatically
      * alternating inversion is an attempt to extend the life-time of these
@@ -459,8 +447,7 @@ class Controller {
     }
 
     void updatePresenter() {
-      ClockInfo* clockInfo;
-
+      ClockInfo clockInfo; // make a copy
       switch (mClockInfo0.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
@@ -477,33 +464,30 @@ class Controller {
         case Mode::kChangeTimeZoneDst1:
         case Mode::kChangeTimeZoneDst2:
       #endif
-          clockInfo = &mChangingClockInfo;
+          clockInfo = mChangingClockInfo;
           break;
 
         default:
-          clockInfo = &mClockInfo0;
+          clockInfo = mClockInfo0;
           break;
 
       }
 
-      mClockInfo0.mode = clockInfo->mode;
-      mClockInfo1.mode = clockInfo->mode;
-      mClockInfo2.mode = clockInfo->mode;
+      uint8_t invertState = calculateInvertState(clockInfo);
+      clockInfo.invertState = invertState;
 
-      mClockInfo0.dateTime = clockInfo->dateTime;
-      mClockInfo1.dateTime = ZonedDateTime::forEpochSeconds(
-          clockInfo->dateTime.toEpochSeconds(), mClockInfo1.timeZone);
-      mClockInfo2.dateTime = ZonedDateTime::forEpochSeconds(
-          clockInfo->dateTime.toEpochSeconds(), mClockInfo2.timeZone);
+      // Clock0
+      mPresenter0.setClockInfo(clockInfo);
 
-      uint8_t invertState = calculateInvertState(*clockInfo);
-      mClockInfo0.invertState = invertState;
-      mClockInfo1.invertState = invertState;
-      mClockInfo2.invertState = invertState;
+      // Clock1
+      clockInfo.dateTime = clockInfo.dateTime.convertToTimeZone(
+          mClockInfo1.timeZone);
+      mPresenter1.setClockInfo(clockInfo);
 
-      mPresenter0.setClockInfo(mClockInfo0);
-      mPresenter1.setClockInfo(mClockInfo1);
-      mPresenter2.setClockInfo(mClockInfo2);
+      // Clock2
+      clockInfo.dateTime = clockInfo.dateTime.convertToTimeZone(
+          mClockInfo2.timeZone);
+      mPresenter2.setClockInfo(clockInfo);
     }
 
     /** Save the current UTC ZonedDateTime to the RTC. */
