@@ -83,7 +83,7 @@ class Controller {
      * We could have used a finite state machine inside this Controller object
      * to implement the staggered rendering of the 3 displays. But it was a lot
      * easier to take advantage of the inherent advantages of a Coroutine,
-     * and call the updatePresenterN() methods separately from the coroutine.
+     * and call the displayPresenterN() methods separately from the coroutine.
      */
     void update() {
       if (mClockInfo0.mode == Mode::kUnknown) return;
@@ -101,13 +101,13 @@ class Controller {
     }
 
     // These are exposed as public methods so that the
-    // COROUTINE(updateController) can update each Presenter separately,
-    // interspersed with calls to COROUTINE_YIELD(). They should be called 5-10
-    // times a second to support blinking mode and to avoid noticeable drift
-    // against the RTC which has a 1 second resolution.
-    void updatePresenter0() { mPresenter0.display(); }
-    void updatePresenter1() { mPresenter1.display(); }
-    void updatePresenter2() { mPresenter2.display(); }
+    // COROUTINE(updateController) can tell each Presenter to render to its OLED
+    // dislay separately, interspersed with calls to COROUTINE_YIELD(). They
+    // should be called 5-10 times a second to support blinking mode and to
+    // avoid noticeable drift against the RTC which has a 1 second resolution.
+    void displayPresenter0() { mPresenter0.display(); }
+    void displayPresenter1() { mPresenter1.display(); }
+    void displayPresenter2() { mPresenter2.display(); }
 
     void handleModeButtonPress() {
       if (ENABLE_SERIAL_DEBUG >= 1) {
@@ -211,7 +211,7 @@ class Controller {
         case Mode::kChangeTimeZoneDst1:
         case Mode::kChangeTimeZoneDst2:
       #endif
-          saveClockInfo();
+          saveSettings();
           mClockInfo0.mode = Mode::kViewSettings;
           break;
 
@@ -343,7 +343,7 @@ class Controller {
       // button is triggering RepeatPressed events. Display1 and Display2 will
       // follow, perhaps slightly behind the Display0, but that's ok.
       update();
-      updatePresenter0();
+      displayPresenter0();
     }
 
     void handleChangeButtonRepeatPress() {
@@ -446,6 +446,7 @@ class Controller {
       return invertState;
     }
 
+    // Transfer the ClockInfo from the Controller to the various Presenters.
     void updatePresenter() {
       ClockInfo clockInfo; // make a copy
       switch (mClockInfo0.mode) {
@@ -496,10 +497,16 @@ class Controller {
       mClock.setNow(mChangingClockInfo.dateTime.toEpochSeconds());
     }
 
-    void saveClockInfo() {
+    void saveSettings() {
       if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("saveClockInfo()"));
+        SERIAL_PORT_MONITOR.println(F("saveSettings()"));
       }
+
+      mClockInfo0.hourMode = mChangingClockInfo.hourMode;
+      mClockInfo0.blinkingColon = mChangingClockInfo.blinkingColon;
+      mClockInfo0.contrastLevel = mChangingClockInfo.contrastLevel;
+      mClockInfo0.invertDisplay = mChangingClockInfo.invertDisplay;
+
       preserveClockInfo();
     }
 

@@ -67,9 +67,8 @@ class Presenter {
 
       // Update invertDisplay if changed.
       if (mPrevClockInfo.mode == Mode::kUnknown
-          || mPrevClockInfo.invertState !=
-              mClockInfo.invertState) {
-        mOled.invertDisplay(mClockInfo.invertDisplay);
+          || mPrevClockInfo.invertState != mClockInfo.invertState) {
+        mOled.invertDisplay(mClockInfo.invertState);
       }
     }
 
