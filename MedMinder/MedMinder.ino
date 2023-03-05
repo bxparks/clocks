@@ -55,7 +55,6 @@
 #include <AceTime.h>
 #include <AceTimeClock.h>
 #include <AceUtils.h>
-#include <mode_group/mode_group.h> // from AceUtils
 
 #include "config.h"
 #if ENABLE_LOW_POWER == 1

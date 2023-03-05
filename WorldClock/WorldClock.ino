@@ -272,13 +272,13 @@ COROUTINE(updateController) {
     controller.update();
 
     COROUTINE_YIELD();
-    controller.updatePresenter0();
+    controller.displayPresenter0();
 
     COROUTINE_YIELD();
-    controller.updatePresenter1();
+    controller.displayPresenter1();
 
     COROUTINE_YIELD();
-    controller.updatePresenter2();
+    controller.displayPresenter2();
 
     COROUTINE_DELAY(100);
   }

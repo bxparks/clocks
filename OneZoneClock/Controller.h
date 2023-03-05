@@ -557,7 +557,7 @@ class Controller {
       mClockInfo.syncStatusCode = mClock.getSyncStatusCode();
 
       // If in CHANGE mode, and the 'second' field has not been cleared,
-      // update the mChangingDateTime.second field with the current second.
+      // update the mChangingClockInfo.second field with the current second.
       switch (mClockInfo.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:

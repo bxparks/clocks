@@ -83,13 +83,12 @@ class Controller {
      * We could have used a finite state machine inside this Controller object
      * to implement the staggered rendering of the 3 displays. But it was a lot
      * easier to take advantage of the inherent advantages of a Coroutine,
-     * and call the updatePresenterN() methods separately from the coroutine.
+     * and call the displayPresenterN() methods separately from the coroutine.
      */
     void update() {
       if (mClockInfo0.mode == Mode::kUnknown) return;
       updateDateTime();
       updatePresenter();
-      updateInvertState();
     }
 
     void updateBlinkState () {
@@ -102,13 +101,13 @@ class Controller {
     }
 
     // These are exposed as public methods so that the
-    // COROUTINE(updateController) can update each Presenter separately,
-    // interspersed with calls to COROUTINE_YIELD(). They should be called 5-10
-    // times a second to support blinking mode and to avoid noticeable drift
-    // against the RTC which has a 1 second resolution.
-    void updatePresenter0() { mPresenter0.display(); }
-    void updatePresenter1() { mPresenter1.display(); }
-    void updatePresenter2() { mPresenter2.display(); }
+    // COROUTINE(updateController) can tell each Presenter to render to its OLED
+    // dislay separately, interspersed with calls to COROUTINE_YIELD(). They
+    // should be called 5-10 times a second to support blinking mode and to
+    // avoid noticeable drift against the RTC which has a 1 second resolution.
+    void displayPresenter0() { mPresenter0.display(); }
+    void displayPresenter1() { mPresenter1.display(); }
+    void displayPresenter2() { mPresenter2.display(); }
 
     void handleModeButtonPress() {
       if (ENABLE_SERIAL_DEBUG >= 1) {
@@ -212,7 +211,7 @@ class Controller {
         case Mode::kChangeTimeZoneDst1:
         case Mode::kChangeTimeZoneDst2:
       #endif
-          saveClockInfo();
+          saveSettings();
           mClockInfo0.mode = Mode::kViewSettings;
           break;
 
@@ -307,27 +306,19 @@ class Controller {
           break;
 
         case Mode::kChangeHourMode:
-          mClockInfo0.hourMode ^= 0x1;
-          mClockInfo1.hourMode ^= 0x1;
-          mClockInfo2.hourMode ^= 0x1;
+          mChangingClockInfo.hourMode ^= 0x1;
           break;
 
         case Mode::kChangeBlinkingColon:
-          mClockInfo0.blinkingColon = !mClockInfo0.blinkingColon;
-          mClockInfo1.blinkingColon = !mClockInfo1.blinkingColon;
-          mClockInfo2.blinkingColon = !mClockInfo2.blinkingColon;
+          mChangingClockInfo.blinkingColon = !mChangingClockInfo.blinkingColon;
           break;
 
         case Mode::kChangeContrast:
-          incrementMod(mClockInfo0.contrastLevel, (uint8_t) 10);
-          incrementMod(mClockInfo1.contrastLevel, (uint8_t) 10);
-          incrementMod(mClockInfo2.contrastLevel, (uint8_t) 10);
+          incrementMod(mChangingClockInfo.contrastLevel, (uint8_t) 10);
           break;
 
         case Mode::kChangeInvertDisplay:
-          incrementMod(mClockInfo0.invertDisplay, (uint8_t) 5);
-          incrementMod(mClockInfo1.invertDisplay, (uint8_t) 5);
-          incrementMod(mClockInfo2.invertDisplay, (uint8_t) 5);
+          incrementMod(mChangingClockInfo.invertDisplay, (uint8_t) 5);
           break;
 
       #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
@@ -352,7 +343,7 @@ class Controller {
       // button is triggering RepeatPressed events. Display1 and Display2 will
       // follow, perhaps slightly behind the Display0, but that's ok.
       update();
-      updatePresenter0();
+      displayPresenter0();
     }
 
     void handleChangeButtonRepeatPress() {
@@ -416,9 +407,6 @@ class Controller {
       }
     }
 
-    void updateInvertState() {
-    }
-
     /**
      * Calculate the next actual invertDisplay setting. Automatically
      * alternating inversion is an attempt to extend the life-time of these
@@ -458,9 +446,9 @@ class Controller {
       return invertState;
     }
 
+    // Transfer the ClockInfo from the Controller to the various Presenters.
     void updatePresenter() {
-      ClockInfo* clockInfo;
-
+      ClockInfo clockInfo; // make a copy
       switch (mClockInfo0.mode) {
         case Mode::kChangeYear:
         case Mode::kChangeMonth:
@@ -477,33 +465,30 @@ class Controller {
         case Mode::kChangeTimeZoneDst1:
         case Mode::kChangeTimeZoneDst2:
       #endif
-          clockInfo = &mChangingClockInfo;
+          clockInfo = mChangingClockInfo;
           break;
 
         default:
-          clockInfo = &mClockInfo0;
+          clockInfo = mClockInfo0;
           break;
 
       }
 
-      mClockInfo0.mode = clockInfo->mode;
-      mClockInfo1.mode = clockInfo->mode;
-      mClockInfo2.mode = clockInfo->mode;
+      uint8_t invertState = calculateInvertState(clockInfo);
+      clockInfo.invertState = invertState;
 
-      mClockInfo0.dateTime = clockInfo->dateTime;
-      mClockInfo1.dateTime = ZonedDateTime::forEpochSeconds(
-          clockInfo->dateTime.toEpochSeconds(), mClockInfo1.timeZone);
-      mClockInfo2.dateTime = ZonedDateTime::forEpochSeconds(
-          clockInfo->dateTime.toEpochSeconds(), mClockInfo2.timeZone);
+      // Clock0
+      mPresenter0.setClockInfo(clockInfo);
 
-      uint8_t invertState = calculateInvertState(*clockInfo);
-      mClockInfo0.invertState = invertState;
-      mClockInfo1.invertState = invertState;
-      mClockInfo2.invertState = invertState;
+      // Clock1
+      clockInfo.dateTime = clockInfo.dateTime.convertToTimeZone(
+          mClockInfo1.timeZone);
+      mPresenter1.setClockInfo(clockInfo);
 
-      mPresenter0.setClockInfo(mClockInfo0);
-      mPresenter1.setClockInfo(mClockInfo1);
-      mPresenter2.setClockInfo(mClockInfo2);
+      // Clock2
+      clockInfo.dateTime = clockInfo.dateTime.convertToTimeZone(
+          mClockInfo2.timeZone);
+      mPresenter2.setClockInfo(clockInfo);
     }
 
     /** Save the current UTC ZonedDateTime to the RTC. */
@@ -512,10 +497,16 @@ class Controller {
       mClock.setNow(mChangingClockInfo.dateTime.toEpochSeconds());
     }
 
-    void saveClockInfo() {
+    void saveSettings() {
       if (ENABLE_SERIAL_DEBUG >= 1) {
-        SERIAL_PORT_MONITOR.println(F("saveClockInfo()"));
+        SERIAL_PORT_MONITOR.println(F("saveSettings()"));
       }
+
+      mClockInfo0.hourMode = mChangingClockInfo.hourMode;
+      mClockInfo0.blinkingColon = mChangingClockInfo.blinkingColon;
+      mClockInfo0.contrastLevel = mChangingClockInfo.contrastLevel;
+      mClockInfo0.invertDisplay = mChangingClockInfo.invertDisplay;
+
       preserveClockInfo();
     }
 
