@@ -36,6 +36,7 @@ func (p *Presenter) UpdateDisplay() {
 
 	p.prevInfo = p.currInfo
 	zdt := &p.currInfo.dateTime
+	p.numWriter.Home()
 
 	switch p.currInfo.clockMode {
 	case modeViewHourMinute:
@@ -44,101 +45,103 @@ func (p *Presenter) UpdateDisplay() {
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
 			p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
 		} else {
-			p.numWriter.Module().Clear()
-			p.numWriter.WriteDec2(2, zdt.Minute, 0)
+			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDec2(zdt.Minute, 0)
 			p.numWriter.WriteColon(true)
 		}
 	case modeChangeMinute:
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
 			p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
 		} else {
-			p.numWriter.Module().Clear()
-			p.numWriter.WriteDec2(0, zdt.Hour, 0)
+			p.numWriter.WriteDec2(zdt.Hour, 0)
 			p.numWriter.WriteColon(true)
+			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDigit(segwriter.DigitSpace)
 		}
 	case modeViewSecond:
-		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-		p.numWriter.WriteDec2(2, zdt.Second, 0)
+		p.numWriter.WriteDigit(segwriter.DigitSpace)
+		p.numWriter.WriteDigit(segwriter.DigitSpace)
 		p.numWriter.WriteColon(true)
+		p.numWriter.WriteDec2(zdt.Second, 0)
 	case modeChangeSecond:
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-			p.numWriter.WriteDec2(2, zdt.Second, 0)
+			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDec2(zdt.Second, 0)
 			p.numWriter.WriteColon(true)
 		} else {
-			p.numWriter.Module().Clear()
+			p.numWriter.Clear()
 		}
 	case modeViewYear:
-		p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
+		p.numWriter.WriteDec4(uint16(zdt.Year), 0)
 	case modeChangeYear:
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteDec4(0, uint16(zdt.Year), 0)
+			p.numWriter.WriteDec4(uint16(zdt.Year), 0)
 		} else {
-			p.numWriter.Module().Clear()
+			p.numWriter.Clear()
 		}
 	case modeViewMonth:
-		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-		p.numWriter.WriteDec2(2, zdt.Month, 0)
+		p.numWriter.WriteDigit(segwriter.DigitSpace)
+		p.numWriter.WriteDigit(segwriter.DigitSpace)
+		p.numWriter.WriteDec2(zdt.Month, 0)
 	case modeChangeMonth:
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-			p.numWriter.WriteDec2(2, zdt.Month, 0)
+			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDec2(zdt.Month, 0)
 		} else {
-			p.numWriter.Module().Clear()
+			p.numWriter.Clear()
 		}
 	case modeViewDay:
-		p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-		p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-		p.numWriter.WriteDec2(2, zdt.Day, 0)
+		p.numWriter.WriteDigit(segwriter.DigitSpace)
+		p.numWriter.WriteDigit(segwriter.DigitSpace)
+		p.numWriter.WriteDec2(zdt.Day, 0)
 	case modeChangeDay:
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteHexChar(0, segwriter.HexCharSpace)
-			p.numWriter.WriteHexChar(1, segwriter.HexCharSpace)
-			p.numWriter.WriteDec2(2, zdt.Day, 0)
+			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDec2(zdt.Day, 0)
 		} else {
-			p.numWriter.Module().Clear()
+			p.numWriter.Clear()
 		}
 	case modeViewWeekday:
 		dt := p.currInfo.dateTime
 		weekday := acetime.LocalDateToWeekday(dt.Year, dt.Month, dt.Day)
 		weekdayName := weekday.Name()[:3]
-		p.charWriter.WriteString(0, weekdayName)
-		p.charWriter.Module().SetPattern(3, 0)
+		p.charWriter.WriteString(weekdayName)
+		p.charWriter.ClearToEnd()
 	case modeViewTimeZone:
 		tzName := zones[p.currInfo.zoneIndex].name
-		p.charWriter.WriteString(0, tzName)
-		p.charWriter.ClearToEnd(uint8(len(tzName)))
+		p.charWriter.WriteString(tzName)
+		p.charWriter.ClearToEnd()
 	case modeChangeTimeZone:
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
 			tzName := zones[p.currInfo.zoneIndex].name
-			p.charWriter.WriteString(0, tzName)
-			p.charWriter.ClearToEnd(uint8(len(tzName)))
+			p.charWriter.WriteString(tzName)
+			p.charWriter.ClearToEnd()
 		} else {
-			p.numWriter.Module().Clear()
+			p.numWriter.Clear()
 		}
 	case modeViewBrightness:
-		p.charWriter.WriteString(0, "br")
-		p.charWriter.WriteDecimalPoint(1, true)
-		p.numWriter.WriteDec2(2, p.currInfo.brightness, segwriter.HexCharSpace)
+		p.charWriter.WriteString("br")
+		p.charWriter.SetDecimalPoint(1, true)
+		p.numWriter.WriteDec2(p.currInfo.brightness, segwriter.DigitSpace)
 	case modeChangeBrightness:
-		p.charWriter.WriteString(0, "br")
-		p.charWriter.WriteDecimalPoint(1, true)
+		p.charWriter.WriteString("br")
+		p.charWriter.SetDecimalPoint(1, true)
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteDec2(2, p.currInfo.brightness, segwriter.HexCharSpace)
+			p.numWriter.WriteDec2(p.currInfo.brightness, segwriter.DigitSpace)
 		} else {
-			p.charWriter.ClearToEnd(2)
+			p.charWriter.ClearToEnd()
 		}
 	case modeViewTempC:
 		t := int8(p.currInfo.tempCentiC / 100)
-		p.numWriter.WriteSignedDec3(0, t, segwriter.HexCharSpace)
-		p.numWriter.WriteHexChar(3, 0xC)
+		p.numWriter.WriteSignedDec3(t, segwriter.DigitSpace)
+		p.numWriter.WriteDigit(0xC)
 	case modeViewTempF:
 		t := int8(p.currInfo.tempCentiF / 100)
-		p.numWriter.WriteSignedDec3(0, t, segwriter.HexCharSpace)
-		p.numWriter.WriteHexChar(3, 0xF)
+		p.numWriter.WriteSignedDec3(t, segwriter.DigitSpace)
+		p.numWriter.WriteDigit(0xF)
 	}
 }

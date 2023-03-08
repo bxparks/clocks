@@ -6,7 +6,7 @@ SRCS := $(CMD_NAME).go controller.go presenter.go clockinfo.go
 
 .PHONY := build tiny tinyesp32 flashesp32 all clean help
 
-tinyesp32: $(TARGETS_TINY_ESP32)
+buildesp32: $(TARGETS_TINY_ESP32)
 
 flashesp32:
 	tinygo flash -x -target=esp32-coreboard-v2

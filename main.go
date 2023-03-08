@@ -27,8 +27,9 @@ const (
 )
 
 var tm = tm1637.New(clkPin, dioPin, delayMicros, numDigits)
-var numWriter = segwriter.NewNumberWriter(&tm)
-var charWriter = segwriter.NewCharWriter(&tm)
+var patternWriter = segwriter.NewPatternWriter(&tm)
+var numWriter = segwriter.NewNumberWriter(&patternWriter)
+var charWriter = segwriter.NewCharWriter(&patternWriter)
 
 func setupDisplay() {
 	println("setupDisplay()")
