@@ -19,13 +19,6 @@ import (
 // TM1637 LED Module
 //-----------------------------------------------------------------------------
 
-const (
-	clkPin      = machine.GPIO33
-	dioPin      = machine.GPIO32
-	delayMicros = 4
-	numDigits   = 4
-)
-
 var tm = tm1637.New(clkPin, dioPin, delayMicros, numDigits)
 var patternWriter = segwriter.NewPatternWriter(&tm)
 var numWriter = segwriter.NewNumberWriter(&patternWriter)
