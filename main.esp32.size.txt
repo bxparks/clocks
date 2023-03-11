@@ -1,6 +1,6 @@
    code  rodata    data     bss |   flash     ram | package
 ------------------------------- | --------------- | -------
-   4084    1094       4      10 |    5182      14 | (unknown)
+   4084    1093       4      10 |    5181      14 | (unknown)
       0       0       0    4096 |       0    4096 | C stack
     201       0       0       0 |     201       0 | Go interface method
       0     474       0       0 |     474       0 | Go reflect data
@@ -17,7 +17,7 @@
     133       2       0       0 |     135       0 | internal/itoa
     357      24       0       8 |     381       8 | internal/task
     601       0       0       0 |     601       0 | machine
-   2581     153    9580     144 |   12314    9724 | main
+   2581     154    9580     144 |   12315    9724 | main
    2623     622       0       0 |    3245       0 | reflect
    3780     172       0      66 |    3952      66 | runtime
      78       0       0       0 |      78       0 | runtime/interrupt

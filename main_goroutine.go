@@ -1,6 +1,7 @@
-//go:build !goroutine
+//go:build goroutine
 
 // An LED clock, bringing together: AceTimeGo/acetime, button, and tm1637.
+// This version uses Go routines.
 
 package main
 
@@ -12,6 +13,7 @@ import (
 	"gitlab.com/bxparks/coding/tinygo/segwriter"
 	"gitlab.com/bxparks/coding/tinygo/tm1637"
 	"machine"
+	"runtime"
 	"time"
 	"tinygo.org/x/drivers/i2csoft"
 )
@@ -36,11 +38,14 @@ var lastFlushTime = time.Now()
 
 // Flush LED display every 100 millis
 func flushDisplay() {
-	now := time.Now()
-	elapsed := now.Sub(lastFlushTime)
-	if elapsed.Milliseconds() >= 100 {
-		lastFlushTime = now
-		tm.Flush()
+	for {
+		now := time.Now()
+		elapsed := now.Sub(lastFlushTime)
+		if elapsed.Milliseconds() >= 100 {
+			lastFlushTime = now
+			tm.Flush()
+		}
+		runtime.Gosched()
 	}
 }
 
@@ -66,11 +71,14 @@ func setupRTC() {
 var lastReadTempTime = time.Now()
 
 func readTemperature() {
-	now := time.Now()
-	elapsed := now.Sub(lastReadTempTime)
-	if elapsed.Milliseconds() >= 10000 {
-		lastReadTempTime = now
-		controller.ReadTemp()
+	for {
+		now := time.Now()
+		elapsed := now.Sub(lastReadTempTime)
+		if elapsed.Milliseconds() >= 10000 {
+			lastReadTempTime = now
+			controller.ReadTemp()
+		}
+		runtime.Gosched()
 	}
 }
 
@@ -81,11 +89,14 @@ func readTemperature() {
 var lastSyncRTCTime = time.Now()
 
 func syncSystemTime() {
-	now := time.Now()
-	elapsed := now.Sub(lastSyncRTCTime)
-	if elapsed.Milliseconds() >= 100 {
-		lastSyncRTCTime = now
-		controller.SyncSystemTime()
+	for {
+		now := time.Now()
+		elapsed := now.Sub(lastSyncRTCTime)
+		if elapsed.Milliseconds() >= 100 {
+			lastSyncRTCTime = now
+			controller.SyncSystemTime()
+		}
+		runtime.Gosched()
 	}
 }
 
@@ -99,11 +110,14 @@ var controller = NewController(&presenter, &rtc, &tm)
 var lastUpdateDisplayTime = time.Now()
 
 func updateDisplay() {
-	now := time.Now()
-	elapsed := now.Sub(lastUpdateDisplayTime)
-	if elapsed.Milliseconds() >= 100 {
-		lastUpdateDisplayTime = now
-		presenter.UpdateDisplay()
+	for {
+		now := time.Now()
+		elapsed := now.Sub(lastUpdateDisplayTime)
+		if elapsed.Milliseconds() >= 100 {
+			lastUpdateDisplayTime = now
+			presenter.UpdateDisplay()
+		}
+		runtime.Gosched()
 	}
 }
 
@@ -204,12 +218,15 @@ var lastCheckButtonsTime = time.Now()
 
 // Check buttons every 5 milliseconds
 func checkButtons() {
-	now := time.Now()
-	elapsed := now.Sub(lastCheckButtonsTime)
-	if elapsed.Milliseconds() >= 5 {
-		lastCheckButtonsTime = now
-		modeButton.Check()
-		changeButton.Check()
+	for {
+		now := time.Now()
+		elapsed := now.Sub(lastCheckButtonsTime)
+		if elapsed.Milliseconds() >= 5 {
+			lastCheckButtonsTime = now
+			modeButton.Check()
+			changeButton.Check()
+		}
+		runtime.Gosched()
 	}
 }
 
@@ -220,11 +237,14 @@ func checkButtons() {
 var lastBlinkTime = time.Now()
 
 func blinkDisplay() {
-	now := time.Now()
-	elapsed := now.Sub(lastBlinkTime)
-	if elapsed.Milliseconds() >= 500 {
-		lastBlinkTime = now
-		controller.Blink()
+	for {
+		now := time.Now()
+		elapsed := now.Sub(lastBlinkTime)
+		if elapsed.Milliseconds() >= 500 {
+			lastBlinkTime = now
+			controller.Blink()
+		}
+		runtime.Gosched()
 	}
 }
 
@@ -241,14 +261,15 @@ func main() {
 	controller.SetupSystemTimeFromRTC()
 	tm.Flush()
 
-	println("Entering event loop...")
+	println("Creating go routines...")
+	go checkButtons()
+	go syncSystemTime()
+	go readTemperature()
+	go blinkDisplay()
+	go updateDisplay()
+	go flushDisplay()
+
 	for {
-		checkButtons()
-		syncSystemTime()
-		readTemperature()
-		blinkDisplay()
-		updateDisplay()
-		flushDisplay()
-		time.Sleep(time.Millisecond * 1)
+		runtime.Gosched()
 	}
 }
