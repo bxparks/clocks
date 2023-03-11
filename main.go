@@ -13,7 +13,6 @@ import (
 	"gitlab.com/bxparks/coding/tinygo/tm1637"
 	"machine"
 	"time"
-	"tinygo.org/x/drivers/i2csoft"
 )
 
 //-----------------------------------------------------------------------------
@@ -48,12 +47,10 @@ func flushDisplay() {
 // DS3231 RTC
 //-----------------------------------------------------------------------------
 
-var i2c = i2csoft.New(machine.SCL_PIN, machine.SDA_PIN)
 var rtc = ds3231.New(i2c)
 
 func setupRTC() {
 	println("setupRTC()")
-	i2c.Configure(i2csoft.I2CConfig{Frequency: 400e3})
 	rtc.Configure()
 }
 
@@ -154,11 +151,6 @@ var zones = []ZoneInfo{
 // Buttons
 //-----------------------------------------------------------------------------
 
-const (
-	modePin   = machine.GPIO15
-	changePin = machine.GPIO14
-)
-
 type ButtonHandler struct{}
 
 func (h *ButtonHandler) Handle(b *button.Button, e button.Event, state bool) {
@@ -237,6 +229,7 @@ func main() {
 
 	setupButtons()
 	setupDisplay()
+	setupI2C()
 	setupRTC()
 	controller.SetupSystemTimeFromRTC()
 	tm.Flush()

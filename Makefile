@@ -17,6 +17,19 @@ flashnano:
 
 #------------------------------------------------------------------------------
 
+buildzero: $(SRCS) zero.go Makefile
+	tinygo build \
+		-size full \
+		-print-allocs=.*bxparks.* \
+		-target=arduino-zero \
+		-o zero.out \
+		> main.zero.size.txt
+
+flashzero:
+	tinygo flash -x -target=arduino-zero
+
+#------------------------------------------------------------------------------
+
 buildesp32: $(SRCS) esp32.go Makefile
 	tinygo build \
 		-size full \
