@@ -4,7 +4,7 @@ SRCS := main.go controller.go presenter.go clockinfo.go
 
 #------------------------------------------------------------------------------
 
-buildnano: $(SRCS) nano.go Makefile
+buildnano: $(SRCS) config_nano.go Makefile
 	tinygo build \
 		-size full \
 		-print-allocs=.*bxparks.* \
@@ -17,7 +17,7 @@ flashnano:
 
 #------------------------------------------------------------------------------
 
-buildzero: $(SRCS) zero.go Makefile
+buildzero: $(SRCS) config_zero.go Makefile
 	tinygo build \
 		-size full \
 		-print-allocs=.*bxparks.* \
@@ -30,7 +30,7 @@ flashzero:
 
 #------------------------------------------------------------------------------
 
-buildesp32: $(SRCS) esp32.go Makefile
+buildesp32: $(SRCS) config_esp32.go Makefile
 	tinygo build \
 		-size full \
 		-print-allocs=.*bxparks.* \
@@ -43,7 +43,7 @@ flashesp32:
 
 #------------------------------------------------------------------------------
 
-buildesp32go: $(SRCS) esp32.go Makefile
+buildesp32go: $(SRCS) config_esp32.go Makefile
 	tinygo build \
 		--tags goroutine \
 		-size full \
