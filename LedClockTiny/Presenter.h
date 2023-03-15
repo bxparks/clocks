@@ -8,11 +8,12 @@
 
 using ace_time::DateStrings;
 using ace_time::OffsetDateTime;
-using ace_segment::kHexCharSpace;
+using ace_segment::kDigitSpace;
 using ace_segment::kPatternSpace;
 using ace_segment::LedModule;
-using ace_segment::ClockWriter;
+using ace_segment::PatternWriter;
 using ace_segment::NumberWriter;
+using ace_segment::ClockWriter;
 using ace_segment::CharWriter;
 using ace_segment::StringWriter;
 
@@ -20,9 +21,10 @@ class Presenter {
   public:
     Presenter(LedModule& ledModule):
         mDisplay(ledModule),
-        mClockWriter(ledModule),
-        mNumberWriter(ledModule),
-        mCharWriter(ledModule),
+        mPatternWriter(ledModule),
+        mNumberWriter(mPatternWriter),
+        mClockWriter(mNumberWriter),
+        mCharWriter(mPatternWriter),
         mStringWriter(mCharWriter)
     {}
 
@@ -72,7 +74,7 @@ class Presenter {
       }
     }
 
-    void clearDisplay() { mClockWriter.clear(); }
+    void clearDisplay() { mPatternWriter.clear(); }
 
     void displayData() {
       const OffsetDateTime& dateTime = mClockInfo.dateTime;
@@ -81,6 +83,8 @@ class Presenter {
         dateTime.printTo(SERIAL_PORT_MONITOR);
         SERIAL_PORT_MONITOR.println();
       #endif
+
+      mPatternWriter.home();
 
       switch ((Mode) mClockInfo.mode) {
         case Mode::kViewHourMinute:
@@ -126,33 +130,37 @@ class Presenter {
 
     void displayHourMinute(const OffsetDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeHour)) {
-        mNumberWriter.writeDec2At(0, dateTime.hour());
+        mNumberWriter.writeDec2(dateTime.hour());
       } else {
-        mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
 
       if (shouldShowFor(Mode::kChangeMinute)) {
-        mNumberWriter.writeDec2At(2, dateTime.minute());
+        mNumberWriter.writeDec2(dateTime.minute());
       } else {
-        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
       mClockWriter.writeColon(true);
     }
 
     void displaySecond(const OffsetDateTime& dateTime) {
-      mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
 
       if (shouldShowFor(Mode::kChangeSecond)) {
-        mNumberWriter.writeDec2At(2, dateTime.second());
+        mNumberWriter.writeDec2(dateTime.second());
         mClockWriter.writeColon(true);
       } else {
-        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
     }
 
     void displayYear(const OffsetDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeYear)) {
-        mNumberWriter.writeDec4At(0, dateTime.year());
+        mNumberWriter.writeDec4(dateTime.year());
       } else {
         clearDisplay();
       }
@@ -160,49 +168,54 @@ class Presenter {
     }
 
     void displayMonth(const OffsetDateTime& dateTime) {
-      mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
       if (shouldShowFor(Mode::kChangeMonth)) {
-        mNumberWriter.writeDec2At(2, dateTime.month());
+        mNumberWriter.writeDec2(dateTime.month());
       } else {
-        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
       mClockWriter.writeColon(false);
     }
 
     void displayDay(const OffsetDateTime& dateTime) {
-      mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
       if (shouldShowFor(Mode::kChangeDay)) {
-        mNumberWriter.writeDec2At(2, dateTime.day());
+        mNumberWriter.writeDec2(dateTime.day());
       } else  {
-        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
       mClockWriter.writeColon(false);
     }
 
     void displayWeekday(const OffsetDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeWeekday)) {
-        uint8_t written = mStringWriter.writeStringAt(
-            0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));
-        mStringWriter.clearToEnd(written);
+        mStringWriter.writeString(
+            DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));
+        mStringWriter.clearToEnd();
       } else {
         clearDisplay();
       }
     }
 
     void displayBrightness() {
-      mCharWriter.writeCharAt(0, 'b');
-      mCharWriter.writeCharAt(1, 'r');
+      mCharWriter.writeChar('B');
+      mCharWriter.writeChar('r');
       mClockWriter.writeColon(true);
       if (shouldShowFor(Mode::kChangeBrightness)) {
-        // Save 110 bytes of flash using NumberWriter::writeDec2At() instead of
-        // the more general writeUnsignedDecimalAt(). We could avoid
+        // Save 110 bytes of flash using NumberWriter::writeDec2() instead of
+        // the more general writeUnsignedDecimal(). We could avoid
         // NumberWriter completely by manually doing the conversion here. But
         // that turns out to save only 18 bytes (12 of which are character
-        // patterns in NumberWriter::kHexCharPatterns[]) so not really worth
+        // patterns in NumberWriter::kDigitPatterns[]) so not really worth
         // duplicating the code here.
-        mNumberWriter.writeDec2At(2, mClockInfo.brightness, kPatternSpace);
+        mNumberWriter.writeDec2(mClockInfo.brightness, kPatternSpace);
       } else {
-        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
     }
 
@@ -212,8 +225,9 @@ class Presenter {
     Presenter& operator=(const Presenter&) = delete;
 
     LedModule& mDisplay;
-    ClockWriter<LedModule> mClockWriter;
+    PatternWriter<LedModule> mPatternWriter;
     NumberWriter<LedModule> mNumberWriter;
+    ClockWriter<LedModule> mClockWriter;
     CharWriter<LedModule> mCharWriter;
     StringWriter<LedModule> mStringWriter;
 

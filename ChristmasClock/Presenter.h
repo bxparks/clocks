@@ -19,7 +19,7 @@ using ace_time::ExtendedZoneManager;
 using ace_time::BasicZoneProcessor;
 using ace_time::ExtendedZoneProcessor;
 using ace_time::ZonedExtra;
-using ace_segment::kHexCharSpace;
+using ace_segment::kDigitSpace;
 using ace_segment::kPatternSpace;
 using ace_segment::LedModule;
 using ace_segment::PatternWriter;
@@ -40,9 +40,10 @@ class Presenter {
     ):
         mZoneManager(zoneManager),
         mLedModule(ledModule),
-        mClockWriter(ledModule),
-        mNumberWriter(ledModule),
-        mCharWriter(ledModule),
+        mPatternWriter(ledModule),
+        mNumberWriter(mPatternWriter),
+        mClockWriter(mNumberWriter),
+        mCharWriter(mPatternWriter),
         mStringWriter(mCharWriter)
     {}
 
@@ -92,7 +93,7 @@ class Presenter {
       }
     }
 
-    void clearDisplay() { mClockWriter.clear(); }
+    void clearDisplay() { mPatternWriter.clear(); }
 
     void displayData() {
       const ZonedDateTime& dateTime = mClockInfo.dateTime;
@@ -101,6 +102,8 @@ class Presenter {
         dateTime.printTo(SERIAL_PORT_MONITOR);
         SERIAL_PORT_MONITOR.println();
       #endif
+
+      mPatternWriter.home();
 
       switch (mClockInfo.mode) {
         case Mode::kViewCountdown:
@@ -135,8 +138,8 @@ class Presenter {
 
         case Mode::kViewWeekday: {
           mStringWriter.clear();
-          mStringWriter.writeStringAt(
-              0, DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));
+          mStringWriter.writeString(
+              DateStrings().dayOfWeekShortString(dateTime.dayOfWeek()));
           break;
         }
 
@@ -162,39 +165,43 @@ class Presenter {
     /** Display number of days until Christmas. */
     void displayCountdown(const ZonedDateTime& dateTime) {
       int32_t days = daysUntil(dateTime.localDateTime().localDate(), 12, 25);
-      mNumberWriter.writeDec4At(0, (uint16_t) days, kPatternSpace);
+      mNumberWriter.writeDec4((uint16_t) days, kPatternSpace);
       mClockWriter.writeColon(false);
     }
 
     void displayHourMinute(const ZonedDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeHour)) {
-        mNumberWriter.writeDec2At(0, dateTime.hour());
+        mNumberWriter.writeDec2(dateTime.hour());
       } else {
-        mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
 
       if (shouldShowFor(Mode::kChangeMinute)) {
-        mNumberWriter.writeDec2At(2, dateTime.minute());
+        mNumberWriter.writeDec2(dateTime.minute());
       } else {
-        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
       mClockWriter.writeColon(true);
     }
 
     void displaySecond(const ZonedDateTime& dateTime) {
-      mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
 
       if (shouldShowFor(Mode::kChangeSecond)) {
-        mNumberWriter.writeDec2At(2, dateTime.second());
+        mNumberWriter.writeDec2(dateTime.second());
         mClockWriter.writeColon(true);
       } else {
-        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
     }
 
     void displayYear(const ZonedDateTime& dateTime) {
       if (shouldShowFor(Mode::kChangeYear)) {
-        mNumberWriter.writeDec4At(0, dateTime.year());
+        mNumberWriter.writeDec4(dateTime.year());
       } else {
         clearDisplay();
       }
@@ -202,21 +209,25 @@ class Presenter {
     }
 
     void displayMonth(const ZonedDateTime& dateTime) {
-      mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
       if (shouldShowFor(Mode::kChangeMonth)) {
-        mNumberWriter.writeDec2At(2, dateTime.month());
+        mNumberWriter.writeDec2(dateTime.month());
       } else {
-        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
       mClockWriter.writeColon(false);
     }
 
     void displayDay(const ZonedDateTime& dateTime) {
-      mNumberWriter.writeHexChars2At(0, kHexCharSpace, kHexCharSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
+      mNumberWriter.writeDigit(kDigitSpace);
       if (shouldShowFor(Mode::kChangeDay)) {
-        mNumberWriter.writeDec2At(2, dateTime.day());
+        mNumberWriter.writeDec2(dateTime.day());
       } else  {
-        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
       mClockWriter.writeColon(false);
     }
@@ -241,7 +252,7 @@ class Presenter {
             break;
         }
         mStringWriter.clear();
-        mStringWriter.writeStringAt(0, name);
+        mStringWriter.writeString(name);
       } else  {
         clearDisplay();
       }
@@ -249,27 +260,28 @@ class Presenter {
     }
 
     void displayBrightness() {
-      mCharWriter.writeCharAt(0, 'B');
-      mCharWriter.writeCharAt(1, 'r');
+      mCharWriter.writeChar('B');
+      mCharWriter.writeChar('r');
       mClockWriter.writeColon(true);
       if (shouldShowFor(Mode::kChangeBrightness)) {
-        // Save 110 bytes of flash using NumberWriter::writeDec2At() instead of
-        // the more general writeUnsignedDecimalAt(). We could avoid
+        // Save 110 bytes of flash using NumberWriter::writeDec2() instead of
+        // the more general writeUnsignedDecimal(). We could avoid
         // NumberWriter completely by manually doing the conversion here. But
         // that turns out to save only 18 bytes (12 of which are character
-        // patterns in NumberWriter::kHexCharPatterns[]) so not really worth
+        // patterns in NumberWriter::kDigitPatterns[]) so not really worth
         // duplicating the code here.
-        mNumberWriter.writeDec2At(2, mClockInfo.brightness, kPatternSpace);
+        mNumberWriter.writeDec2(mClockInfo.brightness, kPatternSpace);
       } else {
-        mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
+        mNumberWriter.writeDigit(kDigitSpace);
       }
     }
 
     void displayVersion() {
-      mCharWriter.writeCharAt(0, 'V');
-      mCharWriter.writeCharAt(1, 'e');
+      mCharWriter.writeChar('V');
+      mCharWriter.writeChar('e');
       mClockWriter.writeColon(true);
-      mNumberWriter.writeDec2At(2, CHRISTMAS_CLOCK_VERSION, kPatternSpace);
+      mNumberWriter.writeDec2(CHRISTMAS_CLOCK_VERSION, kPatternSpace);
     }
 
   private:
@@ -284,8 +296,9 @@ class Presenter {
   #endif
 
     LedModule& mLedModule;
-    ClockWriter<LedModule> mClockWriter;
+    PatternWriter<LedModule> mPatternWriter;
     NumberWriter<LedModule> mNumberWriter;
+    ClockWriter<LedModule> mClockWriter;
     CharWriter<LedModule> mCharWriter;
     StringWriter<LedModule> mStringWriter;
 
