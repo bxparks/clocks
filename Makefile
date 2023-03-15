@@ -1,6 +1,6 @@
 SRCS := main.go controller.go presenter.go clockinfo.go
 
-.PHONY := buildesp32 flashesp32
+all: buildzero buildesp32 buildesp32go
 
 #------------------------------------------------------------------------------
 
@@ -50,7 +50,7 @@ buildesp32go: $(SRCS) config_esp32.go Makefile
 		-print-allocs=.*bxparks.* \
 		-target=esp32-coreboard-v2 \
 		-o esp32.out \
-		> main.esp32.size.txt
+		> main.esp32go.size.txt
 
 flashesp32go:
 	tinygo flash --tags goroutine -x -target=esp32-coreboard-v2

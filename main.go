@@ -6,7 +6,7 @@ package main
 
 import (
 	"github.com/bxparks/AceTimeGo/acetime"
-	"github.com/bxparks/AceTimeGo/zonedb"
+	"github.com/bxparks/AceTimeGo/zonedb2000"
 	"gitlab.com/bxparks/coding/tinygo/button"
 	"gitlab.com/bxparks/coding/tinygo/ds3231"
 	"gitlab.com/bxparks/coding/tinygo/segwriter"
@@ -135,11 +135,11 @@ type ZoneInfo struct {
 // support a significant number of timezones, potentiallly determined by user
 // input, then it's better to let the ZoneManager create the TimeZone objects
 // on-demand.
-var manager = acetime.NewZoneManager(&zonedb.DataContext)
-var tz0 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Los_Angeles)
-var tz1 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Denver)
-var tz2 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Chicago)
-var tz3 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_New_York)
+var manager = acetime.NewZoneManager(&zonedb2000.DataContext)
+var tz0 = manager.TimeZoneFromZoneID(zonedb2000.ZoneIDAmerica_Los_Angeles)
+var tz1 = manager.TimeZoneFromZoneID(zonedb2000.ZoneIDAmerica_Denver)
+var tz2 = manager.TimeZoneFromZoneID(zonedb2000.ZoneIDAmerica_Chicago)
+var tz3 = manager.TimeZoneFromZoneID(zonedb2000.ZoneIDAmerica_New_York)
 var zones = []ZoneInfo{
 	{&tz0, "PST"},
 	{&tz1, "MST"},
