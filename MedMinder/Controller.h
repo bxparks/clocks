@@ -246,11 +246,11 @@ class Controller {
         case Mode::kViewTimeZone:
           mChangingClockInfo = mClockInfo;
           initChangingClock();
-          mZoneRegistryIndex = mZoneManager.indexForZoneId(
-              mChangingClockInfo.timeZoneData.zoneId);
         #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
           mClockInfo.mode = Mode::kChangeTimeZoneOffset;
         #else
+          mZoneRegistryIndex = mZoneManager.indexForZoneId(
+              mChangingClockInfo.timeZoneData.zoneId);
           mClockInfo.mode = Mode::kChangeTimeZoneName;
         #endif
           break;
@@ -333,9 +333,10 @@ class Controller {
         case Mode::kChangeTimeZoneOffset: {
           TimeZone tz = mZoneManager.createForTimeZoneData(
               mChangingClockInfo.timeZoneData);
-          TimeOffset offset = tz.getStdOffset();
-          time_offset_mutation::increment15Minutes(offset);
-          tz.setStdOffset(offset);
+          TimeOffset stdOffset = tz.getStdOffset();
+          TimeOffset dstOffset = tz.getDstOffset();
+          time_offset_mutation::increment15Minutes(stdOffset);
+          tz = TimeZone::forTimeOffset(stdOffset, dstOffset);
           mChangingClockInfo.timeZoneData = tz.toTimeZoneData();
           break;
         }
@@ -343,11 +344,12 @@ class Controller {
         case Mode::kChangeTimeZoneDst: {
           TimeZone tz = mZoneManager.createForTimeZoneData(
               mChangingClockInfo.timeZoneData);
+          TimeOffset stdOffset = tz.getStdOffset();
           TimeOffset dstOffset = tz.getDstOffset();
           dstOffset = (dstOffset.isZero())
               ? TimeOffset::forMinutes(kDstOffsetMinutes)
               : TimeOffset();
-          tz.setDstOffset(dstOffset);
+          tz = TimeZone::forTimeOffset(stdOffset, dstOffset);
           mChangingClockInfo.timeZoneData = tz.toTimeZoneData();
           break;
         }
