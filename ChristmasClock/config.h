@@ -7,6 +7,9 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
+// Printed as 2-digits on LED, so up to v100 supported.
+#define CHRISTMAS_CLOCK_VERSION 1
+
 // Set >= 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
 #define ENABLE_SERIAL_DEBUG 0
@@ -29,7 +32,7 @@
 #define TIME_ZONE_TYPE_MANUAL 0
 #define TIME_ZONE_TYPE_BASIC 1
 #define TIME_ZONE_TYPE_EXTENDED 2
-#define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
+#define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
 
 // List of clock types for the referenceClock and backupClock of the
 // SystemClock. Used as the value of the TIME_SOURCE_TYPE and
@@ -178,6 +181,7 @@ enum class Mode : uint8_t {
   kViewWeekday,
   kViewTimeZone,
   kViewBrightness,
+  kViewVersion,
 
   kChangeYear,
   kChangeMonth,

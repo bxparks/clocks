@@ -150,6 +150,10 @@ class Presenter {
           displayBrightness();
           break;
 
+        case Mode::kViewVersion:
+          displayVersion();
+          break;
+
         default:
           break;
       }
@@ -245,7 +249,7 @@ class Presenter {
     }
 
     void displayBrightness() {
-      mCharWriter.writeCharAt(0, 'b');
+      mCharWriter.writeCharAt(0, 'B');
       mCharWriter.writeCharAt(1, 'r');
       mClockWriter.writeColon(true);
       if (shouldShowFor(Mode::kChangeBrightness)) {
@@ -259,6 +263,13 @@ class Presenter {
       } else {
         mNumberWriter.writeHexChars2At(2, kHexCharSpace, kHexCharSpace);
       }
+    }
+
+    void displayVersion() {
+      mCharWriter.writeCharAt(0, 'V');
+      mCharWriter.writeCharAt(1, 'e');
+      mClockWriter.writeColon(true);
+      mNumberWriter.writeDec2At(2, CHRISTMAS_CLOCK_VERSION, kPatternSpace);
     }
 
   private:

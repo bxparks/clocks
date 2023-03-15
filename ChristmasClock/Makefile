@@ -15,6 +15,13 @@ ARDUINO_LIBS := EpoxyEepromEsp EpoxyMockSTM32RTC \
 	AceTimeClock \
 	AceUtils \
 	AceWire
+DEPS:= \
+	ClockInfo.h \
+	Controller.h \
+	PersistentStore.h \
+	Presenter.h \
+	StoredInfo.h \
+	config.h
 MORE_CLEAN := more_clean
 include ../../EpoxyDuino/EpoxyDuino.mk
 

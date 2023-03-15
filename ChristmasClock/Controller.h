@@ -115,6 +115,9 @@ class Controller {
           mClockInfo.mode = Mode::kViewBrightness;
           break;
         case Mode::kViewBrightness:
+          mClockInfo.mode = Mode::kViewVersion;
+          break;
+        case Mode::kViewVersion:
           mClockInfo.mode = Mode::kViewCountdown;
           break;
 
