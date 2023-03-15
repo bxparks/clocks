@@ -123,9 +123,7 @@ Set the `TIME_ZONE_TYPE` parameter in `config.h` to one of the following:
 ```
 
 The UTC offset and the DST shift rules will be automatically calculated from the
-TZ Database using the AceTime library. (The `TIME_ZONE_TYPE_MANUAL` is carried
-over from the LedClock project, but this functionality is not supported in
-ChristmasClock.)
+TZ Database using the AceTime library.
 
 The menu of timezone choices are defined in `ChristmasClock.ino`:
 
