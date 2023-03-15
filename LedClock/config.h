@@ -25,10 +25,11 @@
 
 // Determine whether "auto" time zone uses Basic or Extended. Extended is too
 // big for a Nano or Pro Micro, but will work on an ESP8266 or ESP32.
+// TIME_ZONE_TYPE_MANUAL is not supported.
 #define TIME_ZONE_TYPE_MANUAL 0
 #define TIME_ZONE_TYPE_BASIC 1
 #define TIME_ZONE_TYPE_EXTENDED 2
-#define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
+#define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
 
 // List of clock types for the referenceClock and backupClock of the
 // SystemClock. Used as the value of the TIME_SOURCE_TYPE and

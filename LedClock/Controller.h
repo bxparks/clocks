@@ -23,9 +23,7 @@ class Controller {
         Clock& clock,
         PersistentStore& persistentStore,
         Presenter& presenter,
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        ManualZoneManager& zoneManager,
-      #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
         BasicZoneManager& zoneManager,
       #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
         ExtendedZoneManager& zoneManager,
@@ -472,9 +470,7 @@ class Controller {
     Presenter& mPresenter;
 
     // TimeZone
-  #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-    ManualZoneManager& mZoneManager;
-  #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+  #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
     BasicZoneManager& mZoneManager;
   #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
     ExtendedZoneManager& mZoneManager;

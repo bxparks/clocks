@@ -57,11 +57,7 @@ void setupPersistentStore() {
 // Configure time zones and ZoneManager.
 //-----------------------------------------------------------------------------
 
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-
-static ManualZoneManager zoneManager;
-
-#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
 
 static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
   &zonedb::kZoneAmerica_Los_Angeles,
