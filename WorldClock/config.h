@@ -26,7 +26,7 @@
 #define MODE_BUTTON_PIN 8
 #define CHANGE_BUTTON_PIN 9
 
-// Whether to use Manual TimeZone, Basic TimeZone or Extended TimeZone.
+// Whether to use Basic TimeZone or Extended TimeZone. Manual not supported.
 #define TIME_ZONE_TYPE_MANUAL 0
 #define TIME_ZONE_TYPE_BASIC 1
 #define TIME_ZONE_TYPE_EXTENDED 2
@@ -87,13 +87,6 @@ enum class Mode : uint8_t {
   kChangeBlinkingColon,
   kChangeContrast, // OLED contrast/brightness
   kChangeInvertDisplay,
-
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-  kChangeTimeZoneDst0,
-  kChangeTimeZoneDst1,
-  kChangeTimeZoneDst2,
-#endif
-
 };
 
 #endif
