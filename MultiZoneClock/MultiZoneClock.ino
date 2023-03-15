@@ -151,6 +151,10 @@ static const uint16_t CACHE_SIZE = NUM_TIME_ZONES + 1;
 static ExtendedDbZoneManager<CACHE_SIZE> zoneManager;
 static const char kZoneDbFileName[] = "zonedbx_thinz.bin";
 
+#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+
+static ManualZoneManager zoneManager;
+
 #endif
 
 void setupZoneManager() {

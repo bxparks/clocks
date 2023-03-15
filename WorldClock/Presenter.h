@@ -116,11 +116,6 @@ class Presenter {
         case Mode::kChangeBlinkingColon:
         case Mode::kChangeContrast:
         case Mode::kChangeInvertDisplay:
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case Mode::kChangeTimeZoneDst0:
-        case Mode::kChangeTimeZoneDst1:
-        case Mode::kChangeTimeZoneDst2:
-#endif
           displayClockInfo();
           break;
 
@@ -321,31 +316,6 @@ class Presenter {
         mOled.print(statusString);
       }
       clearToEOL();
-
-      // Extract time zone info.
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-      const TimeZone& timeZone = mClockInfo.timeZone;
-      TimeOffset timeOffset = timeZone.getUtcOffset(0);
-      int8_t hour;
-      uint8_t minute;
-      timeOffset.toHourMinute(hour, minute);
-
-      mOled.print("UTC");
-      mOled.print((hour < 0) ? '-' : '+');
-      if (hour < 0) hour = -hour;
-      printPad2To(mOled, hour, '0');
-      mOled.print(':');
-      printPad2To(mOled, minute, '0');
-      clearToEOL();
-
-      mOled.print("DST:");
-      if (shouldShowFor(Mode::kChangeTimeZoneDst0)
-          && shouldShowFor(Mode::kChangeTimeZoneDst1)
-          && shouldShowFor(Mode::kChangeTimeZoneDst2)) {
-        mOled.print(timeZone.isDst() ? "on " : "off");
-      }
-      clearToEOL();
-#endif
     }
 
     void displayAbout() const;

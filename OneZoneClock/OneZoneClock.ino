@@ -123,6 +123,10 @@ static ExtendedZoneProcessorCache<CACHE_SIZE> zoneProcessorCache;
 static ExtendedZoneManager zoneManager(
     ZONE_REGISTRY_SIZE, ZONE_REGISTRY, zoneProcessorCache);
 
+#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
+
+static ManualZoneManager zoneManager;
+
 #endif
 
 //-----------------------------------------------------------------------------

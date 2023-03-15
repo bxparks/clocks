@@ -206,11 +206,6 @@ class Controller {
         case Mode::kChangeBlinkingColon:
         case Mode::kChangeContrast:
         case Mode::kChangeInvertDisplay:
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case Mode::kChangeTimeZoneDst0:
-        case Mode::kChangeTimeZoneDst1:
-        case Mode::kChangeTimeZoneDst2:
-      #endif
           saveSettings();
           mClockInfo0.mode = Mode::kViewSettings;
           break;
@@ -247,11 +242,6 @@ class Controller {
         case Mode::kChangeBlinkingColon:
         case Mode::kChangeContrast:
         case Mode::kChangeInvertDisplay:
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case Mode::kChangeTimeZoneDst0:
-        case Mode::kChangeTimeZoneDst1:
-        case Mode::kChangeTimeZoneDst2:
-      #endif
           mClockInfo0.mode = Mode::kViewSettings;
           break;
 
@@ -321,20 +311,6 @@ class Controller {
           incrementMod(mChangingClockInfo.invertDisplay, (uint8_t) 5);
           break;
 
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case Mode::kChangeTimeZoneDst0:
-          mClockInfo0.timeZone.setDst(!mClockInfo0.timeZone.isDst());
-          break;
-
-        case Mode::kChangeTimeZoneDst1:
-          mClockInfo1.timeZone.setDst(!mClockInfo1.timeZone.isDst());
-          break;
-
-        case Mode::kChangeTimeZoneDst2:
-          mClockInfo2.timeZone.setDst(!mClockInfo2.timeZone.isDst());
-          break;
-      #endif
-
         default:
           break;
       }
@@ -362,11 +338,6 @@ class Controller {
         case Mode::kChangeBlinkingColon:
         case Mode::kChangeContrast:
         case Mode::kChangeInvertDisplay:
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case Mode::kChangeTimeZoneDst0:
-        case Mode::kChangeTimeZoneDst1:
-        case Mode::kChangeTimeZoneDst2:
-      #endif
           mClockInfo0.suppressBlink = false;
           mClockInfo1.suppressBlink = false;
           mClockInfo2.suppressBlink = false;
@@ -460,11 +431,6 @@ class Controller {
         case Mode::kChangeBlinkingColon:
         case Mode::kChangeContrast:
         case Mode::kChangeInvertDisplay:
-      #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-        case Mode::kChangeTimeZoneDst0:
-        case Mode::kChangeTimeZoneDst1:
-        case Mode::kChangeTimeZoneDst2:
-      #endif
           clockInfo = mChangingClockInfo;
           break;
 
@@ -582,12 +548,6 @@ class Controller {
       mClockInfo0.invertDisplay = storedInfo.invertDisplay;
       mClockInfo1.invertDisplay = storedInfo.invertDisplay;
       mClockInfo2.invertDisplay = storedInfo.invertDisplay;
-
-    #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-      mClockInfo0.timeZone.setDst(storedInfo.isDst0);
-      mClockInfo1.timeZone.setDst(storedInfo.isDst1);
-      mClockInfo2.timeZone.setDst(storedInfo.isDst2);
-    #endif
     }
 
     /**
@@ -602,12 +562,6 @@ class Controller {
       storedInfo.blinkingColon = mClockInfo0.blinkingColon;
       storedInfo.contrastLevel = mClockInfo0.contrastLevel;
       storedInfo.invertDisplay = mClockInfo0.invertDisplay;
-
-    #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-      storedInfo.isDst0 = mClockInfo0.timeZone.isDst();
-      storedInfo.isDst1 = mClockInfo1.timeZone.isDst();
-      storedInfo.isDst2 = mClockInfo2.timeZone.isDst();
-    #endif
     }
 
   private:

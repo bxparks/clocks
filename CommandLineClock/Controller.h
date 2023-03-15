@@ -52,7 +52,9 @@ class Controller {
 
     /** Set the DST setting of Manual TimeZone. */
     void setDst(bool isDst) {
-      mTimeZone.setDstOffset(TimeOffset::forHours(isDst ? 1 : 0));
+      mTimeZone = TimeZone::forTimeOffset(
+        mTimeZone.getStdOffset(),
+        TimeOffset::forHours(isDst ? 1 : 0));
       preserveInfo();
     }
 

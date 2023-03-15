@@ -24,7 +24,8 @@
 #define BUTTON_TYPE_ANALOG 1
 
 // Determine whether "auto" time zone uses Basic or Extended. Extended is too
-// big for a Nano or Pro Micro, but will work on an ESP8266 or ESP32.
+// big for a Nano or Pro Micro, but will work on an ESP8266 or ESP32. Manual
+// time zone is not supported.
 #define TIME_ZONE_TYPE_MANUAL 0
 #define TIME_ZONE_TYPE_BASIC 1
 #define TIME_ZONE_TYPE_EXTENDED 2

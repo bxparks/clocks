@@ -44,11 +44,7 @@ void setupPersistentStore() {
 // Configure time zones and ZoneManager.
 //-----------------------------------------------------------------------------
 
-#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_MANUAL
-
-static ManualZoneManager zoneManager;
-
-#elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
+#if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
 
 static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
   &zonedb::kZoneAmerica_Los_Angeles,
@@ -91,16 +87,8 @@ static ExtendedZoneManager zoneManager(
 // the information retrieved from the EEPROM by the Controller.
 //-----------------------------------------------------------------------------
 
-#if TIME_ZONE_TYPE == TIME_ZONE_MANUAL
-
-  const TimeZoneData DISPLAY_ZONE = {-8*60, 0} /*-08:00*/;
-
-#else
-
-  // zoneIds are identical in zonedb:: and zonedbx::
-  const TimeZoneData DISPLAY_ZONE = {zonedb::kZoneIdAmerica_Los_Angeles};
-
-#endif
+// zoneIds are identical in zonedb:: and zonedbx::
+const TimeZoneData DISPLAY_ZONE = {zonedb::kZoneIdAmerica_Los_Angeles};
 
 //------------------------------------------------------------------
 // Configure AceWire
