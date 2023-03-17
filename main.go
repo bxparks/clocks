@@ -176,7 +176,7 @@ func (h *ButtonHandler) Handle(b *button.Button, e button.Event, state bool) {
 }
 
 // Configure buttons
-var config = button.NewConfig(&ButtonHandler{})
+var config = button.ButtonConfig{Handler: &ButtonHandler{}}
 var modeButton = button.NewButton(&config, modePin)
 var changeButton = button.NewButton(&config, changePin)
 
@@ -185,6 +185,7 @@ func setupButtons() {
 	modePin.Configure(machine.PinConfig{Mode: machine.PinInputPullup})
 	changePin.Configure(machine.PinConfig{Mode: machine.PinInputPullup})
 
+	config.Configure()
 	config.SetFeature(button.FeatureLongPress)
 	config.SetFeature(button.FeatureRepeatPress)
 	config.SetFeature(button.FeatureSuppressAfterLongPress)
