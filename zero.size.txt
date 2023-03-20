@@ -1,6 +1,6 @@
    code  rodata    data     bss |   flash     ram | package
 ------------------------------- | --------------- | -------
-   1086       0     147     298 |    1233     445 | (unknown)
+   1066       0     147     274 |    1213     421 | (unknown)
    1374       0       0       0 |    1374       0 | /__w/tinygo/tinygo/build/release/tinygo/lib/compiler-rt-builtins
     220       0       0       0 |     220       0 | /__w/tinygo/tinygo/build/release/tinygo/lib/compiler-rt-builtins/arm
      80       0       0       0 |      80       0 | /__w/tinygo/tinygo/build/release/tinygo/lib/picolibc/newlib/libc/string
@@ -13,7 +13,7 @@
    5098      92       0       0 |    5190       0 | github.com/bxparks/AceTimeGo/acetime
       0    8989       0       0 |    8989       0 | github.com/bxparks/AceTimeGo/zonedb2000
     138       0       0       0 |     138       0 | github.com/bxparks/AceTimeGo/zoneinfo
-    866       0       0      24 |     866      24 | gitlab.com/bxparks/coding/tinygo/button
+    982       0       0       0 |     982       0 | gitlab.com/bxparks/coding/tinygo/button
     420       0       0       0 |     420       0 | gitlab.com/bxparks/coding/tinygo/ds3231
     774      18     128       0 |     920     128 | gitlab.com/bxparks/coding/tinygo/segwriter
     456       0       0       0 |     456       0 | gitlab.com/bxparks/coding/tinygo/tm1637
@@ -23,7 +23,7 @@
    2756      55       0    1792 |    2811    1792 | machine
      66       0      93       0 |     159      93 | machine/usb
     444       0       0       0 |     444       0 | machine/usb/cdc
-   2264     153    5164      24 |    7581    5188 | main
+   2248     153    5164      48 |    7565    5212 | main
    2367     622       0       0 |    2989       0 | reflect
    3862     203       0     686 |    4065     686 | runtime
    1626       0       0       0 |    1626       0 | runtime/volatile
@@ -33,4 +33,4 @@
   11630     680       8       0 |   12318       8 | time
     782      32       8       0 |     822       8 | tinygo.org/x/drivers/i2csoft
 ------------------------------- | --------------- | -------
-  37903   11637    5548    4872 |   55088   10420 | total
+  37983   11637    5548    4848 |   55168   10396 | total

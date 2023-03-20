@@ -10,7 +10,7 @@ buildnano: $(SRCS) config_nano.go Makefile
 		-print-allocs=.*bxparks.* \
 		-target=arduino-nano \
 		-o nano.out \
-		> main.nano.size.txt
+		> nano.size.txt
 
 flashnano:
 	tinygo flash -x -target=arduino-nano
@@ -23,7 +23,7 @@ buildzero: $(SRCS) config_zero.go Makefile
 		-print-allocs=.*bxparks.* \
 		-target=arduino-zero \
 		-o zero.out \
-		> main.zero.size.txt
+		> zero.size.txt
 
 flashzero:
 	tinygo flash -x -target=arduino-zero
@@ -36,7 +36,7 @@ buildesp32: $(SRCS) config_esp32.go Makefile
 		-print-allocs=.*bxparks.* \
 		-target=esp32-coreboard-v2 \
 		-o esp32.out \
-		> main.esp32.size.txt
+		> esp32.size.txt
 
 flashesp32:
 	tinygo flash -x -target=esp32-coreboard-v2
@@ -50,7 +50,7 @@ buildesp32go: $(SRCS) config_esp32.go Makefile
 		-print-allocs=.*bxparks.* \
 		-target=esp32-coreboard-v2 \
 		-o esp32.out \
-		> main.esp32go.size.txt
+		> esp32go.size.txt
 
 flashesp32go:
 	tinygo flash --tags goroutine -x -target=esp32-coreboard-v2
