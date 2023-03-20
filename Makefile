@@ -30,6 +30,19 @@ flashzero:
 
 #------------------------------------------------------------------------------
 
+buildxiao: $(SRCS) config_xiao.go Makefile
+	tinygo build \
+		-size full \
+		-print-allocs=.*bxparks.* \
+		-target=xiao \
+		-o xiao.out \
+		> xiao.size.txt
+
+flashxiao:
+	tinygo flash -x -target=xiao
+
+#------------------------------------------------------------------------------
+
 buildesp32: $(SRCS) config_esp32.go Makefile
 	tinygo build \
 		-size full \

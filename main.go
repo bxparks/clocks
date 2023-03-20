@@ -222,6 +222,21 @@ func blinkDisplay() {
 }
 
 //-----------------------------------------------------------------------------
+// Print debug info on the serial monitor port every few seconds.
+//-----------------------------------------------------------------------------
+
+var lastDebugTime = time.Now()
+
+func printSerialMonitor() {
+	now := time.Now()
+	elapsed := now.Sub(lastDebugTime)
+	if elapsed.Milliseconds() >= 2000 {
+		lastDebugTime = now
+		controller.printSerialMonitor()
+	}
+}
+
+//-----------------------------------------------------------------------------
 // Main loop
 //-----------------------------------------------------------------------------
 
@@ -243,6 +258,7 @@ func main() {
 		blinkDisplay()
 		updateDisplay()
 		flushDisplay()
+		printSerialMonitor()
 		time.Sleep(time.Millisecond * 1)
 	}
 }

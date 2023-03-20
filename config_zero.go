@@ -1,4 +1,4 @@
-//go:build arduino_zero
+//go:build zero
 
 package main
 

@@ -289,3 +289,7 @@ func (c *Controller) updatePresenter() {
 	}
 	c.presenter.SetClockInfo(clockInfo)
 }
+
+func (c* Controller) printSerialMonitor() {
+	println(c.currInfo.dateTime.String())
+}
