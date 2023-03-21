@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/bxparks/AceTimeGo/acetime"
-	"github.com/bxparks/AceTimeClockGo/ds3231"
 	"github.com/bxparks/AceSegmentGo/tm1637"
+	"github.com/bxparks/AceTimeClockGo/ds3231"
+	"github.com/bxparks/AceTimeGo/acetime"
 	"runtime"
 	"time"
 )
@@ -290,6 +290,6 @@ func (c *Controller) updatePresenter() {
 	c.presenter.SetClockInfo(clockInfo)
 }
 
-func (c* Controller) printSerialMonitor() {
+func (c *Controller) printSerialMonitor() {
 	println(c.currInfo.dateTime.String())
 }

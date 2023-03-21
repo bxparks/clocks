@@ -5,12 +5,12 @@
 package main
 
 import (
+	"github.com/bxparks/AceButtonGo/button"
+	"github.com/bxparks/AceSegmentGo/tm1637"
+	"github.com/bxparks/AceSegmentGo/writer"
+	"github.com/bxparks/AceTimeClockGo/ds3231"
 	"github.com/bxparks/AceTimeGo/acetime"
 	"github.com/bxparks/AceTimeGo/zonedb2000"
-	"github.com/bxparks/AceButtonGo/button"
-	"github.com/bxparks/AceTimeClockGo/ds3231"
-	"github.com/bxparks/AceSegmentGo/writer"
-	"github.com/bxparks/AceSegmentGo/tm1637"
 	"machine"
 	"time"
 )
