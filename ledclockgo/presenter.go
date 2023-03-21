@@ -2,19 +2,19 @@ package main
 
 import (
 	"github.com/bxparks/AceTimeGo/acetime"
-	"gitlab.com/bxparks/coding/tinygo/segwriter"
+	"github.com/bxparks/AceSegmentGo/writer"
 )
 
 type Presenter struct {
-	numWriter  *segwriter.NumberWriter
-	charWriter *segwriter.CharWriter
+	numWriter  *writer.NumberWriter
+	charWriter *writer.CharWriter
 	currInfo   ClockInfo
 	prevInfo   ClockInfo
 }
 
 func NewPresenter(
-	numWriter *segwriter.NumberWriter,
-	charWriter *segwriter.CharWriter) Presenter {
+	numWriter *writer.NumberWriter,
+	charWriter *writer.CharWriter) Presenter {
 
 	return Presenter{
 		numWriter:  numWriter,
@@ -45,8 +45,8 @@ func (p *Presenter) UpdateDisplay() {
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
 			p.numWriter.WriteHourMinute24(zdt.Hour, zdt.Minute)
 		} else {
-			p.numWriter.WriteDigit(segwriter.DigitSpace)
-			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDigit(writer.DigitSpace)
+			p.numWriter.WriteDigit(writer.DigitSpace)
 			p.numWriter.WriteDec2(zdt.Minute, 0)
 			p.numWriter.WriteColon(true)
 		}
@@ -56,18 +56,18 @@ func (p *Presenter) UpdateDisplay() {
 		} else {
 			p.numWriter.WriteDec2(zdt.Hour, 0)
 			p.numWriter.WriteColon(true)
-			p.numWriter.WriteDigit(segwriter.DigitSpace)
-			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDigit(writer.DigitSpace)
+			p.numWriter.WriteDigit(writer.DigitSpace)
 		}
 	case modeViewSecond:
-		p.numWriter.WriteDigit(segwriter.DigitSpace)
-		p.numWriter.WriteDigit(segwriter.DigitSpace)
+		p.numWriter.WriteDigit(writer.DigitSpace)
+		p.numWriter.WriteDigit(writer.DigitSpace)
 		p.numWriter.WriteColon(true)
 		p.numWriter.WriteDec2(zdt.Second, 0)
 	case modeChangeSecond:
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteDigit(segwriter.DigitSpace)
-			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDigit(writer.DigitSpace)
+			p.numWriter.WriteDigit(writer.DigitSpace)
 			p.numWriter.WriteDec2(zdt.Second, 0)
 			p.numWriter.WriteColon(true)
 		} else {
@@ -82,25 +82,25 @@ func (p *Presenter) UpdateDisplay() {
 			p.numWriter.Clear()
 		}
 	case modeViewMonth:
-		p.numWriter.WriteDigit(segwriter.DigitSpace)
-		p.numWriter.WriteDigit(segwriter.DigitSpace)
+		p.numWriter.WriteDigit(writer.DigitSpace)
+		p.numWriter.WriteDigit(writer.DigitSpace)
 		p.numWriter.WriteDec2(zdt.Month, 0)
 	case modeChangeMonth:
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteDigit(segwriter.DigitSpace)
-			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDigit(writer.DigitSpace)
+			p.numWriter.WriteDigit(writer.DigitSpace)
 			p.numWriter.WriteDec2(zdt.Month, 0)
 		} else {
 			p.numWriter.Clear()
 		}
 	case modeViewDay:
-		p.numWriter.WriteDigit(segwriter.DigitSpace)
-		p.numWriter.WriteDigit(segwriter.DigitSpace)
+		p.numWriter.WriteDigit(writer.DigitSpace)
+		p.numWriter.WriteDigit(writer.DigitSpace)
 		p.numWriter.WriteDec2(zdt.Day, 0)
 	case modeChangeDay:
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteDigit(segwriter.DigitSpace)
-			p.numWriter.WriteDigit(segwriter.DigitSpace)
+			p.numWriter.WriteDigit(writer.DigitSpace)
+			p.numWriter.WriteDigit(writer.DigitSpace)
 			p.numWriter.WriteDec2(zdt.Day, 0)
 		} else {
 			p.numWriter.Clear()
@@ -126,22 +126,22 @@ func (p *Presenter) UpdateDisplay() {
 	case modeViewBrightness:
 		p.charWriter.WriteString("br")
 		p.charWriter.SetDecimalPoint(1, true)
-		p.numWriter.WriteDec2(p.currInfo.brightness, segwriter.DigitSpace)
+		p.numWriter.WriteDec2(p.currInfo.brightness, writer.DigitSpace)
 	case modeChangeBrightness:
 		p.charWriter.WriteString("br")
 		p.charWriter.SetDecimalPoint(1, true)
 		if p.currInfo.blinkShowState || p.currInfo.blinkSuppressed {
-			p.numWriter.WriteDec2(p.currInfo.brightness, segwriter.DigitSpace)
+			p.numWriter.WriteDec2(p.currInfo.brightness, writer.DigitSpace)
 		} else {
 			p.charWriter.ClearToEnd()
 		}
 	case modeViewTempC:
 		t := int8(p.currInfo.tempCentiC / 100)
-		p.numWriter.WriteSignedDec3(t, segwriter.DigitSpace)
+		p.numWriter.WriteSignedDec3(t, writer.DigitSpace)
 		p.numWriter.WriteDigit(0xC)
 	case modeViewTempF:
 		t := int8(p.currInfo.tempCentiF / 100)
-		p.numWriter.WriteSignedDec3(t, segwriter.DigitSpace)
+		p.numWriter.WriteSignedDec3(t, writer.DigitSpace)
 		p.numWriter.WriteDigit(0xF)
 	}
 }

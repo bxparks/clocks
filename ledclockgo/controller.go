@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/bxparks/AceTimeGo/acetime"
-	"gitlab.com/bxparks/coding/tinygo/ds3231"
-	"gitlab.com/bxparks/coding/tinygo/tm1637"
+	"github.com/bxparks/AceTimeClockGo/ds3231"
+	"github.com/bxparks/AceSegmentGo/tm1637"
 	"runtime"
 	"time"
 )

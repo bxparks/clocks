@@ -7,10 +7,10 @@ package main
 import (
 	"github.com/bxparks/AceTimeGo/acetime"
 	"github.com/bxparks/AceTimeGo/zonedb2000"
-	"gitlab.com/bxparks/coding/tinygo/button"
-	"gitlab.com/bxparks/coding/tinygo/ds3231"
-	"gitlab.com/bxparks/coding/tinygo/segwriter"
-	"gitlab.com/bxparks/coding/tinygo/tm1637"
+	"github.com/bxparks/AceButtonGo/button"
+	"github.com/bxparks/AceTimeClockGo/ds3231"
+	"github.com/bxparks/AceSegmentGo/writer"
+	"github.com/bxparks/AceSegmentGo/tm1637"
 	"machine"
 	"time"
 )
@@ -21,9 +21,9 @@ import (
 //-----------------------------------------------------------------------------
 
 var tm = tm1637.New(clkPin, dioPin, delayMicros, numDigits)
-var patternWriter = segwriter.NewPatternWriter(&tm)
-var numWriter = segwriter.NewNumberWriter(&patternWriter)
-var charWriter = segwriter.NewCharWriter(&patternWriter)
+var patternWriter = writer.NewPatternWriter(&tm)
+var numWriter = writer.NewNumberWriter(&patternWriter)
+var charWriter = writer.NewCharWriter(&patternWriter)
 
 func setupDisplay() {
 	println("setupDisplay()")
