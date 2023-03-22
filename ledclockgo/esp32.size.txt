@@ -1,13 +1,13 @@
    code  rodata    data     bss |   flash     ram | package
 ------------------------------- | --------------- | -------
-   4173    1101       4      10 |    5278      14 | (unknown)
+   4196    1101       2      10 |    5299      12 | (unknown)
       0       0       0    4096 |       0    4096 | C stack
     201       0       0       0 |     201       0 | Go interface method
       0     474       0       0 |     474       0 | Go reflect data
      66       0       0       0 |      66       0 | device/esp
      13       0       0       0 |      13       0 | errors
    1110       0       0      24 |    1110      24 | github.com/bxparks/AceButtonGo/button
-    547       0       0       0 |     547       0 | github.com/bxparks/AceSegmentGo/tm1637
+    588       0       0       0 |     588       0 | github.com/bxparks/AceSegmentGo/tm1637
     860      18     128       0 |    1006     128 | github.com/bxparks/AceSegmentGo/writer
     461       0       0       0 |     461       0 | github.com/bxparks/AceTimeClockGo/ds3231
    6247     149       8       0 |    6404       8 | github.com/bxparks/AceTimeGo/acetime
@@ -18,15 +18,15 @@
     133       2       0       0 |     135       0 | internal/itoa
     357      24       0       8 |     381       8 | internal/task
     601       0       0       0 |     601       0 | machine
-   2610     153    5220     168 |    7983    5388 | main
+   2610     153    5222     168 |    7985    5390 | main
    2623     622       0       0 |    3245       0 | reflect
-   3780     172       0      66 |    3952      66 | runtime
+   3756     172       0      66 |    3928      66 | runtime
      78       0       0       0 |      78       0 | runtime/interrupt
     141       0       0       0 |     141       0 | runtime/volatile
     450     108       0       0 |     558       0 | strings
     142      38       0       0 |     180       0 | sync
      23       6       0       0 |      29       0 | syscall
-  11837     587      64      76 |   12488     140 | time
+  11893     587      64      76 |   12544     140 | time
    1016      32       8       0 |    1056       8 | tinygo.org/x/drivers/i2csoft
 ------------------------------- | --------------- | -------
-  37892   12475    5432    4448 |   55799    9880 | total
+  37988   12475    5432    4448 |   55895    9880 | total
