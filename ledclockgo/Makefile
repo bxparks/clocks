@@ -1,7 +1,5 @@
 SRCS := main.go controller.go presenter.go clockinfo.go
 
-all: buildesp32 buildesp32go buildxiao
-
 #------------------------------------------------------------------------------
 
 buildnano: $(SRCS) config_nano.go Makefile
@@ -42,19 +40,22 @@ flashxiao:
 	tinygo flash -x -target=xiao
 
 #------------------------------------------------------------------------------
+# ESP32 box with ezSBC ESP32 using time.Sleep()
 
-buildesp32: $(SRCS) config_esp32.go Makefile
+buildesp32box: $(SRCS) config_esp32box.go Makefile
 	tinygo build \
 		-size full \
 		-print-allocs=.*bxparks.* \
 		-target=esp32-coreboard-v2 \
+		-tags=esp32box \
 		-o esp32.out \
 		> esp32.size.txt
 
-flashesp32:
-	tinygo flash -x -target=esp32-coreboard-v2
+flashesp32box:
+	tinygo flash -x -target=esp32-coreboard-v2 -tags=esp32box
 
 #------------------------------------------------------------------------------
+# ESP32 box with ezSBC ESP32, using Goroutines.
 
 buildesp32go: $(SRCS) config_esp32.go Makefile
 	tinygo build \
@@ -67,6 +68,21 @@ buildesp32go: $(SRCS) config_esp32.go Makefile
 
 flashesp32go:
 	tinygo flash --tags goroutine -x -target=esp32-coreboard-v2
+
+#------------------------------------------------------------------------------
+# ESP32 dev board with DevKit V1
+
+buildesp32board: $(SRCS) config_esp32board.go Makefile
+	tinygo build \
+		-size full \
+		-print-allocs=.*bxparks.* \
+		-target=esp32-coreboard-v2 \
+		-tags=esp32board \
+		-o esp32.out \
+		> esp32.size.txt
+
+flashesp32board:
+	tinygo flash -x -target=esp32-coreboard-v2 -tags=esp32board
 
 #------------------------------------------------------------------------------
 

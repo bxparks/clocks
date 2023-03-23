@@ -1,4 +1,4 @@
-//go:build esp32
+//go:build esp32 && esp32board
 
 package main
 
@@ -9,16 +9,16 @@ import (
 
 // TM1637 LED
 const (
-	clkPin      = machine.GPIO33
-	dioPin      = machine.GPIO32
+	clkPin      = machine.GPIO14
+	dioPin      = machine.GPIO13
 	delayMicros = 4
 	numDigits   = 4
 )
 
 // Digital Buttons
 const (
-	modePin   = machine.GPIO15
-	changePin = machine.GPIO14
+	modePin   = machine.GPIO19
+	changePin = machine.GPIO18
 )
 
 // I2C
