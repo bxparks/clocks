@@ -96,7 +96,7 @@ var zones = []ZoneInfo{
 type ButtonHandler struct{}
 
 func (h *ButtonHandler) Handle(b *button.Button, e button.Event, state bool) {
-	switch b.GetPin() {
+	switch b.Pin {
 	case modePin:
 		switch e {
 		case button.EventReleased:
@@ -117,20 +117,26 @@ func (h *ButtonHandler) Handle(b *button.Button, e button.Event, state bool) {
 	}
 }
 
-// Configure buttons
-var config = button.ButtonConfig{Handler: &ButtonHandler{}}
-var modeButton = button.NewButton(&config, modePin)
-var changeButton = button.NewButton(&config, changePin)
+// Configure digital buttons
+var handler ButtonHandler
+var buttons = []button.Button{
+	{Pin: modePin},
+	{Pin: changePin},
+}
+var buttonGroup = button.ButtonGroup{
+	Handler: &handler,
+	Buttons: buttons,
+}
 
 func setupButtons() {
 	println("setupButtons()")
 	modePin.Configure(machine.PinConfig{Mode: machine.PinInputPullup})
 	changePin.Configure(machine.PinConfig{Mode: machine.PinInputPullup})
 
-	config.Configure()
-	config.SetFeature(button.FeatureLongPress)
-	config.SetFeature(button.FeatureRepeatPress)
-	config.SetFeature(button.FeatureSuppressAfterLongPress)
-	config.SetFeature(button.FeatureSuppressAfterRepeatPress)
-	//config.RepeatPressInterval = 100
+	buttonGroup.Configure()
+	buttonGroup.SetFeature(button.FeatureLongPress)
+	buttonGroup.SetFeature(button.FeatureRepeatPress)
+	buttonGroup.SetFeature(button.FeatureSuppressAfterLongPress)
+	buttonGroup.SetFeature(button.FeatureSuppressAfterRepeatPress)
+	//buttonGroup.Timing.RepeatPressInterval = 100
 }

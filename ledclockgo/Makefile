@@ -1,6 +1,6 @@
 SRCS := main.go controller.go presenter.go clockinfo.go
 
-all: buildzero buildesp32 buildesp32go
+all: buildesp32 buildesp32go buildxiao
 
 #------------------------------------------------------------------------------
 

@@ -84,8 +84,7 @@ func checkButtons() {
 	elapsed := now.Sub(lastCheckButtonsTime)
 	if elapsed.Milliseconds() >= 5 {
 		lastCheckButtonsTime = now
-		modeButton.Check()
-		changeButton.Check()
+		buttonGroup.CheckButtons()
 	}
 }
 

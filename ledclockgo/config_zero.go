@@ -15,7 +15,7 @@ const (
 	numDigits   = 4
 )
 
-// Buttons
+// Digital Buttons
 const (
 	modePin   = machine.D8
 	changePin = machine.D9
