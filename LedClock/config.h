@@ -111,6 +111,9 @@
   #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_TM1637
   #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_TMI_FAST
 
+//-----------------------------------------------------------------------------
+// env:micro
+
 #elif defined(AUNITER_MICRO_CUSTOM_DIRECT)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN A2
@@ -235,6 +238,76 @@
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
 
+//-----------------------------------------------------------------------------
+// env:xiao
+
+#elif defined(AUNITER_XIAO_TM1637)
+  #undef ENABLE_EEPROM
+  #define ENABLE_EEPROM 0
+
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN 1
+  #define CHANGE_BUTTON_PIN 0
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_WIRE
+  #define SDA_PIN SDA
+  #define SCL_PIN SCL
+  #define WIRE_BIT_DELAY 4
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_TM1637
+  #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_TMI
+  #define CLK_PIN 3
+  #define DIO_PIN 2
+  #define TMI_BIT_DELAY 100
+
+#elif defined(AUNITER_XIAO_MAX7219)
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN PA0
+  #define CHANGE_BUTTON_PIN PA1
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_XIAOF1RTC
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_XIAOF1RTC
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_MAX7219
+  #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_SPI
+  #define LATCH_PIN SS
+  #define DATA_PIN MOSI
+  #define CLOCK_PIN SCK
+
+#elif defined(AUNITER_XIAO_HT16K33)
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN PA0
+  #define CHANGE_BUTTON_PIN PA1
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_XIAOF1RTC
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_XIAOF1RTC
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HT16K33
+  #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_WIRE
+  #define HT16K33_I2C_ADDRESS 0x70
+  #define SDA_PIN SDA
+  #define SCL_PIN SCL
+  #define WIRE_BIT_DELAY 4
+
+#elif defined(AUNITER_XIAO_HC595)
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN PA0
+  #define CHANGE_BUTTON_PIN PA1
+
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_XIAOF1RTC
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_XIAOF1RTC
+
+  #define LED_DISPLAY_TYPE LED_DISPLAY_TYPE_HC595
+  #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_SPI
+  #define LATCH_PIN SS
+  #define DATA_PIN MOSI
+  #define CLOCK_PIN SCK
+
+//-----------------------------------------------------------------------------
+// env:stm32
+
 #elif defined(AUNITER_STM32_TM1637)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN PA0
@@ -291,6 +364,9 @@
   #define LATCH_PIN SS
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
+
+//-----------------------------------------------------------------------------
+// env:d1minilarge
 
 #elif defined(AUNITER_D1MINI_LARGE_TM1637)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
@@ -397,8 +473,11 @@
   #define DATA_PIN MOSI
   #define CLOCK_PIN SCK
 
+//-----------------------------------------------------------------------------
+// env:env32
+
 // EzSBC ESP32 board in a box, with OLED and TM1637
-#elif defined(AUNITER_ESP32)
+#elif defined(AUNITER_ESP32BOX)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
   #define MODE_BUTTON_PIN 15
   #define CHANGE_BUTTON_PIN 14
@@ -418,15 +497,20 @@
 
 // ESP32 dev board using TM1637
 #elif defined(AUNITER_ESP32_TM1637)
-  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define MODE_BUTTON_PIN 0
-  #define CHANGE_BUTTON_PIN 1
-  #define ANALOG_BUTTON_PIN A10
-  #define ANALOG_BUTTON_LEVELS { \
-      0 /*0% ground, 470*/, \
-      2048 /*50%, 10k*/, \
-      4096 /*100%, open*/ \
-    }
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    #define MODE_BUTTON_PIN 19
+    #define CHANGE_BUTTON_PIN 18
+  #else
+    #define MODE_BUTTON_PIN 0
+    #define CHANGE_BUTTON_PIN 1
+    #define ANALOG_BUTTON_PIN A18
+    #define ANALOG_BUTTON_LEVELS { \
+        0 /*0% ground, 470*/, \
+        2048 /*50%, 10k*/, \
+        4096 /*100%, open*/ \
+      }
+  #endif
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -443,15 +527,20 @@
 
 // ESP32 dev board using MAX7219
 #elif defined(AUNITER_ESP32_MAX7219)
-  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define MODE_BUTTON_PIN 0
-  #define CHANGE_BUTTON_PIN 1
-  #define ANALOG_BUTTON_PIN A10
-  #define ANALOG_BUTTON_LEVELS { \
-      0 /*0% ground, 470*/, \
-      2048 /*50%, 10k*/, \
-      4096 /*100%, open*/ \
-    }
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    #define MODE_BUTTON_PIN 19
+    #define CHANGE_BUTTON_PIN 18
+  #else
+    #define MODE_BUTTON_PIN 0
+    #define CHANGE_BUTTON_PIN 1
+    #define ANALOG_BUTTON_PIN A18
+    #define ANALOG_BUTTON_LEVELS { \
+        0 /*0% ground, 470*/, \
+        2048 /*50%, 10k*/, \
+        4096 /*100%, open*/ \
+      }
+  #endif
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -468,15 +557,20 @@
 
 // ESP32 dev board using HT16K33
 #elif defined(AUNITER_ESP32_HT16K33)
-  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define MODE_BUTTON_PIN 0
-  #define CHANGE_BUTTON_PIN 1
-  #define ANALOG_BUTTON_PIN A10
-  #define ANALOG_BUTTON_LEVELS { \
-      0 /*0% ground, 470*/, \
-      2048 /*50%, 10k*/, \
-      4096 /*100%, open*/ \
-    }
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    #define MODE_BUTTON_PIN 19
+    #define CHANGE_BUTTON_PIN 18
+  #else
+    #define MODE_BUTTON_PIN 0
+    #define CHANGE_BUTTON_PIN 1
+    #define ANALOG_BUTTON_PIN A18
+    #define ANALOG_BUTTON_LEVELS { \
+        0 /*0% ground, 470*/, \
+        2048 /*50%, 10k*/, \
+        4096 /*100%, open*/ \
+      }
+  #endif
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -494,15 +588,20 @@
 
 // ESP32 dev board using 74HC595
 #elif defined(AUNITER_ESP32_HC595)
-  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define MODE_BUTTON_PIN 0
-  #define CHANGE_BUTTON_PIN 1
-  #define ANALOG_BUTTON_PIN A10
-  #define ANALOG_BUTTON_LEVELS { \
-      0 /*0% ground, 470*/, \
-      2048 /*50%, 10k*/, \
-      4096 /*100%, open*/ \
-    }
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    #define MODE_BUTTON_PIN 19
+    #define CHANGE_BUTTON_PIN 18
+  #else
+    #define MODE_BUTTON_PIN 0
+    #define CHANGE_BUTTON_PIN 1
+    #define ANALOG_BUTTON_PIN A18
+    #define ANALOG_BUTTON_LEVELS { \
+        0 /*0% ground, 470*/, \
+        2048 /*50%, 10k*/, \
+        4096 /*100%, open*/ \
+      }
+  #endif
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231

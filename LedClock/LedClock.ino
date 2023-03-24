@@ -12,6 +12,7 @@ Supported boards are:
 */
 
 #include "config.h"
+#include <Arduino.h>
 #include <AceSPI.h>
 #include <AceTMI.h>
 #include <AceWire.h>
