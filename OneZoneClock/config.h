@@ -134,10 +134,6 @@
 
 // TODO: The parameters needs updating
 #elif defined(AUNITER_ATTINY_OLED)
-  // Defined by auniter.ini
-  //#define WIFI_SSID
-  //#define WIFI_PASSWORD
-
   #define ENABLE_EEPROM 1
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
@@ -161,10 +157,6 @@
   #define OLED_REMAP true
 
 #elif defined(AUNITER_NANO)
-  // Defined by auniter.ini
-  //#define WIFI_SSID
-  //#define WIFI_PASSWORD
-
   #define ENABLE_EEPROM 1
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
@@ -188,10 +180,6 @@
   #define OLED_REMAP false
 
 #elif defined(AUNITER_MICRO_OLED)
-  // Defined by auniter.ini
-  //#define WIFI_SSID
-  //#define WIFI_PASSWORD
-
   #define ENABLE_EEPROM 1
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
@@ -215,10 +203,6 @@
   #define OLED_REMAP true
 
 #elif defined(AUNITER_MEGA)
-  // Defined by auniter.ini
-  //#define WIFI_SSID
-  //#define WIFI_PASSWORD
-
   #define ENABLE_EEPROM 1
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_BASIC
 
@@ -242,10 +226,6 @@
   #define OLED_REMAP false
 
 #elif defined(AUNITER_SAMD_OLED)
-  // Defined by auniter.ini
-  //#define WIFI_SSID
-  //#define WIFI_PASSWORD
-
   #define ENABLE_EEPROM 0
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
 
@@ -268,11 +248,30 @@
   #define OLED_INITIAL_CONTRAST 0
   #define OLED_REMAP true
 
-#elif defined(AUNITER_STM32_OLED)
-  // Defined by auniter.ini
-  //#define WIFI_SSID
-  //#define WIFI_PASSWORD
+#elif defined(AUNITER_XIAO_OLED)
+  #define ENABLE_EEPROM 0
+  #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
 
+  // Clock parameters.
+  #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
+  #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_TWO_WIRE
+  #define SDA_PIN SDA
+  #define SCL_PIN SCL
+  #define WIRE_BIT_DELAY 4
+
+  // Button parameters
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #define MODE_BUTTON_PIN 1
+  #define CHANGE_BUTTON_PIN 0
+
+  // Display type
+  #define DISPLAY_TYPE DISPLAY_TYPE_OLED
+  #define OLED_INTERFACE_TYPE INTERFACE_TYPE_TWO_WIRE
+  #define OLED_INITIAL_CONTRAST 0
+  #define OLED_REMAP true
+
+#elif defined(AUNITER_STM32_OLED)
   #define ENABLE_EEPROM 1
   #define TIME_ZONE_TYPE TIME_ZONE_TYPE_EXTENDED
 
