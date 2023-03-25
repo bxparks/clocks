@@ -698,17 +698,19 @@ class Presenter {
       mDisplay.print(mClockInfo.syncStatusCode);
       clearToEOL();
 
-      // Print the prev sync as a negative
+      // Print the time since prev sync as a negative
       mDisplay.print(F("<:"));
       TimePeriod prevSync = mClockInfo.prevSync;
       prevSync.sign(-prevSync.sign());
       displayTimePeriodHMS(prevSync);
       clearToEOL();
 
+      // Print the time until next sync as a positive
       mDisplay.print(F(">:"));
       displayTimePeriodHMS(mClockInfo.nextSync);
       clearToEOL();
 
+      // Print the last known clock skew from RTC.
       mDisplay.print(F("S:"));
       displayTimePeriodHMS(mClockInfo.clockSkew);
       clearToEOL();

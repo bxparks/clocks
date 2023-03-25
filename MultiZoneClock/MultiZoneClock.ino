@@ -585,6 +585,21 @@ void setupWire() {
 }
 
 //-----------------------------------------------------------------------------
+// Debugging ace_time::SystemClockCoroutine which does not seem to get
+// inserted into the linked list.
+//-----------------------------------------------------------------------------
+
+#if ENABLE_SERIAL_DEBUG >= 2
+COROUTINE(monitor) {
+  COROUTINE_LOOP() {
+    SERIAL_PORT_MONITOR.println("----");
+    CoroutineScheduler::list(SERIAL_PORT_MONITOR);
+    COROUTINE_DELAY_SECONDS(2);
+  }
+}
+#endif
+
+//-----------------------------------------------------------------------------
 // Main setup and loop
 //-----------------------------------------------------------------------------
 
@@ -603,6 +618,9 @@ void setup() {
   if (ENABLE_SERIAL_DEBUG >= 1 || ENABLE_FPS_DEBUG >= 1) {
     SERIAL_PORT_MONITOR.begin(115200);
     while (!SERIAL_PORT_MONITOR); // Leonardo/Micro
+  #if defined(EPOXY_DUINO)
+    SERIAL_PORT_MONITOR.setLineModeUnix();
+  #endif
   }
 
   if (ENABLE_SERIAL_DEBUG >= 1) {
@@ -629,6 +647,15 @@ void setup() {
   bool isModePressedDuringBoot = modeButton.isPressedRaw();
   setupController(isModePressedDuringBoot);
 
+#if ENABLE_SERIAL_DEBUG >= 2
+  displayClock.setName(F("displayClock"));
+  blinker.setName(F("blinker"));
+  readButtons.setName(F("readButtons"));
+  systemClock.setName(F("systemClock"));
+  monitor.setName(F("monitor"));
+  CoroutineScheduler::list(SERIAL_PORT_MONITOR);
+#endif
+
   CoroutineScheduler::setup();
 
   if (ENABLE_SERIAL_DEBUG >= 1) {
@@ -639,6 +666,7 @@ void setup() {
 void loop() {
   CoroutineScheduler::loop();
 
-  // SYSTEM_CLOCK_TYPE_COROUTINE seems to be buggy, use LOOP instead.
+#if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
   systemClock.loop();
+#endif
 }

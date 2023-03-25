@@ -67,7 +67,8 @@
 // SystemClock
 #define SYSTEM_CLOCK_TYPE_LOOP 0
 #define SYSTEM_CLOCK_TYPE_COROUTINE 1
-#define SYSTEM_CLOCK_TYPE SYSTEM_CLOCK_TYPE_LOOP
+#define SYSTEM_CLOCK_TYPE SYSTEM_CLOCK_TYPE_COROUTINE
+
 #if SYSTEM_CLOCK_TYPE == SYSTEM_CLOCK_TYPE_LOOP
   #define SYSTEM_CLOCK SystemClockLoop
 #else
@@ -421,24 +422,26 @@
   // Clock parameters.
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
-  #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_WIRE
+  #define DS3231_INTERFACE_TYPE INTERFACE_TYPE_TWO_WIRE
   #define SDA_PIN SDA
   #define SCL_PIN SCL
   #define WIRE_BIT_DELAY 4
 
   // Button parameters
-  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define MODE_BUTTON_PIN 0
-  #define CHANGE_BUTTON_PIN 2
-  #define ANALOG_BUTTON_COUNT 4
-  #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BUTTON_LEVELS { \
-      0 /*short to ground*/, \
-      327 /*32%, 4.7k*/, \
-      512 /*50%, 10k*/, \
-      844 /*82%, 47k*/, \
-      1023 /*100%, open*/ \
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    #define MODE_BUTTON_PIN 19
+    #define CHANGE_BUTTON_PIN 18
+  #else
+    #define MODE_BUTTON_PIN 0
+    #define CHANGE_BUTTON_PIN 1
+    #define ANALOG_BUTTON_PIN A18
+    #define ANALOG_BUTTON_LEVELS { \
+      0 /*0% ground, 470*/, \
+      2048 /*50%, 10k*/, \
+      4096 /*100%, open*/ \
     }
+  #endif
 
   // Display parameters
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
