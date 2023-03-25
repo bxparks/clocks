@@ -524,10 +524,10 @@
     #define CHANGE_BUTTON_PIN 1
     #define ANALOG_BUTTON_PIN A18
     #define ANALOG_BUTTON_LEVELS { \
-        0 /*0% ground, 470*/, \
-        2048 /*50%, 10k*/, \
-        4096 /*100%, open*/ \
-      }
+      0 /*0% ground, 470*/, \
+      2048 /*50%, 10k*/, \
+      4096 /*100%, open*/ \
+    }
   #endif
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231

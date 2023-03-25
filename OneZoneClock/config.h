@@ -476,15 +476,20 @@
   #define WIRE_BIT_DELAY 4
 
   // Button parameters
-  #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define MODE_BUTTON_PIN 0
-  #define CHANGE_BUTTON_PIN 1
-  #define ANALOG_BUTTON_PIN A10
-  #define ANALOG_BUTTON_LEVELS { \
+  #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    #define MODE_BUTTON_PIN 19
+    #define CHANGE_BUTTON_PIN 18
+  #else
+    #define MODE_BUTTON_PIN 0
+    #define CHANGE_BUTTON_PIN 1
+    #define ANALOG_BUTTON_PIN A18
+    #define ANALOG_BUTTON_LEVELS { \
       0 /*0% ground, 470*/, \
       2048 /*50%, 10k*/, \
       4096 /*100%, open*/ \
     }
+  #endif
 
   // Display type
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
