@@ -221,7 +221,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
     using SpiInterface = HardSpiFastInterface<SPIClass>;
     SpiInterface spiInterface(SPI, LATCH_PIN);
   #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI
-    using SpiInterface = SimpleSpiFastInterface;
+    using SpiInterface = SimpleSpiInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
   #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI_FAST
     using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
@@ -274,7 +274,7 @@ const uint8_t FRAMES_PER_SECOND = 60;
     using SpiInterface = HardSpiFastInterface<SPIClass>;
     SpiInterface spiInterface(SPI, LATCH_PIN);
   #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI
-    using SpiInterface = SimpleSpiFastInterface;
+    using SpiInterface = SimpleSpiInterface;
     SpiInterface spiInterface(LATCH_PIN, DATA_PIN, CLOCK_PIN);
   #elif LED_INTERFACE_TYPE == INTERFACE_TYPE_SIMPLE_SPI_FAST
     using SpiInterface = SimpleSpiFastInterface<LATCH_PIN, DATA_PIN, CLOCK_PIN>;
@@ -399,6 +399,13 @@ const uint8_t FRAMES_PER_SECOND = 60;
 
 // Setup the various resources.
 void setupAceSegment() {
+  // TODO: This does not quite work for microcontrollers with multiple SPI
+  // buses. See AceSegment/examples/Max7219Demo/ for a config that works.
+  #if LED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI \
+    || LED_INTERFACE_TYPE == INTERFACE_TYPE_HARD_SPI_FAST
+      SPI.begin();
+  #endif
+
   #if LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_MAX7219 \
       || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HC595 \
       || LED_DISPLAY_TYPE == LED_DISPLAY_TYPE_HYBRID \
