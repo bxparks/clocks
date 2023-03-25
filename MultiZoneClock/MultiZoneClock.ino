@@ -638,4 +638,7 @@ void setup() {
 
 void loop() {
   CoroutineScheduler::loop();
+
+  // SYSTEM_CLOCK_TYPE_COROUTINE seems to be buggy, use LOOP instead.
+  systemClock.loop();
 }
