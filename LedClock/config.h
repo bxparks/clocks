@@ -388,16 +388,21 @@
 
 #elif defined(AUNITER_D1MINI_LARGE_TM1637)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define MODE_BUTTON_PIN 0
-  #define CHANGE_BUTTON_PIN 2
-  #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BUTTON_LEVELS { \
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    #define MODE_BUTTON_PIN D0
+    #define CHANGE_BUTTON_PIN D4
+  #else
+    #define MODE_BUTTON_PIN 0
+    #define CHANGE_BUTTON_PIN 2
+    #define ANALOG_BUTTON_PIN A0
+    #define ANALOG_BUTTON_LEVELS { \
       0 /*short to ground*/, \
       327 /*32%, 4.7k*/, \
       512 /*50%, 10k*/, \
       844 /*82%, 47k*/, \
       1023 /*100%, open*/ \
     }
+  #endif
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -414,16 +419,21 @@
 
 #elif defined(AUNITER_D1MINI_LARGE_MAX7219)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define MODE_BUTTON_PIN 0
-  #define CHANGE_BUTTON_PIN 2
-  #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BUTTON_LEVELS { \
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    #define MODE_BUTTON_PIN D0
+    #define CHANGE_BUTTON_PIN D4
+  #else
+    #define MODE_BUTTON_PIN 0
+    #define CHANGE_BUTTON_PIN 2
+    #define ANALOG_BUTTON_PIN A0
+    #define ANALOG_BUTTON_LEVELS { \
       0 /*short to ground*/, \
       327 /*32%, 4.7k*/, \
       512 /*50%, 10k*/, \
       844 /*82%, 47k*/, \
       1023 /*100%, open*/ \
     }
+  #endif
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -440,16 +450,21 @@
 
 #elif defined(AUNITER_D1MINI_LARGE_HT16K33)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define MODE_BUTTON_PIN 0
-  #define CHANGE_BUTTON_PIN 2
-  #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BUTTON_LEVELS { \
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    #define MODE_BUTTON_PIN D0
+    #define CHANGE_BUTTON_PIN D4
+  #else
+    #define MODE_BUTTON_PIN 0
+    #define CHANGE_BUTTON_PIN 2
+    #define ANALOG_BUTTON_PIN A0
+    #define ANALOG_BUTTON_LEVELS { \
       0 /*short to ground*/, \
       327 /*32%, 4.7k*/, \
       512 /*50%, 10k*/, \
       844 /*82%, 47k*/, \
       1023 /*100%, open*/ \
     }
+  #endif
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
@@ -467,16 +482,21 @@
 
 #elif defined(AUNITER_D1MINI_LARGE_HC595)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
-  #define MODE_BUTTON_PIN 0
-  #define CHANGE_BUTTON_PIN 2
-  #define ANALOG_BUTTON_PIN A0
-  #define ANALOG_BUTTON_LEVELS { \
+  #if BUTTON_TYPE == BUTTON_TYPE_DIGITAL
+    #define MODE_BUTTON_PIN D0
+    #define CHANGE_BUTTON_PIN D4
+  #else
+    #define MODE_BUTTON_PIN 0
+    #define CHANGE_BUTTON_PIN 2
+    #define ANALOG_BUTTON_PIN A0
+    #define ANALOG_BUTTON_LEVELS { \
       0 /*short to ground*/, \
       327 /*32%, 4.7k*/, \
       512 /*50%, 10k*/, \
       844 /*82%, 47k*/, \
       1023 /*100%, open*/ \
     }
+  #endif
 
   #define TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
   #define BACKUP_TIME_SOURCE_TYPE TIME_SOURCE_TYPE_DS3231
