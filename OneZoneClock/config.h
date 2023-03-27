@@ -336,7 +336,7 @@
   #define ENABLE_LED_DISPLAY 1
   #define CLK_PIN D5
   #define DIO_PIN D7
-  #define TMI_BIT_DELAY 10
+  #define TMI_BIT_DELAY 4
 
 #elif defined(AUNITER_D1MINI_SMALL_OLED) \
     || defined(AUNITER_D1MINI_SMALL_LCD)

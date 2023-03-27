@@ -92,7 +92,7 @@
   #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_TMI_FAST
   #define CLK_PIN 10
   #define DIO_PIN 9
-  #define TMI_BIT_DELAY 100
+  #define TMI_BIT_DELAY 4
 
 #elif ! defined(AUNITER)
   #warning Arduino IDE detected. Check config parameters.
@@ -181,7 +181,7 @@
   #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_TMI_FAST
   #define CLK_PIN A0
   #define DIO_PIN 9
-  #define TMI_BIT_DELAY 100
+  #define TMI_BIT_DELAY 4
 
 #elif defined(AUNITER_MICRO_MAX7219)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -260,7 +260,7 @@
   #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_TMI
   #define CLK_PIN 3
   #define DIO_PIN 2
-  #define TMI_BIT_DELAY 100
+  #define TMI_BIT_DELAY 4
 
 #elif defined(AUNITER_XIAO_MAX7219)
   #undef ENABLE_EEPROM
@@ -338,7 +338,7 @@
   #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_TMI
   #define CLK_PIN PB3
   #define DIO_PIN PB4
-  #define TMI_BIT_DELAY 100
+  #define TMI_BIT_DELAY 4
 
 #elif defined(AUNITER_STM32_MAX7219)
   #define BUTTON_TYPE BUTTON_TYPE_DIGITAL
@@ -415,7 +415,7 @@
   #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_TMI
   #define CLK_PIN D5
   #define DIO_PIN D7
-  #define TMI_BIT_DELAY 100
+  #define TMI_BIT_DELAY 4
 
 #elif defined(AUNITER_D1MINI_LARGE_MAX7219)
   #define BUTTON_TYPE BUTTON_TYPE_ANALOG
@@ -561,7 +561,7 @@
   #define LED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_TMI
   #define CLK_PIN 14
   #define DIO_PIN 13
-  #define TMI_BIT_DELAY 100
+  #define TMI_BIT_DELAY 4
 
 // ESP32 dev board using MAX7219
 #elif defined(AUNITER_ESP32_MAX7219)
