@@ -12,7 +12,7 @@
     465       0       0       0 |     465       0 | github.com/bxparks/AceTimeClockGo/ds3231
    6249     149       8       0 |    6406       8 | github.com/bxparks/AceTimeGo/acetime
     205       0       0       0 |     205       0 | github.com/bxparks/AceTimeGo/strbuild
-      0    8989       0       0 |    8989       0 | github.com/bxparks/AceTimeGo/zonedb2000
+      0    8989       0       0 |    8989       0 | github.com/bxparks/AceTimeGo/zonedb
     163       0       0       0 |     163       0 | github.com/bxparks/AceTimeGo/zoneinfo
      57       0       0       0 |      57       0 | internal/bytealg
     133       2       0       0 |     135       0 | internal/itoa

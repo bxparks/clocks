@@ -11,7 +11,7 @@
      38       0       0       0 |      38       0 | device/sam
      30       0       0       0 |      30       0 | errors
    5098      92       0       0 |    5190       0 | github.com/bxparks/AceTimeGo/acetime
-      0    8989       0       0 |    8989       0 | github.com/bxparks/AceTimeGo/zonedb2000
+      0    8989       0       0 |    8989       0 | github.com/bxparks/AceTimeGo/zonedb
     138       0       0       0 |     138       0 | github.com/bxparks/AceTimeGo/zoneinfo
     982       0       0       0 |     982       0 | gitlab.com/bxparks/coding/tinygo/button
     420       0       0       0 |     420       0 | gitlab.com/bxparks/coding/tinygo/ds3231
