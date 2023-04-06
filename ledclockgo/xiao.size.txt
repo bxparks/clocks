@@ -1,36 +1,36 @@
    code  rodata    data     bss |   flash     ram | package
 ------------------------------- | --------------- | -------
-   1082       0     107     258 |    1189     365 | (unknown)
+   1087       0     135     258 |    1222     393 | (unknown)
    1374       0       0       0 |    1374       0 | /__w/tinygo/tinygo/build/release/tinygo/lib/compiler-rt-builtins
     220       0       0       0 |     220       0 | /__w/tinygo/tinygo/build/release/tinygo/lib/compiler-rt-builtins/arm
      80       0       0       0 |      80       0 | /__w/tinygo/tinygo/build/release/tinygo/lib/picolibc/newlib/libc/string
       0       0       0    2048 |       0    2048 | C stack
-    242       0       0       0 |     242       0 | Go interface method
-      0     794       0       0 |     794       0 | Go reflect data
+    324       0       0       0 |     324       0 | Go interface method
+      0     811       0       0 |     811       0 | Go reflect data
     162       0       0       0 |     162       0 | device/arm
      38       0       0       0 |      38       0 | device/sam
      30       0       0       0 |      30       0 | errors
    1266       0       0      24 |    1266      24 | github.com/bxparks/AceButtonGo/button
-    460       0       0       0 |     460       0 | github.com/bxparks/AceSegmentGo/tm1637
-    746      18     128       0 |     892     128 | github.com/bxparks/AceSegmentGo/writer
-    422       0       0       0 |     422       0 | github.com/bxparks/AceTimeClockGo/ds3231
-   5224     149       0       0 |    5373       0 | github.com/bxparks/AceTimeGo/acetime
-    226       0       0       0 |     226       0 | github.com/bxparks/AceTimeGo/strbuild
+    506       0       0       0 |     506       0 | github.com/bxparks/AceSegmentGo/tm1637
+    722      18     128       0 |     868     128 | github.com/bxparks/AceSegmentGo/writer
+   5310     149       0       0 |    5459       0 | github.com/bxparks/AceTimeGo/acetime
+    422       0       0       0 |     422       0 | github.com/bxparks/AceTimeGo/ds3231
+    226       0       0       0 |     226       0 | github.com/bxparks/AceTimeGo/internal/strbuild
       0    8989       0       0 |    8989       0 | github.com/bxparks/AceTimeGo/zonedb
     138       0       0       0 |     138       0 | github.com/bxparks/AceTimeGo/zoneinfo
      42       0       0       0 |      42       0 | internal/bytealg
     124       2       0       0 |     126       0 | internal/itoa
     334      24       0       0 |     358       0 | internal/task
-   3048     145      40    1792 |    3233    1832 | machine
+   3004     145      40    1792 |    3189    1832 | machine
      66       0      93       0 |     159      93 | machine/usb
     444       0       0       0 |     444       0 | machine/usb/cdc
-   2344     153    5164      24 |    7661    5188 | main
+   2344     153    5224      24 |    7721    5248 | main
    2367     622       0       0 |    2989       0 | reflect
    3890     240       0     686 |    4130     686 | runtime
-   1564       0       0       0 |    1564       0 | runtime/volatile
+   1562       0       0       0 |    1562       0 | runtime/volatile
     394     108       0       0 |     502       0 | strings
     306      38       0       0 |     344       0 | sync
      28       6       0       0 |      34       0 | syscall
-  11912     627      72      64 |   12611     136 | time
+  11918     627       8      64 |   12553      72 | time
 ------------------------------- | --------------- | -------
-  38573   11915    5604    4896 |   56092   10500 | total
+  38728   11932    5628    4896 |   56288   10524 | total

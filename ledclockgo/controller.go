@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/bxparks/AceSegmentGo/tm1637"
-	"github.com/bxparks/AceTimeClockGo/ds3231"
+	"github.com/bxparks/AceSegmentGo/writer"
+	"github.com/bxparks/AceTimeGo/ds3231"
 	"github.com/bxparks/AceTimeGo/acetime"
 	"runtime"
 	"time"
@@ -11,18 +11,20 @@ import (
 type Controller struct {
 	presenter    *Presenter
 	rtc          *ds3231.Device
-	tm           *tm1637.Device
+	ledModule    writer.LedModule
 	currInfo     ClockInfo
 	changingInfo ClockInfo
 }
 
 func NewController(
-	presenter *Presenter, rtc *ds3231.Device, tm *tm1637.Device) Controller {
+	presenter *Presenter,
+	rtc *ds3231.Device,
+	ledModule writer.LedModule) Controller {
 
 	return Controller{
 		presenter: presenter,
 		rtc:       rtc,
-		tm:        tm,
+		ledModule: ledModule,
 		currInfo: ClockInfo{
 			hourMode:   hourMode24,
 			clockMode:  modeViewHourMinute,
@@ -178,10 +180,11 @@ func (c *Controller) HandleChangePress() {
 	c.changingInfo.clockMode = c.currInfo.clockMode
 	c.updatePresenter()
 
-	// Flush the TM1637 immediately because if we wait until the next tm.Flush()
-	// from main.go, the beat frequency between the button.Handle() events and the
-	// tm.Flush() events causes a noticeable irregularity in the display update.
-	c.tm.Flush()
+	// Flush the TM1637 immediately because if we wait until the next
+	// ledModule.Flush() from main.go, the beat frequency between the
+	// button.Handle() events and the ledModule.Flush() events causes a noticeable
+	// irregularity in the display update.
+	c.ledModule.Flush()
 }
 
 func (c *Controller) HandleChangeRelease() {
@@ -227,7 +230,7 @@ func (c *Controller) Blink() {
 }
 
 func (c *Controller) ReadTemp() {
-	rawTemp, err := c.rtc.ReadTemp()
+	rawTemp, err := c.rtc.ReadTemperature()
 	if err != nil {
 		return
 	}

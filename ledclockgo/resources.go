@@ -4,9 +4,8 @@ package main
 
 import (
 	"github.com/bxparks/AceButtonGo/button"
-	"github.com/bxparks/AceSegmentGo/tm1637"
 	"github.com/bxparks/AceSegmentGo/writer"
-	"github.com/bxparks/AceTimeClockGo/ds3231"
+	"github.com/bxparks/AceTimeGo/ds3231"
 	"github.com/bxparks/AceTimeGo/acetime"
 	"github.com/bxparks/AceTimeGo/zonedb"
 	"machine"
@@ -17,14 +16,13 @@ import (
 // TM1637 LED Module
 //-----------------------------------------------------------------------------
 
-var tm = tm1637.New(clkPin, dioPin, delayMicros, numDigits)
-var patternWriter = writer.NewPatternWriter(&tm)
+var patternWriter = writer.NewPatternWriter(&ledModule)
 var numWriter = writer.NewNumberWriter(&patternWriter)
 var charWriter = writer.NewCharWriter(&patternWriter)
 
 func setupDisplay() {
 	println("setupDisplay()")
-	tm.Configure()
+	ledModule.Configure()
 }
 
 //-----------------------------------------------------------------------------
@@ -43,7 +41,7 @@ func setupRTC() {
 //-----------------------------------------------------------------------------
 
 var presenter = NewPresenter(&numWriter, &charWriter)
-var controller = NewController(&presenter, &rtc, &tm)
+var controller = NewController(&presenter, &rtc, &ledModule)
 
 //-----------------------------------------------------------------------------
 // AceTimeGo

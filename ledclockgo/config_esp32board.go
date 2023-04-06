@@ -3,6 +3,7 @@
 package main
 
 import (
+	"github.com/bxparks/AceSegmentGo/tm1637"
 	"machine"
 	"tinygo.org/x/drivers/i2csoft"
 )
@@ -14,6 +15,14 @@ const (
 	delayMicros = 4
 	numDigits   = 4
 )
+
+var tmi = tm1637.TMISoft{clkPin, dioPin, delayMicros}
+var ledModule = tm1637.Device{
+	TMI: &tmi,
+	NumDigits: numDigits,
+	DigitRemap: nil,
+	Brightness: 4,
+}
 
 // Digital Buttons
 const (

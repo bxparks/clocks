@@ -21,7 +21,7 @@ func flushDisplay() {
 	elapsed := now.Sub(lastFlushTime)
 	if elapsed.Milliseconds() >= 100 {
 		lastFlushTime = now
-		tm.Flush()
+		ledModule.Flush()
 	}
 }
 
@@ -130,7 +130,7 @@ func main() {
 	setupI2C()
 	setupRTC()
 	controller.SetupSystemTimeFromRTC()
-	tm.Flush()
+	ledModule.Flush()
 
 	println("Entering event loop...")
 	for {

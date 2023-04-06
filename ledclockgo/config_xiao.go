@@ -3,6 +3,7 @@
 package main
 
 import (
+	"github.com/bxparks/AceSegmentGo/tm1637"
 	"machine"
 )
 
@@ -10,9 +11,17 @@ import (
 const (
 	clkPin      = machine.D3
 	dioPin      = machine.D2
-	delayMicros = 100
+	delayMicros = 4
 	numDigits   = 4
 )
+
+var tmi = tm1637.TMISoft{clkPin, dioPin, delayMicros}
+var ledModule = tm1637.Device{
+	TMI: &tmi,
+	NumDigits: numDigits,
+	DigitRemap: nil,
+	Brightness: 4,
+}
 
 // Digital Buttons
 const (
