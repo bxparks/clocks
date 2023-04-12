@@ -250,6 +250,9 @@ func (c *Controller) saveClockInfo() {
 	} else {
 		c.currInfo = c.changingInfo
 	}
+
+	c.currInfo.dateTime.Normalize()
+
 	c.saveRTC(&c.currInfo)
 	c.SetupSystemTimeFromRTC()
 }
