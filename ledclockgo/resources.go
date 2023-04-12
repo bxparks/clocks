@@ -79,11 +79,13 @@ var tz0 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Los_Angeles)
 var tz1 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Denver)
 var tz2 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_Chicago)
 var tz3 = manager.TimeZoneFromZoneID(zonedb.ZoneIDAmerica_New_York)
+var tz4 = acetime.TimeZoneUTC
 var zones = []ZoneInfo{
-	{&tz0, "PST"},
-	{&tz1, "MST"},
-	{&tz2, "CST"},
-	{&tz3, "EST"},
+	{&tz0, "PT"},
+	{&tz1, "MT"},
+	{&tz2, "CT"},
+	{&tz3, "ET"},
+	{&tz4, "UTC"},
 }
 
 //-----------------------------------------------------------------------------
