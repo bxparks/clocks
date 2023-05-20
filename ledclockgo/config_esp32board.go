@@ -12,7 +12,7 @@ import (
 const (
 	clkPin      = machine.GPIO14
 	dioPin      = machine.GPIO13
-	delayMicros = 4
+	delayMicros = 100
 	numDigits   = 4
 )
 

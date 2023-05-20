@@ -5,9 +5,9 @@ package main
 import (
 	"github.com/bxparks/AceButtonGo/button"
 	"github.com/bxparks/AceSegmentGo/writer"
-	"github.com/bxparks/AceTimeGo/ds3231"
-	"github.com/bxparks/AceTimeGo/acetime"
-	"github.com/bxparks/AceTimeGo/zonedb"
+	"github.com/bxparks/acetimego/ds3231"
+	"github.com/bxparks/acetimego/acetime"
+	"github.com/bxparks/acetimego/zonedb"
 	"machine"
 )
 
@@ -44,7 +44,7 @@ var presenter = NewPresenter(&numWriter, &charWriter)
 var controller = NewController(&presenter, &rtc, &ledModule)
 
 //-----------------------------------------------------------------------------
-// AceTimeGo
+// acetimego
 //-----------------------------------------------------------------------------
 
 // An entry of the timezone supported by this app. The `name` field allows the

@@ -9,11 +9,11 @@
    1423       0       0      24 |    1423      24 | github.com/bxparks/AceButtonGo/button
     598       0       0       0 |     598       0 | github.com/bxparks/AceSegmentGo/tm1637
     827      18     128       0 |     973     128 | github.com/bxparks/AceSegmentGo/writer
-   6266     149       8       0 |    6423       8 | github.com/bxparks/AceTimeGo/acetime
-    466       0       0       0 |     466       0 | github.com/bxparks/AceTimeGo/ds3231
-    207       0       0       0 |     207       0 | github.com/bxparks/AceTimeGo/internal/strbuild
-      0    8989       0       0 |    8989       0 | github.com/bxparks/AceTimeGo/zonedb
-    163       0       0       0 |     163       0 | github.com/bxparks/AceTimeGo/zoneinfo
+   6266     149       8       0 |    6423       8 | github.com/bxparks/acetimego/acetime
+    466       0       0       0 |     466       0 | github.com/bxparks/acetimego/ds3231
+    207       0       0       0 |     207       0 | github.com/bxparks/acetimego/internal/strbuild
+      0    8989       0       0 |    8989       0 | github.com/bxparks/acetimego/zonedb
+    163       0       0       0 |     163       0 | github.com/bxparks/acetimego/zoneinfo
      57       0       0       0 |      57       0 | internal/bytealg
     133       2       0       0 |     135       0 | internal/itoa
     357      24       0       8 |     381       8 | internal/task

@@ -1,6 +1,6 @@
 //go:build goroutine && tinygo
 
-// An LED clock, bringing together: AceTimeGo/acetime, button, and tm1637.
+// An LED clock, bringing together: acetimego/acetime, button, and tm1637.
 // This version uses Go routines.
 
 package main

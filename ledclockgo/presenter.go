@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/bxparks/AceSegmentGo/writer"
-	"github.com/bxparks/AceTimeGo/acetime"
+	"github.com/bxparks/acetimego/acetime"
 )
 
 type Presenter struct {

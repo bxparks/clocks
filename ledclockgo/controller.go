@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/bxparks/AceSegmentGo/writer"
-	"github.com/bxparks/AceTimeGo/ds3231"
-	"github.com/bxparks/AceTimeGo/acetime"
+	"github.com/bxparks/acetimego/ds3231"
+	"github.com/bxparks/acetimego/acetime"
 	"runtime"
 	"time"
 )

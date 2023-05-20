@@ -1,36 +1,43 @@
    code  rodata    data     bss |   flash     ram | package
 ------------------------------- | --------------- | -------
-   1087       0     135     258 |    1222     393 | (unknown)
-   1374       0       0       0 |    1374       0 | /__w/tinygo/tinygo/build/release/tinygo/lib/compiler-rt-builtins
-    220       0       0       0 |     220       0 | /__w/tinygo/tinygo/build/release/tinygo/lib/compiler-rt-builtins/arm
-     80       0       0       0 |      80       0 | /__w/tinygo/tinygo/build/release/tinygo/lib/picolibc/newlib/libc/string
+      0      44       7       6 |      51      13 | (padding)
+   1689       0       8      20 |    1697      28 | (unknown)
+    128       0       0       0 |     128       0 | /home/brian/.cache/tinygo/goroot-ed8297b4b5b7b21e5cea4eae06af739aff2dadd7e219bafcc679cf3ef3b23727/src/device/arm
+      4       0       0       0 |       4       0 | /home/brian/.cache/tinygo/goroot-ed8297b4b5b7b21e5cea4eae06af739aff2dadd7e219bafcc679cf3ef3b23727/src/internal/task
+   1594       0       0       0 |    1594       0 | C compiler-rt
+      0     176       0       0 |     176       0 | C interrupt vector
+     80       0       0       0 |      80       0 | C picolibc
       0       0       0    2048 |       0    2048 | C stack
-    324       0       0       0 |     324       0 | Go interface method
-      0     811       0       0 |     811       0 | Go reflect data
-    162       0       0       0 |     162       0 | device/arm
+    164       0       0       0 |     164       0 | Go interface assert
+    480       0       0       0 |     480       0 | Go interface method
+      0    2112       0       0 |    2112       0 | Go types
+     30       0       0       0 |      30       0 | device/arm
      38       0       0       0 |      38       0 | device/sam
-     30       0       0       0 |      30       0 | errors
-   1266       0       0      24 |    1266      24 | github.com/bxparks/AceButtonGo/button
+     56       0       0       0 |      56       0 | encoding/binary
+     10       0       0       0 |      10       0 | errors
+   1264       0       0      24 |    1264      24 | github.com/bxparks/AceButtonGo/button
     506       0       0       0 |     506       0 | github.com/bxparks/AceSegmentGo/tm1637
-    722      18     128       0 |     868     128 | github.com/bxparks/AceSegmentGo/writer
-   5310     149       0       0 |    5459       0 | github.com/bxparks/AceTimeGo/acetime
-    422       0       0       0 |     422       0 | github.com/bxparks/AceTimeGo/ds3231
-    226       0       0       0 |     226       0 | github.com/bxparks/AceTimeGo/internal/strbuild
-      0    8989       0       0 |    8989       0 | github.com/bxparks/AceTimeGo/zonedb
-    138       0       0       0 |     138       0 | github.com/bxparks/AceTimeGo/zoneinfo
+    720      18     128       0 |     866     128 | github.com/bxparks/AceSegmentGo/writer
+   5982     131       8       0 |    6121       8 | github.com/bxparks/acetimego/acetime
+    416       0       0       0 |     416       0 | github.com/bxparks/acetimego/ds3231
+    226       0       0       0 |     226       0 | github.com/bxparks/acetimego/internal/strbuild
+      0    8989       0       0 |    8989       0 | github.com/bxparks/acetimego/zonedb
+    128       0       0       0 |     128       0 | github.com/bxparks/acetimego/zoneinfo
      42       0       0       0 |      42       0 | internal/bytealg
-    124       2       0       0 |     126       0 | internal/itoa
-    334      24       0       0 |     358       0 | internal/task
-   3004     145      40    1792 |    3189    1832 | machine
-     66       0      93       0 |     159      93 | machine/usb
-    444       0       0       0 |     444       0 | machine/usb/cdc
-   2344     153    5224      24 |    7721    5248 | main
-   2367     622       0       0 |    2989       0 | reflect
-   3890     240       0     686 |    4130     686 | runtime
-   1562       0       0       0 |    1562       0 | runtime/volatile
-    394     108       0       0 |     502       0 | strings
-    306      38       0       0 |     344       0 | sync
+    132       2       0       0 |     134       0 | internal/itoa
+    348      48       4       4 |     400       8 | internal/task
+   2948     145      40    1794 |    3133    1834 | machine
+     50       0       0       0 |      50       0 | machine/usb
+    446       0       0       7 |     446       7 | machine/usb/cdc
+      0       0      93       0 |      93      93 | machine/usb/descriptor
+   2364     161    5276     168 |    7801    5444 | main
+   3832     591       0       0 |    4423       0 | reflect
+   3798     267       0     749 |    4065     749 | runtime
+   1554       0       0       0 |    1554       0 | runtime/volatile
+    406     108       0       0 |     514       0 | strings
+    348      38       0       0 |     386       0 | sync
      28       6       0       0 |      34       0 | syscall
-  11918     627       8      64 |   12553      72 | time
+  11904     645      72      76 |   12621     148 | time
+    296     288       0       0 |     584       0 | unicode/utf8
 ------------------------------- | --------------- | -------
-  38728   11932    5628    4896 |   56288   10524 | total
+  42011   13769    5636    4896 |   61416   10532 | total

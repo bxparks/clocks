@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/bxparks/AceTimeGo/acetime"
+	"github.com/bxparks/acetimego/acetime"
 )
 
 type HourMode uint8
