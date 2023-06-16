@@ -5,7 +5,7 @@ APP_NAME := MultiZoneClock
 ARDUINO_LIBS := EpoxyFS EpoxyEepromEsp EpoxyMockSTM32RTC \
 	EpoxyMockDigitalWriteFast \
 	AceCommon AceButton AceCRC \
-	AceSorting AceTime AceTimeClock AceTimePro AceRoutine AceUtils AceWire \
+	AceSorting AceTime AceTimeClock AceRoutine AceUtils AceWire \
 	SSD1306Ascii
 DEPS:= ClockInfo.h \
 	Controller.h \
