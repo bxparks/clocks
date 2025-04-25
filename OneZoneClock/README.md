@@ -1,7 +1,7 @@
 # OneZoneClock
 
 This is spartan digital clock that supports multiple time zones using the
-AceTime library. It is intentinoally kept basic so that it can be used for
+AceTime library. It is intentionally kept basic so that it can be used for
 testing purposes. I use it to test both software (e.g. AceTime, AceButton
 libraries), and hardware configurations (Pro Micro, D1 Mini, etc).
 
@@ -108,7 +108,7 @@ S1, S2 = momentary buttons
 
 ![OneZoneClock](pics/OneZoneClock.jpg)
 
-## Configuation and Compiling
+## Configuration and Compiling
 
 You probably need to set various parameters in `config.h` match the hardware
 that you assembled. The 2 important parameters are:
@@ -288,7 +288,7 @@ do nothing.
 
 ![OneZoneClock](pics/OneZoneClock-mode-version.jpg)
 
-### Persistance
+### Persistence
 
 The date and time are stored on the DS3231 RTC. The chip that I am using has a
 long-life supercapacitor. It seems to be able to hold enough charge to keep the

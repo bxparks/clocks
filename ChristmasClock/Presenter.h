@@ -8,7 +8,6 @@
 #include "ClockInfo.h"
 
 using ace_time::acetime_t;
-using ace_time::daysUntil;
 using ace_time::DateStrings;
 using ace_time::ZonedDateTime;
 using ace_time::TimeZone;
@@ -164,7 +163,7 @@ class Presenter {
 
     /** Display number of days until Christmas. */
     void displayCountdown(const ZonedDateTime& dateTime) {
-      int32_t days = daysUntil(dateTime.localDateTime().localDate(), 12, 25);
+      int32_t days = dateTime.localDateTime().localDate().daysUntil(12, 25);
       mNumberWriter.writeDec4((uint16_t) days, kPatternSpace);
       mClockWriter.writeColon(false);
     }

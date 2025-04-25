@@ -7,7 +7,7 @@
 // Configuration parameters.
 //------------------------------------------------------------------
 
-#define MULTI_ZONE_CLOCK_VERSION_STRING "2023.03.02"
+#define MULTI_ZONE_CLOCK_VERSION_STRING "2025.04.25"
 
 // Set to >= 1 to print debugging info to SERIAL_PORT_MONITOR
 #ifndef ENABLE_SERIAL_DEBUG
@@ -337,7 +337,7 @@
   #define DISPLAY_TYPE DISPLAY_TYPE_OLED
   #define OLED_INTERFACE_TYPE INTERFACE_TYPE_SIMPLE_WIRE
   #define OLED_INITIAL_CONTRAST 0
-  #define OLED_REMAP false
+  #define OLED_REMAP true
 
 #elif defined(AUNITER_D1MINI_LARGE_OLED)
   // Defined by auniter.ini

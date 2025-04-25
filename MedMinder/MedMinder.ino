@@ -88,7 +88,7 @@ void setupPersistentStore() {
 
 #if TIME_ZONE_TYPE == TIME_ZONE_TYPE_BASIC
 
-static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
+static const basic::Info::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
   &zonedb::kZoneAmerica_Los_Angeles,
   &zonedb::kZoneAmerica_Denver,
   &zonedb::kZoneAmerica_Chicago,
@@ -98,7 +98,7 @@ static const basic::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
 };
 
 static const uint16_t ZONE_REGISTRY_SIZE =
-    sizeof(ZONE_REGISTRY) / sizeof(basic::ZoneInfo*);
+    sizeof(ZONE_REGISTRY) / sizeof(basic::Info::ZoneInfo*);
 
 // Only 1 displayed at any given time, need 2 for conversions.
 static const uint16_t CACHE_SIZE = 1 + 1;
@@ -108,7 +108,8 @@ static BasicZoneManager zoneManager(
 
 #elif TIME_ZONE_TYPE == TIME_ZONE_TYPE_EXTENDED
 
-static const extended::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
+static const extended::Info::ZoneInfo* const ZONE_REGISTRY[]
+    ACE_TIME_PROGMEM = {
   &zonedbx::kZoneAmerica_Los_Angeles,
   &zonedbx::kZoneAmerica_Denver,
   &zonedbx::kZoneAmerica_Chicago,
@@ -118,7 +119,7 @@ static const extended::ZoneInfo* const ZONE_REGISTRY[] ACE_TIME_PROGMEM = {
 };
 
 static const uint16_t ZONE_REGISTRY_SIZE =
-    sizeof(ZONE_REGISTRY) / sizeof(extended::ZoneInfo*);
+    sizeof(ZONE_REGISTRY) / sizeof(extended::Info::ZoneInfo*);
 
 // Only 1 displayed at any given time, need 2 for conversions.
 static const uint16_t CACHE_SIZE = 1 + 1;
